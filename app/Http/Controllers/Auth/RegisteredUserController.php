@@ -41,8 +41,7 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', new StrongPassword()],
             'phone' => ['required', 'digits:10', 'unique:users,phone'],
             'date_of_birth' => 'required|date|before:today',
-            'address' => 'required|string|max:500',
-            'udise' => ['required', 'digits:11', 'unique:users,udise'],
+            'udise_code' => ['required', 'string', 'max:20', 'unique:users,udise_code'],
             
             // Location master data validation (J&K/Ladakh only)
             'state' => 'required|string|in:Jammu and Kashmir,Ladakh',
@@ -69,20 +68,15 @@ class RegisteredUserController extends Controller
                 'password' => Hash::make($validated['password']),
                 'phone' => $validated['phone'],
                 'date_of_birth' => $validated['date_of_birth'],
-                'address' => $validated['address'],
-                'udise' => $validated['udise'],
+                'udise_code' => $validated['udise_code'],
                 
                 // Foreign keys (master data)
                 'district_id' => $validated['district_id'],
                 'zone_id' => $validated['zone_id'],
-                
-                // Text fields auto-populated from models (use null-safe access and fallback)
                 'state' => $district?->state ?? $validated['state'],
-                'district' => $district?->name,
-                'zone' => $zone?->name,
                 
-                // Set active by default
-                'is_active' => true,
+                // Status (enum: active, inactive, pending)
+                'status' => 'active',
                 
                 'school_name' => $validated['school_name'],
                 'school_type' => $validated['school_type'],
