@@ -23,16 +23,16 @@ class AdminUserSeeder extends Seeder
                 'password' => Hash::make('Admin@123'),
                 'phone' => '1234567890',
                 'date_of_birth' => '1990-01-01',
-                'address' => 'MDM Office, Srinagar',
-                'udise' => 'ADMIN000001',
+                'udise_code' => 'ADMIN000001',  // Changed from 'udise'
                 'state' => 'Jammu and Kashmir',
-                'district' => 'Srinagar',
-                'zone' => 'Central',
+                'district_id' => 1,  // Changed from 'district', using ID for Srinagar
+                'zone_id' => 1,      // Changed from 'zone', using ID
                 'school_name' => 'MDM Administration',
                 'school_type' => 'primary',
                 'institute_address' => 'Government Office, Srinagar',
                 'school_pincode' => '190001',
-                'is_active' => true,
+                'status' => 'active',  // Changed from 'is_active' boolean to 'active' enum
+                'email_verified_at' => now(),  // Mark as verified
             ]
         );
 
