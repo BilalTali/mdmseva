@@ -1,0 +1,399 @@
+import { useState } from 'react';
+import { useForm } from '@inertiajs/react';
+import GuestLayout from '@/Layouts/GuestLayout';
+import InputLabel from '@/Components/InputLabel';
+import TextInput from '@/Components/TextInput';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
+
+const themeConfig = {
+    schoolTypes: [
+        { value: '', label: 'Select School Type' },
+        { value: 'primary', label: 'Primary' },
+        { value: 'middle', label: 'Middle' },
+        { value: 'secondary', label: 'Secondary' },
+        { value: 'senior_secondary', label: 'Senior Secondary' },
+    ],
+    states: [
+        { value: '', label: 'Select State' },
+        { value: 'JAMMU AND KASHMIR', label: 'Jammu and Kashmir' },
+        { value: 'LADAKH', label: 'Ladakh' },
+      
+    ],
+};
+
+function ProgressIndicator({ currentStep, totalSteps }) {
+    return (
+        <div className="mb-8">
+            <div className="flex justify-between items-center">
+                {[...Array(totalSteps)].map((_, index) => (
+                    <div key={index} className="flex items-center flex-1">
+                        <div className="flex flex-col items-center flex-1">
+                            <div
+                                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
+                                    index < currentStep
+                                        ? 'bg-green-500 text-white'
+                                        : index === currentStep
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'bg-gray-200 text-gray-500'
+                                }`}
+                            >
+                                {index < currentStep ? '✓' : index + 1}
+                            </div>
+                            <span
+                                className={`mt-2 text-xs font-medium ${
+                                    index <= currentStep ? 'text-gray-700' : 'text-gray-400'
+                                }`}
+                            >
+                                {index === 0 ? 'Personal' : 'Institutional'}
+                            </span>
+                        </div>
+                        {index < totalSteps - 1 && (
+                            <div
+                                className={`h-1 flex-1 mx-2 rounded transition-all ${
+                                    index < currentStep ? 'bg-green-500' : 'bg-gray-200'
+                                }`}
+                            />
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+export default function Register() {
+    const [currentStep, setCurrentStep] = useState(0);
+
+    const { data, setData, post, processing, errors, reset } = useForm({
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
+        phone: '',
+        date_of_birth: '',
+        address: '',
+        udise: '',
+        state: '',
+        district: '',
+        zone: '',
+        school_name: '',
+        school_type: '',
+        institute_address: '',
+        school_pincode: '',
+    });
+
+    const [clientErrors, setClientErrors] = useState({});
+
+    // Helper function to convert text to uppercase
+    const handleUppercaseChange = (field, value) => {
+        setData(field, value.toUpperCase());
+    };
+
+    const validateStep1 = () => {
+        const newErrors = {};
+        if (!data.name) newErrors.name = 'Full name is required';
+        if (!data.email) newErrors.email = 'Email is required';
+        else if (!/\S+@\S+\.\S+/.test(data.email)) newErrors.email = 'Email is invalid';
+        if (!data.password) newErrors.password = 'Password is required';
+        else if (data.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+        if (data.password !== data.password_confirmation)
+            newErrors.password_confirmation = 'Passwords do not match';
+        if (!data.phone) newErrors.phone = 'Phone number is required';
+        if (!data.date_of_birth) newErrors.date_of_birth = 'Date of birth is required';
+        if (!data.address) newErrors.address = 'Address is required';
+        setClientErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const validateStep2 = () => {
+        const newErrors = {};
+        if (!data.udise) newErrors.udise = 'UDISE code is required';
+        if (!data.state) newErrors.state = 'State is required';
+        if (!data.district) newErrors.district = 'District is required';
+        if (!data.zone) newErrors.zone = 'Zone is required';
+        if (!data.school_name) newErrors.school_name = 'School name is required';
+        if (!data.school_type) newErrors.school_type = 'School type is required';
+        if (!data.institute_address) newErrors.institute_address = 'Institute address is required';
+        if (!data.school_pincode) newErrors.school_pincode = 'School pincode is required';
+        setClientErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleNext = () => {
+        if (validateStep1()) {
+            setCurrentStep(1);
+        }
+    };
+
+    const handleBack = () => {
+        setCurrentStep(0);
+        setClientErrors({});
+    };
+
+    const submit = (e) => {
+        e.preventDefault();
+
+        if (!validateStep2()) {
+            return;
+        }
+
+        post(route('register'), {
+            onFinish: () => reset('password', 'password_confirmation'),
+            onError: () => {
+                if (errors.name || errors.email || errors.password || 
+                    errors.phone || errors.date_of_birth || errors.address) {
+                    setCurrentStep(0);
+                }
+            }
+        });
+    };
+
+    const allErrors = { ...clientErrors, ...errors };
+
+    return (
+        <GuestLayout>
+            <div className="mb-6 text-center">
+                <h2 className="text-2xl font-bold text-gray-800">Create Account</h2>
+                <p className="text-gray-600 mt-2">
+                    {currentStep === 0 ? 'Step 1: Personal Information' : 'Step 2: Institutional Information'}
+                </p>
+            </div>
+
+            <ProgressIndicator currentStep={currentStep} totalSteps={2} />
+
+            {currentStep === 0 ? (
+                <div>
+                    <div>
+                        <InputLabel htmlFor="name" value="Full Name" />
+                        <TextInput
+                            id="name"
+                            name="name"
+                            value={data.name}
+                            className="mt-1 block w-full uppercase"
+                            autoComplete="name"
+                            isFocused={true}
+                            onChange={(e) => handleUppercaseChange('name', e.target.value)}
+                        />
+                        {allErrors.name && <p className="text-sm text-red-600 mt-1">{allErrors.name}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="email" value="Email" />
+                        <TextInput
+                            id="email"
+                            type="email"
+                            name="email"
+                            value={data.email}
+                            className="mt-1 block w-full"
+                            autoComplete="username"
+                            onChange={(e) => setData('email', e.target.value)}
+                        />
+                        {allErrors.email && <p className="text-sm text-red-600 mt-1">{allErrors.email}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="password" value="Password" />
+                        <TextInput
+                            id="password"
+                            type="password"
+                            name="password"
+                            value={data.password}
+                            className="mt-1 block w-full"
+                            autoComplete="new-password"
+                            onChange={(e) => setData('password', e.target.value)}
+                        />
+                        {allErrors.password && <p className="text-sm text-red-600 mt-1">{allErrors.password}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="password_confirmation" value="Confirm Password" />
+                        <TextInput
+                            id="password_confirmation"
+                            type="password"
+                            name="password_confirmation"
+                            value={data.password_confirmation}
+                            className="mt-1 block w-full"
+                            autoComplete="new-password"
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                        />
+                        {allErrors.password_confirmation && <p className="text-sm text-red-600 mt-1">{allErrors.password_confirmation}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="phone" value="Phone Number" />
+                        <TextInput
+                            id="phone"
+                            type="tel"
+                            name="phone"
+                            value={data.phone}
+                            className="mt-1 block w-full"
+                            onChange={(e) => setData('phone', e.target.value)}
+                        />
+                        {allErrors.phone && <p className="text-sm text-red-600 mt-1">{allErrors.phone}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="date_of_birth" value="Date of Birth" />
+                        <TextInput
+                            id="date_of_birth"
+                            type="date"
+                            name="date_of_birth"
+                            value={data.date_of_birth}
+                            className="mt-1 block w-full"
+                            onChange={(e) => setData('date_of_birth', e.target.value)}
+                        />
+                        {allErrors.date_of_birth && <p className="text-sm text-red-600 mt-1">{allErrors.date_of_birth}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="address" value="Address" />
+                        <textarea
+                            id="address"
+                            name="address"
+                            value={data.address}
+                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm uppercase"
+                            rows="3"
+                            onChange={(e) => handleUppercaseChange('address', e.target.value)}
+                        />
+                        {allErrors.address && <p className="text-sm text-red-600 mt-1">{allErrors.address}</p>}
+                    </div>
+
+                    <div className="flex items-center justify-end mt-4">
+                        <PrimaryButton onClick={handleNext}>
+                            Next Step →
+                        </PrimaryButton>
+                    </div>
+                </div>
+            ) : (
+                <div>
+                    <div>
+                        <InputLabel htmlFor="udise" value="UDISE Code" />
+                        <TextInput
+                            id="udise"
+                            name="udise"
+                            value={data.udise}
+                            className="mt-1 block w-full uppercase"
+                            onChange={(e) => handleUppercaseChange('udise', e.target.value)}
+                        />
+                        {allErrors.udise && <p className="text-sm text-red-600 mt-1">{allErrors.udise}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="state" value="State" />
+                        <select
+                            id="state"
+                            name="state"
+                            value={data.state}
+                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                            onChange={(e) => setData('state', e.target.value)}
+                        >
+                            {themeConfig.states.map((state) => (
+                                <option key={state.value} value={state.value}>
+                                    {state.label}
+                                </option>
+                            ))}
+                        </select>
+                        {allErrors.state && <p className="text-sm text-red-600 mt-1">{allErrors.state}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="district" value="District" />
+                        <TextInput
+                            id="district"
+                            name="district"
+                            value={data.district}
+                            className="mt-1 block w-full uppercase"
+                            onChange={(e) => handleUppercaseChange('district', e.target.value)}
+                        />
+                        {allErrors.district && <p className="text-sm text-red-600 mt-1">{allErrors.district}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="zone" value="Zone" />
+                        <TextInput
+                            id="zone"
+                            name="zone"
+                            value={data.zone}
+                            className="mt-1 block w-full uppercase"
+                            onChange={(e) => handleUppercaseChange('zone', e.target.value)}
+                        />
+                        {allErrors.zone && <p className="text-sm text-red-600 mt-1">{allErrors.zone}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="school_name" value="School Name" />
+                        <TextInput
+                            id="school_name"
+                            name="school_name"
+                            value={data.school_name}
+                            className="mt-1 block w-full uppercase"
+                            onChange={(e) => handleUppercaseChange('school_name', e.target.value)}
+                        />
+                        {allErrors.school_name && <p className="text-sm text-red-600 mt-1">{allErrors.school_name}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="school_type" value="School Type" />
+                        <select
+                            id="school_type"
+                            name="school_type"
+                            value={data.school_type}
+                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                            onChange={(e) => setData('school_type', e.target.value)}
+                        >
+                            {themeConfig.schoolTypes.map((type) => (
+                                <option key={type.value} value={type.value}>
+                                    {type.label}
+                                </option>
+                            ))}
+                        </select>
+                        {allErrors.school_type && <p className="text-sm text-red-600 mt-1">{allErrors.school_type}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="institute_address" value="Institute Address" />
+                        <textarea
+                            id="institute_address"
+                            name="institute_address"
+                            value={data.institute_address}
+                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm uppercase"
+                            rows="3"
+                            onChange={(e) => handleUppercaseChange('institute_address', e.target.value)}
+                        />
+                        {allErrors.institute_address && <p className="text-sm text-red-600 mt-1">{allErrors.institute_address}</p>}
+                    </div>
+
+                    <div className="mt-4">
+                        <InputLabel htmlFor="school_pincode" value="School Pincode" />
+                        <TextInput
+                            id="school_pincode"
+                            name="school_pincode"
+                            value={data.school_pincode}
+                            className="mt-1 block w-full"
+                            onChange={(e) => setData('school_pincode', e.target.value)}
+                        />
+                        {allErrors.school_pincode && <p className="text-sm text-red-600 mt-1">{allErrors.school_pincode}</p>}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4">
+                        <SecondaryButton onClick={handleBack}>
+                            ← Back
+                        </SecondaryButton>
+
+                        <PrimaryButton onClick={submit} disabled={processing}>
+                            {processing ? 'Creating...' : 'Create Account'}
+                        </PrimaryButton>
+                    </div>
+                </div>
+            )}
+
+            <div className="mt-6 text-center text-sm text-gray-600">
+                Already have an account?{' '}
+                <a href={route('login')} className="text-indigo-600 hover:text-indigo-700 font-semibold">
+                    Sign In
+                </a>
+            </div>
+        </GuestLayout>
+    );
+}

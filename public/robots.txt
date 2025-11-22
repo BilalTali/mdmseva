@@ -1,0 +1,33 @@
+# Robots.txt for MDM SEVA Portal
+# This file tells search engines which pages to crawl and which to avoid
+
+# Allow all search engines
+User-agent: *
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /api/
+
+# Disallow authentication pages
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Allow public pages
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /privacy-policy
+Allow: /terms-of-service
+Allow: /cookie-policy
+Allow: /accessibility-statement
+Allow: /user-guide
+
+# Sitemap location (UPDATE with your production domain)
+Sitemap: https://yourdomain.com/sitemap.xml
+
+# Crawl delay (be nice to servers)
+Crawl-delay: 1

@@ -1,0 +1,21 @@
+export default function ApplicationLogo({ className = '' }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <rect width="48" height="48" rx="8" fill="currentColor" fillOpacity="0.1" />
+            <path
+                d="M14 12C14 10.8954 14.8954 10 16 10H32C33.1046 10 34 10.8954 34 12V36C34 37.1046 33.1046 38 32 38H16C14.8954 38 14 37.1046 14 36V12Z"
+                fill="currentColor"
+            />
+            <path d="M18 14H30V16H18V14Z" fill="white" fillOpacity="0.9" />
+            <path d="M18 19H30V21H18V19Z" fill="white" fillOpacity="0.7" />
+            <path d="M18 24H26V26H18V24Z" fill="white" fillOpacity="0.5" />
+            <path d="M24 6L18 9V11L24 14L30 11V9L24 6Z" fill="currentColor" />
+            <path d="M28 11.5V14.5L24 16.5L20 14.5V11.5L24 13.5L28 11.5Z" fill="currentColor" fillOpacity="0.7" />
+        </svg>
+    );
+}

@@ -1,0 +1,286 @@
+/**
+ * Accessibility Styles
+ * 
+ * WCAG 2.1 AA compliant styles for keyboard navigation and screen readers
+ */
+
+/* ============================================
+   Skip Link - For keyboard and screen reader users
+   ============================================ */
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: #fff;
+    padding: 8px 16px;
+    text-decoration: none;
+    z-index: 100;
+    border-radius: 0 0 4px 0;
+    font-weight: 600;
+}
+
+.skip-link:focus {
+    top: 0;
+    outline: 3px solid #ff6b00;
+    outline-offset: 2px;
+}
+
+/* ============================================
+   Focus Visible Styles - Keyboard Navigation
+   ============================================ */
+
+/* Remove default outline and add custom focus styles */
+*:focus {
+    outline: none;
+}
+
+/* Visible focus indicator for keyboard navigation */
+*:focus-visible {
+    outline: 3px solid #ff6b00;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Links */
+a:focus-visible {
+    outline: 3px solid #ff6b00;
+    outline-offset: 2px;
+    text-decoration: underline;
+}
+
+/* Buttons */
+button:focus-visible,
+[role="button"]:focus-visible {
+    outline: 3px solid #ff6b00;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.2);
+}
+
+/* Form inputs */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 3px solid #ff6b00;
+    outline-offset: 0;
+    border-color: #ff6b00;
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+}
+
+/* Checkboxes and radio buttons */
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+    outline: 3px solid #ff6b00;
+    outline-offset: 2px;
+}
+
+/* ============================================
+   High Contrast Mode Support
+   ============================================ */
+
+@media (prefers-contrast: high) {
+    *:focus-visible {
+        outline-width: 4px;
+        outline-offset: 3px;
+    }
+    
+    button:focus-visible {
+        box-shadow: 0 0 0 6px rgba(255, 107, 0, 0.3);
+    }
+}
+
+/* ============================================
+   Reduced Motion Support
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================
+   Screen Reader Only Content
+   ============================================ */
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
+
+/* ============================================
+   ARIA Live Regions
+   ============================================ */
+
+[aria-live="polite"],
+[aria-live="assertive"] {
+    position: relative;
+}
+
+/* ============================================
+   Disabled State Accessibility
+   ============================================ */
+
+[disabled],
+[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+button[disabled]:focus-visible,
+[aria-disabled="true"]:focus-visible {
+    outline-color: #999;
+    box-shadow: none;
+}
+
+/* ============================================
+   Improved Link Visibility
+   ============================================ */
+
+a {
+    text-decoration-skip-ink: auto;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Ensure links are distinguishable from regular text */
+a:not([class]) {
+    text-decoration-thickness: max(0.08em, 1px);
+    text-underline-offset: 0.15em;
+}
+
+/* ============================================
+   Form Error States
+   ============================================ */
+
+[aria-invalid="true"] {
+    border-color: #dc2626 !important;
+}
+
+[aria-invalid="true"]:focus-visible {
+    outline-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* ============================================
+   Loading States
+   ============================================ */
+
+[aria-busy="true"] {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+/* ============================================
+   Modal/Dialog Accessibility
+   ============================================ */
+
+[role="dialog"],
+[role="alertdialog"] {
+    outline: none;
+}
+
+[role="dialog"]:focus,
+[role="alertdialog"]:focus {
+    outline: none;
+}
+
+/* ============================================
+   Table Accessibility
+   ============================================ */
+
+table {
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    font-weight: 600;
+}
+
+/* Ensure table headers are distinguishable */
+th[scope="col"],
+th[scope="row"] {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================
+   Navigation Accessibility
+   ============================================ */
+
+[aria-current="page"],
+[aria-current="step"] {
+    font-weight: 600;
+    position: relative;
+}
+
+[aria-current="page"]::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: currentColor;
+}
+
+/* ============================================
+   Color Contrast Helpers
+   ============================================ */
+
+/* Ensure sufficient contrast for text on colored backgrounds */
+.bg-mdm-yellow {
+    color: #000 !important; /* Black text on yellow for 4.5:1 contrast */
+}
+
+.bg-mdm-blue {
+    color: #fff !important; /* White text on blue for 4.5:1 contrast */
+}
+
+/* ============================================
+   Print Accessibility
+   ============================================ */
+
+@media print {
+    /* Ensure focus indicators are visible in print */
+    *:focus-visible {
+        outline: 2px solid #000;
+    }
+    
+    /* Show link URLs in print */
+    a[href^="http"]::after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        font-weight: normal;
+    }
+    
+    /* Hide skip links in print */
+    .skip-link {
+        display: none;
+    }
+}
