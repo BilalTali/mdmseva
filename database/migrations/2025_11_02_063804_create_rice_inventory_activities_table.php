@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('config_id')
-                  ->constrained('rice_configurations')
+                  ->constrained('monthly_rice_configurations')
                   ->cascadeOnDelete();
             
             // Period
