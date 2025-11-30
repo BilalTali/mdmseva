@@ -79,6 +79,9 @@
     ];
     
     $colors = $themeColors[$theme] ?? $themeColors['blue'];
+    $billDateDisplay = $bill->bill_date
+        ? $bill->bill_date->format('d F Y')
+        : $bill->created_at->format('d F Y');
 @endphp
 <!DOCTYPE html>
 <html>
@@ -136,8 +139,10 @@
             font-weight: bold;
             color: {{ $colors['text'] }};
             margin-bottom: 3px;
-            letter-spacing: 0.8px;
+            padding-bottom: 3px;
+            border-bottom: 2px solid {{ $colors['border'] }};
             text-transform: uppercase;
+            letter-spacing: 0.8px;
         }
         
         .header-subtitle {
@@ -147,6 +152,14 @@
             margin-bottom: 2px;
             line-height: 1.3;
             font-weight: 500;
+        }
+        
+        .header-subtitle .deals-line {
+            font-weight: 700;
+            color: {{ $colors['text'] }};
+            margin-top: 2px;
+            font-size: 7pt;
+            letter-spacing: 0.4px;
         }
         
         .header-info {
@@ -515,8 +528,13 @@
         <div class="header-content">
             <div class="header-title">{{ strtoupper($bill->shop_name) }}</div>
             <div class="header-subtitle">
-                {{ strtoupper($bill->address) }}
+                <div>{{ strtoupper($bill->address) }}</div>
+                @if(!empty($bill->deals_with))
+                    <div class="deals-line">Deals With: <span>{{ $bill->deals_with }}</span></div>
+                @endif
+
             </div>
+
             @php
                 $headerInfoCount = 2; // Bill Date and Period are always shown
                 if (!empty($bill->phone)) $headerInfoCount++;
@@ -532,7 +550,7 @@
             <div class="header-info {{ $headerClass }}">
                 <div>
                     <strong>Bill Date</strong>
-                   
+                    {{ $billDateDisplay }}
                 </div>
                 <div>
                     <strong>Month</strong>
@@ -605,6 +623,7 @@
                     <strong>Address:</strong><br>
                     {{ $bill->address }}
                 </div>
+             
                 <div class="info-line">
                     <strong>Contact Person:</strong><br>
                     {{ $bill->shopkeeper_name }}
@@ -708,7 +727,7 @@
                     </li>
                     <li style="margin-bottom: 3px; padding-left: 10px; position: relative; line-height: 1.4; font-size: 6.5pt;">
                         <span style="position: absolute; left: 0; color: #f59e0b; font-weight: bold; font-size: 9pt;">▪</span>
-                        Bill Date: 
+                        Bill Date: {{ $billDateDisplay }}
                     </li>
                 </ul>
             </div>
@@ -738,10 +757,7 @@
     <!-- End Content Wrapper -->
 
         <!-- Footer Note -->
-        <div style="text-align: center; margin-top: 6px; padding-top: 4px; border-top: 1px solid #e5e7eb; font-size: 5.5pt; color: #6b7280;">
-            <p>Generated on {{ $generated_at }} | For: {{ $user->school_name ?? $user->name }}@if($user->udise) | UDISE: {{ $user->udise }}@endif</p>
-            <p style="margin-top: 2px;">From: {{ $bill->shop_name }} | Contact: {{ $bill->phone }}</p>
-        </div>
+      
     </div>
     <!-- End Content Wrapper -->
 

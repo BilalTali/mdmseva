@@ -30,8 +30,10 @@ class DashboardStatsController extends Controller
             $kiryanaaBills = Bill::where('bill_type', 'kiryana')->count() ?? 0;
             $fuelBills = Bill::where('bill_type', 'fuel')->count() ?? 0;
 
-            // Students served (sum of all students served across daily consumptions)
-            $totalStudentsServed = DailyConsumption::sum('total_students_served') ?? 0;
+            // Students served (sum of primary + middle columns)
+            $totalStudentsServed = DailyConsumption::sum(
+                DB::raw('(served_primary + served_middle)')
+            ) ?? 0;
 
             // Active users (users who logged in within last 30 days)
             $activeUsers = User::where('last_login_at', '>=', now()->subDays(30))->count() ?? 0;

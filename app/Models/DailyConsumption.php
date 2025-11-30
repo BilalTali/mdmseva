@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\MonthlyRiceConfiguration;
+use App\Models\MonthlyAmountConfiguration;
 
 /**
  * DailyConsumption Model - Uses dynamic rates from MonthlyRiceConfiguration
@@ -28,12 +29,27 @@ use App\Models\MonthlyRiceConfiguration;
  * @property int $id
  * @property int $user_id
  * @property string $date
- * @property string $day
- * @property int|null $served_primary
- * @property int|null $served_middle
- * @property float $rice_consumed
- * @property float $rice_balance_after
- * @property float $amount_consumed
+ * @property int $month
+ * @property int $year
+ * @property int $students_primary
+ * @property int $students_middle
+ * @property float $rice_consumed_primary
+ * @property float $rice_consumed_middle
+ * @property float $total_rice_consumed
+ * @property float $amount_pulses_primary
+ * @property float $amount_vegetables_primary
+ * @property float $amount_oil_primary
+ * @property float $amount_salt_primary
+ * @property float $amount_fuel_primary
+ * @property float $total_amount_primary
+ * @property float $amount_pulses_middle
+ * @property float $amount_vegetables_middle
+ * @property float $amount_oil_middle
+ * @property float $amount_salt_middle
+ * @property float $amount_fuel_middle
+ * @property float $total_amount_middle
+ * @property float $grand_total_amount
+ * @property array|null $salt_breakdown
  * @property string|null $remarks
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
@@ -181,13 +197,24 @@ class DailyConsumption extends Model
     }
 
     /**
-     * Get amount breakdown if AmountConfiguration exists
+     * Get amount breakdown if MonthlyAmountConfiguration exists
      */
     public function getAmountBreakdownAttribute(): ?array
     {
-        $amountConfig = \App\Models\AmountConfiguration::where('user_id', $this->user_id)
-            ->latest()
+        $date = \Carbon\Carbon::parse($this->date);
+
+        $amountConfig = MonthlyAmountConfiguration::where('user_id', $this->user_id)
+            ->where('month', $date->month)
+            ->where('year', $date->year)
             ->first();
+
+        // Fallback to latest if not found (though ideally should exist)
+        if (!$amountConfig) {
+            $amountConfig = MonthlyAmountConfiguration::where('user_id', $this->user_id)
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->first();
+        }
 
         if (!$amountConfig) {
             return null;

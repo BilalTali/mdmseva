@@ -40,30 +40,38 @@ export default function AdminBillsIndex({ bills, aggregations, vendorBreakdown, 
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month/Year</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">School</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">District</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zone</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UDISE</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">School</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {items.map((b) => (
+                                    {items.map((b, index) => (
                                         <tr key={b.id}>
-                                            <td className="px-6 py-4 text-sm text-gray-900">{b.date || `${b.month}/${b.year}`}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">{b.type}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-900">{bills.from + index}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-900">{b.month}/{b.year}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-700">{b.report?.user?.school_name || 'N/A'}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-700">{b.report?.user?.district?.name || 'N/A'}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-700">{b.report?.user?.zone?.name || 'N/A'}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-700">{b.report?.user?.udise_code || 'N/A'}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-700"><span className={`px-2 py-1 text-xs font-semibold rounded ${b.bill_type === 'kiryana' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>{b.bill_type}</span></td>
                                             <td className="px-6 py-4 text-sm text-gray-700">{b.shop_name}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">{b.user?.school_name || b.user?.name || 'School'}</td>
                                             <td className="px-6 py-4 text-sm text-gray-700">₹{Number(b.total_amount || 0).toFixed(2)}</td>
                                             <td className="px-6 py-4 text-sm text-right">
-                                                <Link href={route('admin.bills.show', b.id)} className="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-semibold">View</Link>
+                                                <Link href={`/admin/bills/${b.id}`} className="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-semibold">View</Link>
                                             </td>
                                         </tr>
                                     ))}
                                     {items.length === 0 && (
                                         <tr>
-                                            <td className="px-6 py-8 text-center text-sm text-gray-500" colSpan="6">No bills found.</td>
+                                            <td className="px-6 py-8 text-center text-sm text-gray-500" colSpan="10">No bills found.</td>
                                         </tr>
                                     )}
                                 </tbody>

@@ -22,7 +22,7 @@ export default function SaltBreakdownDisplay({
         { key: 'common_salt', label: 'Common Salt', icon: '🧂' },
         { key: 'chilli_powder', label: 'Chilli Powder', icon: '🌶️' },
         { key: 'turmeric', label: 'Turmeric', icon: '💛' },
-        { key: 'coriander', label: 'Coriander', icon: '🌿' },
+        { key: 'coriander', label: 'Ingredients', icon: '🌿' },
         { key: 'other_condiments', label: 'Other Condiments', icon: '🧄' },
     ];
 

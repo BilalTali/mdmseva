@@ -2,7 +2,8 @@ import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Index({ auth, rollStatements, filters }) {
+export default function Index({ auth, rollStatements, filters, schoolInfo }) {
+
     // Safely access data
     const statements = rollStatements?.data || [];
     const schoolType = auth.user.school_type || 'primary';
@@ -216,22 +217,22 @@ export default function Index({ auth, rollStatements, filters }) {
                                             <div className="grid grid-cols-3 gap-4 text-center mb-4">
                                                 <div className="border-2 border-gray-300 rounded-lg p-2">
                                                     <p className="text-xs text-gray-600 font-semibold">STATE</p>
-                                                    <p className="text-sm font-bold text-gray-900">{auth.user.state || 'J&K'}</p>
+                                                    <p className="text-sm font-bold text-gray-900">{schoolInfo?.state || 'J&K'}</p>
                                                 </div>
                                                 <div className="border-2 border-gray-300 rounded-lg p-2">
                                                     <p className="text-xs text-gray-600 font-semibold">DISTRICT</p>
-                                                    <p className="text-sm font-bold text-gray-900">{auth.user.district || 'Not Set'}</p>
+                                                    <p className="text-sm font-bold text-gray-900">{schoolInfo?.district || 'Not Set'}</p>
                                                 </div>
                                                 <div className="border-2 border-gray-300 rounded-lg p-2">
                                                     <p className="text-xs text-gray-600 font-semibold">ZONE</p>
-                                                    <p className="text-sm font-bold text-gray-900">{auth.user.zone || 'Not Set'}</p>
+                                                    <p className="text-sm font-bold text-gray-900">{schoolInfo?.zone || 'Not Set'}</p>
                                                 </div>
                                             </div>
 
                                             <div className="border-2 border-gray-300 rounded-lg p-3 bg-gray-50">
-                                                <p className="text-lg font-bold text-center text-gray-900">{auth.user.school_name}</p>
+                                                <p className="text-lg font-bold text-center text-gray-900">{schoolInfo?.school_name || auth.user.school_name}</p>
                                                 <p className="text-xs text-center text-gray-600 mt-1">
-                                                    UDISE: <span className="font-bold">{auth.user.udise}</span>
+                                                    UDISE: <span className="font-bold">{schoolInfo?.udise_code || auth.user.udise}</span>
                                                 </p>
                                             </div>
 
@@ -271,10 +272,10 @@ export default function Index({ auth, rollStatements, filters }) {
                                                             </tr>
 
                                                             {/* Primary Total after 5th class */}
-                                                            {statement.class?.toLowerCase() === '5' && (
+                                                            {statement.class?.toLowerCase() === '5' && totalLabels.primary && (
                                                                 <tr className="bg-blue-100">
                                                                     <td colSpan="2" className="border-2 border-gray-400 px-3 py-2 text-sm font-bold text-right">
-                                                                        PRIMARY TOTAL (KG - 5th):
+                                                                        {totalLabels.primary}:
                                                                     </td>
                                                                     <td className="border-2 border-gray-400 px-3 py-2 text-sm font-bold text-center">{primaryTotals.boys}</td>
                                                                     <td className="border-2 border-gray-400 px-3 py-2 text-sm font-bold text-center">{primaryTotals.girls}</td>
@@ -285,10 +286,10 @@ export default function Index({ auth, rollStatements, filters }) {
                                                     ))}
 
                                                     {/* Upper Primary Total */}
-                                                    {upperPrimaryTotals.total > 0 && (
+                                                    {upperPrimaryTotals.total > 0 && totalLabels.upperPrimary && (
                                                         <tr className="bg-green-100">
                                                             <td colSpan="2" className="border-2 border-gray-400 px-3 py-2 text-sm font-bold text-right">
-                                                                UPPER PRIMARY TOTAL (6th - 8th):
+                                                                {totalLabels.upperPrimary}:
                                                             </td>
                                                             <td className="border-2 border-gray-400 px-3 py-2 text-sm font-bold text-center">{upperPrimaryTotals.boys}</td>
                                                             <td className="border-2 border-gray-400 px-3 py-2 text-sm font-bold text-center">{upperPrimaryTotals.girls}</td>

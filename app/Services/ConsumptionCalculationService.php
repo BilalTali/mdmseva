@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\AmountConfiguration;
+use App\Models\MonthlyAmountConfiguration;
 use App\Models\DailyConsumption;
 use App\Models\MonthlyRiceConfiguration;
 use App\Models\User;
@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Log;
  * 3. Balance calculations now support negative values
  * 4. Formula: Total Available = Opening + Lifted + Arranged
  * 5. Updated to use MonthlyRiceConfiguration instead of RiceConfiguration
+ * 6. ✅ UPDATED: Uses MonthlyAmountConfiguration instead of AmountConfiguration
  */
 class ConsumptionCalculationService
 {
@@ -45,6 +46,14 @@ class ConsumptionCalculationService
     /**
      * ✅ UPDATED: Get opening balance including rice arranged
      * Formula: Opening + Lifted + Arranged
+     * 
+     * @deprecated This method calculates opening balance from passed config.
+     *             Consider using direct calculation from MonthlyRiceConfiguration
+     *             in each calling context for better clarity and reduced complexity.
+     *             
+     * @param User $user The school user
+     * @param MonthlyRiceConfiguration $riceConfig The month's configuration
+     * @return float Total opening balance (primary + upper primary)
      */
     private function getCurrentOpeningBalance(User $user, MonthlyRiceConfiguration $riceConfig): float
     {
@@ -103,11 +112,12 @@ class ConsumptionCalculationService
 
     /**
      * Calculate amount/cost consumption with ingredient breakdown
+     * ✅ UPDATED: Accepts MonthlyAmountConfiguration
      */
     public function calculateAmountConsumption(
         int $servedPrimary, 
         int $servedMiddle, 
-        AmountConfiguration $config
+        MonthlyAmountConfiguration $config
     ): array {
         $primaryBreakdown = [
             'pulses' => $servedPrimary * $config->daily_pulses_primary,
@@ -162,9 +172,19 @@ class ConsumptionCalculationService
             ->latest()
             ->first();
 
-        $amountConfig = AmountConfiguration::where('user_id', $user->id)
-            ->latest()
+        // ✅ UPDATED: Fetch MonthlyAmountConfiguration for current month
+        $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)
+            ->where('month', now()->month)
+            ->where('year', now()->year)
             ->first();
+        
+        // If not found for current month, try latest available
+        if (!$amountConfig) {
+            $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->first();
+        }
 
         $openingBalance = $riceConfig 
             ? $this->getCurrentOpeningBalance($user, $riceConfig)
@@ -220,7 +240,7 @@ class ConsumptionCalculationService
     public function getCumulativeBalances(
         Collection $records, 
         float $openingBalance,
-        ?AmountConfiguration $amountConfig = null,
+        ?MonthlyAmountConfiguration $amountConfig = null,
         ?User $user = null
     ): Collection {
         $runningRiceBalance = $openingBalance;
@@ -325,6 +345,103 @@ class ConsumptionCalculationService
             'average_daily_consumption' => $averageDailyConsumption,
 
             // legacy camelCase keys consumed by existing UI
+            'openingBalance' => $openingBalanceRounded,
+            'totalRiceConsumed' => $totalRiceConsumedRounded,
+            'currentBalance' => $currentBalanceRounded,
+            'totalAmountSpent' => $totalAmountSpentRounded,
+            'totalDays' => $totalDays,
+            'avgDailyConsumption' => $averageDailyConsumption,
+        ];
+    }
+
+
+    /**
+     * Get summary statistics for a SPECIFIC MONTH
+     * This fixes the bug where ->latest() was getting wrong month's config
+     */
+    public function getMonthSummary(User $user, int $month, int $year): array
+    {
+        // Get config for THIS specific month
+        $riceConfig = MonthlyRiceConfiguration::where('user_id', $user->id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+
+        if (!$riceConfig) {
+            return [
+                'opening_balance' => 0,
+                'total_consumed' => 0,
+                'current_balance' => 0,
+                'total_amount_spent' => 0,
+                'total_records' => 0,
+                'average_daily_consumption' => 0,
+                'openingBalance' => 0,
+                'totalRiceConsumed' => 0,
+                'currentBalance' => 0,
+                'totalAmountSpent' => 0,
+                'totalDays' => 0,
+                'avgDailyConsumption' => 0,
+            ];
+        }
+
+        // Calculate opening balance for THIS month
+        $openingBalance = ($riceConfig->opening_balance_primary ?? 0) +
+                         ($riceConfig->rice_lifted_primary ?? 0) +
+                         ($riceConfig->rice_arranged_primary ?? 0) +
+                         ($riceConfig->opening_balance_upper_primary ?? 0) +
+                         ($riceConfig->rice_lifted_upper_primary ?? 0) +
+                         ($riceConfig->rice_arranged_upper_primary ?? 0);
+
+        // Get consumption records for THIS month ONLY
+        $monthRecords = DailyConsumption::where('user_id', $user->id)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->orderBy('date', 'asc')
+            ->get();
+
+        $totalRiceConsumed = 0;
+        $totalRicePrimary = 0;
+        $totalRiceMiddle = 0;
+        $totalAmountSpent = 0;
+
+        foreach ($monthRecords as $record) {
+            $riceCalc = $this->calculateRiceConsumption(
+                $record->served_primary ?? 0,
+                $record->served_middle ?? 0,
+                $user
+            );
+            $totalRiceConsumed += $riceCalc['total'];
+            $totalRicePrimary += $riceCalc['primary'];
+            $totalRiceMiddle += $riceCalc['middle'];
+            $totalAmountSpent += $record->amount_consumed ?? 0;
+        }
+
+        $currentBalance = $openingBalance - $totalRiceConsumed;
+        $totalDays = $monthRecords->count();
+        $averageDailyConsumption = $totalDays > 0
+            ? round($totalRiceConsumed / $totalDays, 2)
+            : 0;
+
+        $openingBalanceRounded = round($openingBalance, 2);
+        $totalRiceConsumedRounded = round($totalRiceConsumed, 2);
+        $totalRicePrimaryRounded = round($totalRicePrimary, 2);
+        $totalRiceMiddleRounded = round($totalRiceMiddle, 2);
+        $currentBalanceRounded = round($currentBalance, 2);
+        $totalAmountSpentRounded = round($totalAmountSpent, 2);
+
+        return [
+            'opening_balance' => $openingBalanceRounded,
+            'total_consumed' => $totalRiceConsumedRounded,
+            'current_balance' => $currentBalanceRounded,
+            'total_amount_spent' => $totalAmountSpentRounded,
+            'total_records' => $totalDays,
+            'average_daily_consumption' => $averageDailyConsumption,
+            
+            // Breakdown for sync
+            'totalRicePrimary' => $totalRicePrimaryRounded,
+            'totalRiceMiddle' => $totalRiceMiddleRounded,
+
+            // Legacy camelCase keys
             'openingBalance' => $openingBalanceRounded,
             'totalRiceConsumed' => $totalRiceConsumedRounded,
             'currentBalance' => $currentBalanceRounded,
@@ -469,36 +586,33 @@ class ConsumptionCalculationService
 
     /**
      * Get opening balance for a specific date
+     * ✅ UPDATED: Uses month-specific configuration instead of latest
      */
     public function getOpeningBalanceForDate(User $user, Carbon $date): float
     {
-        $riceConfig = MonthlyRiceConfiguration::where('user_id', $user->id)
-            ->latest()
+        $month = $date->month;
+        $year = $date->year;
+        
+        // ✅ Get config for THIS specific month, not latest
+        $riceConfig = MonthlyRiceConfiguration::forUser($user->id)
+            ->forPeriod($month, $year)
             ->first();
 
         if (!$riceConfig) {
             return 0;
         }
 
-        $openingBalance = $this->getCurrentOpeningBalance($user, $riceConfig);
-
-        $consumedBefore = DailyConsumption::where('user_id', $user->id)
-            ->where('date', '<', $date->format('Y-m-d'))
-            ->orderBy('date', 'asc')
-            ->get();
-
-        $totalConsumed = 0;
-        foreach ($consumedBefore as $record) {
-            $riceCalc = $this->calculateRiceConsumption(
-                $record->served_primary ?? 0,
-                $record->served_middle ?? 0,
-                $user
-            );
-            $totalConsumed += $riceCalc['total'];
-        }
-
-        // ✅ UPDATED: No max(0, ...) - Allow negative balance
-        return round($openingBalance - $totalConsumed, 2);
+        // ✅ Return the month's total available stock
+        // Formula: Opening + Lifted + Arranged
+        return round(
+            ($riceConfig->opening_balance_primary ?? 0) +
+            ($riceConfig->opening_balance_upper_primary ?? 0) +
+            ($riceConfig->rice_lifted_primary ?? 0) +
+            ($riceConfig->rice_lifted_upper_primary ?? 0) +
+            ($riceConfig->rice_arranged_primary ?? 0) +
+            ($riceConfig->rice_arranged_upper_primary ?? 0),
+            2
+        );
     }
 
     /**
@@ -550,18 +664,21 @@ class ConsumptionCalculationService
     }
 
     
-
+    /**
+     * Calculate amount consumption with salt breakdown
+     * ✅ UPDATED: Accepts MonthlyAmountConfiguration
+     */
     public function calculateAmountConsumptionWithSaltBreakdown(
         int $servedPrimary, 
         int $servedMiddle, 
-        AmountConfiguration $config
+        MonthlyAmountConfiguration $config
     ): array {
         $primaryBreakdown = [
             'pulses' => $servedPrimary * $config->daily_pulses_primary,
             'vegetables' => $servedPrimary * $config->daily_vegetables_primary,
             'oil' => $servedPrimary * $config->daily_oil_primary,
-            'salt_iodized' => $servedPrimary * $config->daily_salt_iodized_primary,
-            'salt_non_iodized' => $servedPrimary * $config->daily_salt_non_iodized_primary,
+            'salt_iodized' => $servedPrimary * $config->daily_salt_primary,
+            'salt_non_iodized' => 0,
             'fuel' => $servedPrimary * $config->daily_fuel_primary,
         ];
         $primaryBreakdown['total'] = array_sum($primaryBreakdown);
@@ -570,8 +687,8 @@ class ConsumptionCalculationService
             'pulses' => $servedMiddle * $config->daily_pulses_middle,
             'vegetables' => $servedMiddle * $config->daily_vegetables_middle,
             'oil' => $servedMiddle * $config->daily_oil_middle,
-            'salt_iodized' => $servedMiddle * $config->daily_salt_iodized_middle,
-            'salt_non_iodized' => $servedMiddle * $config->daily_salt_non_iodized_middle,
+            'salt_iodized' => $servedMiddle * $config->daily_salt_middle,
+            'salt_non_iodized' => 0,
             'fuel' => $servedMiddle * $config->daily_fuel_middle,
         ];
         $middleBreakdown['total'] = array_sum($middleBreakdown);
@@ -586,9 +703,13 @@ class ConsumptionCalculationService
         ];
     }
 
+    /**
+     * Calculate monthly amount totals
+     * ✅ UPDATED: Accepts MonthlyAmountConfiguration
+     */
     public function calculateMonthlyAmountTotals(
         Collection $consumptions, 
-        AmountConfiguration $config, 
+        MonthlyAmountConfiguration $config, 
         User $user
     ): array {
         $totalServedPrimary = 0;
@@ -688,6 +809,8 @@ class ConsumptionCalculationService
             'total_fuel' => round($totalFuel, 2),
             'grand_total' => round($grandTotalAmount, 2),
             'total_days' => $totalDays,
+            'total_serving_days' => $totalDays, // Added for compatibility
+            'average_daily_amount' => $averageDailyAmount, // Added for compatibility
 
             'total_primary_students' => $totalServedPrimary,
             'total_primary_pulses' => round($totalPrimaryPulses, 2),
@@ -714,94 +837,47 @@ class ConsumptionCalculationService
             'total_middle_other_condiments' => round($middleSaltBreakdown['other_condiments'], 2),
             'total_middle_fuel' => round($totalMiddleFuel, 2),
             'total_middle_amount' => round($grandTotalMiddle, 2),
-
-            'total_serving_days' => $totalDays,
-            'grand_total_amount' => round($grandTotalAmount, 2),
-            'average_daily_amount' => $averageDailyAmount,
         ];
     }
 
-    public function formatDailyRecordsForAmountReport(
-        Collection $consumptions, 
-        AmountConfiguration $config
-    ): array {
-        $records = [];
-
-        foreach ($consumptions as $consumption) {
-            $breakdown = $this->calculateAmountConsumptionWithSaltBreakdown(
-                $consumption->served_primary ?? 0,
-                $consumption->served_middle ?? 0,
-                $config
-            );
-
-            $records[] = [
-                'date' => $consumption->date->format('Y-m-d'),
-                'day' => $consumption->day,
-                'served_primary' => $consumption->served_primary ?? 0,
-                'served_middle' => $consumption->served_middle ?? 0,
-                'total_served' => ($consumption->served_primary ?? 0) + ($consumption->served_middle ?? 0),
-                'pulses' => $breakdown['primary']['pulses'] + $breakdown['middle']['pulses'],
-                'vegetables' => $breakdown['primary']['vegetables'] + $breakdown['middle']['vegetables'],
-                'oil' => $breakdown['primary']['oil'] + $breakdown['middle']['oil'],
-                'salt_iodized' => $breakdown['primary']['salt_iodized'] + $breakdown['middle']['salt_iodized'],
-                'salt_non_iodized' => $breakdown['primary']['salt_non_iodized'] + $breakdown['middle']['salt_non_iodized'],
-                'fuel' => $breakdown['primary']['fuel'] + $breakdown['middle']['fuel'],
-                'total' => $breakdown['grandTotal'],
-            ];
-        }
-
-        return $records;
-    }
-
-    protected function calculateSaltBreakdownFromPercentages(float $totalSalt, array $percentages): array
+    /**
+     * Normalize salt percentages to ensure they sum to 100
+     */
+    private function normalizeSaltPercentages(array $percentages): array
     {
-        if ($totalSalt <= 0) {
+        $total = array_sum($percentages);
+        
+        if ($total == 0) {
             return [
-                'common_salt' => 0,
-                'chilli_powder' => 0,
-                'turmeric' => 0,
-                'coriander' => 0,
-                'other_condiments' => 0,
+                'common' => 30,
+                'chilli' => 20,
+                'turmeric' => 20,
+                'coriander' => 15,
+                'other' => 15,
             ];
         }
 
-        $percentages = $this->normalizeSaltPercentages($percentages);
-
-        $common = ($totalSalt * $percentages['common']) / 100;
-        $chilli = ($totalSalt * $percentages['chilli']) / 100;
-        $turmeric = ($totalSalt * $percentages['turmeric']) / 100;
-        $coriander = ($totalSalt * $percentages['coriander']) / 100;
-        $other = ($totalSalt * $percentages['other']) / 100;
-
-        return [
-            'common_salt' => round($common, 4),
-            'chilli_powder' => round($chilli, 4),
-            'turmeric' => round($turmeric, 4),
-            'coriander' => round($coriander, 4),
-            'other_condiments' => round($other, 4),
-        ];
-    }
-
-    protected function normalizeSaltPercentages(?array $percentages): array
-    {
-        $defaults = [
-            'common' => 30,
-            'chilli' => 20,
-            'turmeric' => 20,
-            'coriander' => 15,
-            'other' => 15,
-        ];
-
-        if (!$percentages) {
-            return $defaults;
+        if (abs($total - 100) > 0.01) {
+            // Normalize
+            foreach ($percentages as $key => $value) {
+                $percentages[$key] = ($value / $total) * 100;
+            }
         }
 
+        return $percentages;
+    }
+
+    /**
+     * Calculate salt breakdown from total salt and percentages
+     */
+    private function calculateSaltBreakdownFromPercentages(float $totalSalt, array $percentages): array
+    {
         return [
-            'common' => (float) ($percentages['common'] ?? $percentages['common_salt'] ?? $defaults['common']),
-            'chilli' => (float) ($percentages['chilli'] ?? $percentages['chilli_powder'] ?? $defaults['chilli']),
-            'turmeric' => (float) ($percentages['turmeric'] ?? $defaults['turmeric']),
-            'coriander' => (float) ($percentages['coriander'] ?? $defaults['coriander']),
-            'other' => (float) ($percentages['other'] ?? $percentages['other_condiments'] ?? $defaults['other']),
+            'common_salt' => ($totalSalt * $percentages['common']) / 100,
+            'chilli_powder' => ($totalSalt * $percentages['chilli']) / 100,
+            'turmeric' => ($totalSalt * $percentages['turmeric']) / 100,
+            'coriander' => ($totalSalt * $percentages['coriander']) / 100,
+            'other_condiments' => ($totalSalt * $percentages['other']) / 100,
         ];
     }
 }

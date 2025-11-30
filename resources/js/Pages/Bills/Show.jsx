@@ -13,17 +13,8 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function Show({ auth, bill, report, user }) {
-    const [showPreview, setShowPreview] = useState(false);
     const [showThemeOptions, setShowThemeOptions] = useState(false);
     const [previewTheme, setPreviewTheme] = useState('bw');
-    const [iframeKey, setIframeKey] = useState(0);
-
-    // Force iframe reload when theme changes
-    useEffect(() => {
-        if (showPreview) {
-            setIframeKey(prev => prev + 1);
-        }
-    }, [previewTheme, showPreview]);
 
     const handleDownloadPdf = (theme = 'bw') => {
         window.open(`/bills/${bill.id}/pdf?theme=${theme}&download=1`, '_blank');
@@ -38,13 +29,8 @@ export default function Show({ auth, bill, report, user }) {
     };
 
     const handleThemeSelect = (theme) => {
-        setPreviewTheme(theme);
+        window.open(`/bills/${bill.id}/pdf?theme=${theme}&preview=1`, '_blank');
         setShowThemeOptions(false);
-        setShowPreview(true);
-    };
-
-    const closePreview = () => {
-        setShowPreview(false);
     };
 
     const closeThemeOptions = () => {
@@ -394,101 +380,6 @@ export default function Show({ auth, bill, report, user }) {
                                     <h4 className="text-lg font-semibold text-gray-900 mb-1">Purple</h4>
                                     <p className="text-sm text-gray-500">Modern and elegant</p>
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* PDF Preview Modal */}
-            {showPreview && (
-                <div className="fixed inset-0 z-50 overflow-y-auto">
-                    <div className="flex min-h-screen items-center justify-center p-4">
-                        {/* Backdrop */}
-                        <div 
-                            className="fixed inset-0 bg-black bg-opacity-75 transition-opacity"
-                            onClick={closePreview}
-                        ></div>
-
-                        {/* Modal */}
-                        <div className="relative w-full max-w-6xl bg-white rounded-lg shadow-xl">
-                            {/* Header */}
-                            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-900">
-                                        PDF Preview: {bill.bill_number}
-                                    </h3>
-                                    <p className="text-sm text-gray-500 mt-1">
-                                        {bill.shop_name} - {bill.formatted_total}
-                                    </p>
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                    {/* Theme Selector */}
-                                    <select
-                                        value={previewTheme}
-                                        onChange={(e) => setPreviewTheme(e.target.value)}
-                                        className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    >
-                                        <option value="bw">Black & White</option>
-                                        <option value="blue">Blue</option>
-                                        <option value="green">Green</option>
-                                        <option value="purple">Purple</option>
-                                    </select>
-
-                                    {/* Print Button */}
-                                    <button
-                                        onClick={() => handlePrintPdf(previewTheme)}
-                                        className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                                    >
-                                        <PrinterIcon className="h-4 w-4 mr-2" />
-                                        Print
-                                    </button>
-
-                                    {/* Download Button */}
-                                    <button
-                                        onClick={() => handleDownloadPdf(previewTheme)}
-                                        className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                                    >
-                                        <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
-                                        Download
-                                    </button>
-
-                                    {/* Close Button */}
-                                    <button
-                                        onClick={closePreview}
-                                        className="text-gray-400 hover:text-gray-600"
-                                    >
-                                        <XMarkIcon className="h-6 w-6" />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* PDF Viewer */}
-                            <div className="p-4 bg-gray-100" style={{ height: '80vh' }}>
-                                <iframe
-                                    key={iframeKey}
-                                    src={`/bills/${bill.id}/pdf?theme=${previewTheme}&preview=1`}
-                                    className="w-full h-full rounded border-2 border-gray-300"
-                                    title={`PDF Preview: ${bill.bill_number}`}
-                                />
-                            </div>
-
-                            {/* Footer Info */}
-                            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 rounded-b-lg">
-                                <div className="flex items-center justify-between text-sm text-gray-600">
-                                    <div>
-                                        <span className="font-medium">Period:</span> {report.period}
-                                    </div>
-                                    <div>
-                                        <span className="font-medium">Items:</span> {bill.items.length}
-                                    </div>
-                                    <div>
-                                        <span className="font-medium">Total:</span> {bill.formatted_total}
-                                    </div>
-                                    <div>
-                                        <span className="font-medium">Theme:</span> {previewTheme.toUpperCase()}
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>

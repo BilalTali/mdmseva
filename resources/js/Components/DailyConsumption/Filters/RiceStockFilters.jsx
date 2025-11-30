@@ -2,16 +2,10 @@
 // Filter component for rice stock entries
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/Components/ui/card';
-import { Button } from '@/Components/ui/button';
-import { Input } from '@/Components/ui/input';
+import Button from '@/Components/ui/button';
+import Input from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/Components/ui/select';
+
 import {
     Search,
     Filter,
@@ -275,20 +269,17 @@ export default function RiceStockFilters({
                             {showStatus && (
                                 <div className="space-y-2">
                                     <Label htmlFor="status">Status</Label>
-                                    <Select
+                                    <select
+                                        id="status"
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                                         value={filters.status}
-                                        onValueChange={(value) => handleFilterChange('status', value)}
+                                        onChange={(e) => handleFilterChange('status', e.target.value)}
                                     >
-                                        <SelectTrigger id="status">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Statuses</SelectItem>
-                                            <SelectItem value="approved">Approved</SelectItem>
-                                            <SelectItem value="pending">Pending</SelectItem>
-                                            <SelectItem value="rejected">Rejected</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                        <option value="all">All Statuses</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="rejected">Rejected</option>
+                                    </select>
                                 </div>
                             )}
                         </div>

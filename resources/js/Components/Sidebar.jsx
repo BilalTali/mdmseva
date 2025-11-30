@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
+import AuthLogo from '@/Components/AuthLogo';
 
 export default function Sidebar({ currentRoute }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -79,17 +80,7 @@ export default function Sidebar({ currentRoute }) {
         <>
             {/* Sidebar Header */}
             <div className="p-6 border-b border-[var(--sidebar-border)] bg-gradient-to-r from-[var(--primary-600)] to-[var(--primary-700)]">
-                <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20 shadow-lg backdrop-blur-sm">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-white tracking-tight">MDM SEVA</h2>
-                        <p className="text-xs text-primary-100 font-medium opacity-90">School Management</p>
-                    </div>
-                </div>
+                <AuthLogo className="text-white" />
             </div>
 
             {/* Navigation */}
@@ -268,7 +259,7 @@ export default function Sidebar({ currentRoute }) {
                     {currentRoute && currentRoute.startsWith('daily-consumptions') && (
                         <div className="ml-8 mt-1 space-y-1 pl-3 border-l-2 border-[var(--primary-200)]">
                             <Link
-                                href={`${route('daily-consumptions.create')}?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`}
+                                href={route('daily-consumptions.create')}
                                 className="flex items-center px-3 py-1.5 text-xs text-[var(--primary-600)] hover:text-[var(--primary-800)] hover:bg-[var(--primary-50)] rounded transition-all"
                             >
                                 <svg className="w-3 h-3 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

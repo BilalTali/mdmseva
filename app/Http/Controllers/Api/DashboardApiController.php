@@ -6,8 +6,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\MonthlyRiceConfiguration;
-use App\Models\AmountConfiguration;
+use App\Models\MonthlyAmountConfiguration;
 use App\Models\DailyConsumption;
+use App\Services\ConsumptionCalculationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -47,27 +48,30 @@ class DashboardApiController extends Controller
     }
 
     /**
-     * Get rice configuration for user
+     * Get rice configuration for a specific period (month/year only)
+     * No fallback to latest/global config.
      */
-    private function getRiceConfiguration($userId)
+    private function getRiceConfiguration(int $userId, int $year, int $month): ?MonthlyRiceConfiguration
     {
-        return MonthlyRiceConfiguration::where('user_id', $userId)
-            ->latest()
+        return MonthlyRiceConfiguration::forUser($userId)
+            ->forPeriod($month, $year)
             ->first();
     }
 
     /**
-     * Get amount configuration for user
+     * Get amount configuration for a specific period (month/year only)
+     * No fallback to latest/global config.
      */
-    private function getAmountConfiguration($userId)
+    private function getAmountConfiguration(int $userId, int $year, int $month): ?MonthlyAmountConfiguration
     {
-        return AmountConfiguration::where('user_id', $userId)
+        return MonthlyAmountConfiguration::forUser($userId)
+            ->forPeriod($month, $year)
             ->first();
     }
 
     /**
-     * Calculate historical rice available for selected month
-     * Accounts for configuration date and consumption history
+     * Calculate rice available for the selected month only
+     * Uses month-specific configuration and consumption.
      */
     private function calculateRiceAvailable($riceConfig, $year, $month)
     {
@@ -75,40 +79,17 @@ class DashboardApiController extends Controller
             return 0;
         }
 
-        $schoolType = $riceConfig->school_type;
+        // Opening + lifted + arranged for both sections
+        $openingPrimary = ($riceConfig->opening_balance_primary ?? 0) + ($riceConfig->rice_lifted_primary ?? 0) + ($riceConfig->rice_arranged_primary ?? 0);
+        $openingUpper   = ($riceConfig->opening_balance_upper_primary ?? 0) + ($riceConfig->rice_lifted_upper_primary ?? 0) + ($riceConfig->rice_arranged_upper_primary ?? 0);
 
-        // Check if selected month is before configuration was set
-        if ($riceConfig->last_updated_year && $riceConfig->last_updated_month) {
-            $configDate = \Carbon\Carbon::create($riceConfig->last_updated_year, $riceConfig->last_updated_month, 1);
-            $selectedDate = \Carbon\Carbon::create($year, $month, 1);
-            
-            // If selected month is BEFORE configuration, return 0
-            if ($selectedDate->lt($configDate)) {
-                return 0;
-            }
-        }
+        // Consumed for this month only (already month-specific on config after sync)
+        $consumedPrimary = $riceConfig->consumed_primary ?? 0;
+        $consumedUpper   = $riceConfig->consumed_upper_primary ?? 0;
 
-        // Get initial balance based on school type
-        $initialBalance = 0;
-        if ($schoolType === 'primary') {
-            $initialBalance = $riceConfig->total_available_primary;
-        } elseif ($schoolType === 'middle') {
-            $initialBalance = $riceConfig->total_available_primary + $riceConfig->total_available_upper_primary;
-        } else {
-            $initialBalance = $riceConfig->total_available_primary;
-        }
+        $available = ($openingPrimary + $openingUpper) - ($consumedPrimary + $consumedUpper);
 
-        // Calculate total consumed UP TO the end of the selected month
-        $totalConsumedUpToMonth = DailyConsumption::where('user_id', $riceConfig->user_id)
-            ->where('date', '<=', \Carbon\Carbon::create($year, $month, 1)->endOfMonth())
-            ->get()
-            ->sum('total_rice');
-
-        // Available = Initial - All consumption up to this month
-        $riceAvailable = $initialBalance - $totalConsumedUpToMonth;
-        
-        // Ensure non-negative
-        return max(0, $riceAvailable);
+        return round($available, 2);
     }
 
     /**
@@ -162,20 +143,23 @@ class DashboardApiController extends Controller
     {
         try {
             $user = $request->user();
+            $enrollment = $user->getEnrollmentData();
+            $totalEnrolledStudents = ($enrollment['total'] ?? 0)
+                ?: (($enrollment['primary'] ?? 0) + ($enrollment['middle'] ?? 0));
             $period = $this->getPeriod($request, $user->id);
             $year = $period['year'];
             $month = $period['month'];
 
-            // Get configurations
-            $riceConfig = $this->getRiceConfiguration($user->id);
+            // Get configurations for selected period
+            $riceConfig = $this->getRiceConfiguration($user->id, $year, $month);
             
-            // Sync consumed amounts
+            // Sync consumed amounts using month-specific method on the model
             if ($riceConfig) {
-                $this->syncConsumedAmounts($riceConfig);
+                $riceConfig->syncConsumedFromDaily();
                 $riceConfig->refresh();
             }
             
-            $amountConfig = $this->getAmountConfiguration($user->id);
+            $amountConfig = $this->getAmountConfiguration($user->id, $year, $month);
 
             // Check if month is before configuration was set
             $isBeforeConfig = false;
@@ -193,6 +177,8 @@ class DashboardApiController extends Controller
                     'amount_spent' => 0,
                     'students_served' => 0,
                     'days_served' => 0,
+                    'total_students' => $totalEnrolledStudents,
+                    'student_serving_target' => 0,
                     'current_month' => $month,
                     'current_year' => $year,
                     'primary_rice_consumed' => 0,
@@ -222,6 +208,8 @@ class DashboardApiController extends Controller
                     'amount_spent' => 0,
                     'students_served' => 0,
                     'days_served' => 0,
+                    'total_students' => $totalEnrolledStudents,
+                    'student_serving_target' => 0,
                     'current_month' => $month,
                     'current_year' => $year,
                     'primary_rice_consumed' => 0,
@@ -238,12 +226,28 @@ class DashboardApiController extends Controller
             // Calculate historical rice available
             $riceAvailable = $this->calculateRiceAvailable($riceConfig, $year, $month);
 
+            // Total rice available for this month (opening + lifted + arranged)
+            $totalAvailablePrimary = ($riceConfig->opening_balance_primary ?? 0)
+                + ($riceConfig->rice_lifted_primary ?? 0)
+                + ($riceConfig->rice_arranged_primary ?? 0);
+            $totalAvailableUpper = ($riceConfig->opening_balance_upper_primary ?? 0)
+                + ($riceConfig->rice_lifted_upper_primary ?? 0)
+                + ($riceConfig->rice_arranged_upper_primary ?? 0);
+            $totalAvailable = $totalAvailablePrimary + $totalAvailableUpper;
+
+            // Calculate closing balance for selected month from configuration (current stock)
+            $closingBalance = ($riceConfig->closing_balance_primary ?? 0)
+                + ($riceConfig->closing_balance_upper_primary ?? 0);
+
             // Calculate totals
             $totalRiceConsumed = $dailyConsumptions->sum('total_rice');
             $totalStudentsServed = $dailyConsumptions->sum(function($consumption) {
                 return ($consumption->served_primary ?? 0) + ($consumption->served_middle ?? 0);
             });
             $daysOfService = $dailyConsumptions->count();
+            $studentServingTarget = $daysOfService > 0
+                ? $totalEnrolledStudents * $daysOfService
+                : $totalEnrolledStudents;
 
             // Calculate breakdown by section
             $primaryRiceConsumed = 0;
@@ -258,25 +262,33 @@ class DashboardApiController extends Controller
                 $primaryRiceConsumed += ($consumption->served_primary ?? 0) * 0.1;
                 $middleRiceConsumed += ($consumption->served_middle ?? 0) * 0.15;
 
-                if ($amountConfig) {
-                    $primaryAmount = ($consumption->served_primary ?? 0) * $amountConfig->total_daily_primary;
-                    $middleAmount = ($consumption->served_middle ?? 0) * $amountConfig->total_daily_middle;
-
-                    $primaryAmountSpent += $primaryAmount;
-                    $middleAmountSpent += $middleAmount;
-                    $totalAmountSpent += ($primaryAmount + $middleAmount);
-                }
-
                 $primaryStudentsServed += ($consumption->served_primary ?? 0);
                 $middleStudentsServed += ($consumption->served_middle ?? 0);
             }
 
+            if ($amountConfig) {
+                $calculationService = app(ConsumptionCalculationService::class);
+                $monthlyTotals = $calculationService->calculateMonthlyAmountTotals(
+                    $dailyConsumptions,
+                    $amountConfig,
+                    $user
+                );
+
+                $totalAmountSpent = $monthlyTotals['grand_total'] ?? 0;
+                $primaryAmountSpent = $monthlyTotals['total_primary_amount'] ?? 0;
+                $middleAmountSpent = $monthlyTotals['total_middle_amount'] ?? 0;
+            }
+
             return response()->json([
                 'rice_available' => round($riceAvailable, 2),
+                'total_available' => round($totalAvailable, 2),
+                'closing_balance' => round($closingBalance, 2),
                 'rice_consumed' => round($totalRiceConsumed, 2),
                 'amount_spent' => round($totalAmountSpent, 2),
                 'students_served' => $totalStudentsServed,
                 'days_served' => $daysOfService,
+                'total_students' => $totalEnrolledStudents,
+                'student_serving_target' => $studentServingTarget,
                 'current_month' => $month,
                 'current_year' => $year,
                 'primary_rice_consumed' => round($primaryRiceConsumed, 2),
@@ -310,15 +322,15 @@ class DashboardApiController extends Controller
             $year = $period['year'];
             $month = $period['month'];
 
-            // Get rice configuration
-            $riceConfig = $this->getRiceConfiguration($user->id);
+            // Get rice configuration for selected period
+            $riceConfig = $this->getRiceConfiguration($user->id, $year, $month);
 
             if (!$riceConfig) {
                 return response()->json([]);
             }
 
-            // Sync: Ensure data is up-to-date
-            $this->syncConsumedAmounts($riceConfig);
+            // Sync: Ensure data is up-to-date for this month
+            $riceConfig->syncConsumedFromDaily();
 
             // Get initial balance
             $initialBalance = $this->calculateInitialBalance($riceConfig);
@@ -378,8 +390,8 @@ class DashboardApiController extends Controller
             $year = $period['year'];
             $month = $period['month'];
 
-            // Get amount configuration
-            $amountConfig = $this->getAmountConfiguration($user->id);
+            // Get amount configuration for selected period
+            $amountConfig = $this->getAmountConfiguration($user->id, $year, $month);
 
             if (!$amountConfig) {
                 return response()->json([]);
@@ -398,26 +410,46 @@ class DashboardApiController extends Controller
                 $servedPrimary = $consumption->served_primary ?? 0;
                 $servedMiddle = $consumption->served_middle ?? 0;
 
-                // Calculate amounts based on sections
-                $primaryAmount = $servedPrimary * $amountConfig->total_daily_primary;
-                $middleAmount = $servedMiddle * $amountConfig->total_daily_middle;
+                // Calculate section totals using current monthly config
+                // Prefer precomputed daily_amount_per_student_* if present, otherwise
+                // fall back to summing component daily_* rates.
+                $primaryRate = ($amountConfig->daily_amount_per_student_primary ?? null);
+                if ($primaryRate === null) {
+                    $primaryRate = ($amountConfig->daily_pulses_primary ?? 0)
+                        + ($amountConfig->daily_vegetables_primary ?? 0)
+                        + ($amountConfig->daily_oil_primary ?? 0)
+                        + ($amountConfig->daily_salt_primary ?? 0)
+                        + ($amountConfig->daily_fuel_primary ?? 0);
+                }
+
+                $middleRate = ($amountConfig->daily_amount_per_student_upper_primary ?? null);
+                if ($middleRate === null) {
+                    $middleRate = ($amountConfig->daily_pulses_middle ?? 0)
+                        + ($amountConfig->daily_vegetables_middle ?? 0)
+                        + ($amountConfig->daily_oil_middle ?? 0)
+                        + ($amountConfig->daily_salt_middle ?? 0)
+                        + ($amountConfig->daily_fuel_middle ?? 0);
+                }
+
+                $primaryAmount = $servedPrimary * $primaryRate;
+                $middleAmount = $servedMiddle * $middleRate;
                 $totalAmount = $primaryAmount + $middleAmount;
 
                 // Break down by component
                 $primaryBreakdown = [
-                    'pulses' => $servedPrimary * $amountConfig->daily_pulses_primary,
-                    'vegetables' => $servedPrimary * $amountConfig->daily_vegetables_primary,
-                    'oil' => $servedPrimary * $amountConfig->daily_oil_primary,
-                    'salt' => $servedPrimary * $amountConfig->daily_salt_primary,
-                    'fuel' => $servedPrimary * $amountConfig->daily_fuel_primary,
+                    'pulses' => $servedPrimary * ($amountConfig->daily_pulses_primary ?? 0),
+                    'vegetables' => $servedPrimary * ($amountConfig->daily_vegetables_primary ?? 0),
+                    'oil' => $servedPrimary * ($amountConfig->daily_oil_primary ?? 0),
+                    'salt' => $servedPrimary * ($amountConfig->daily_salt_primary ?? 0),
+                    'fuel' => $servedPrimary * ($amountConfig->daily_fuel_primary ?? 0),
                 ];
 
                 $middleBreakdown = [
-                    'pulses' => $servedMiddle * $amountConfig->daily_pulses_middle,
-                    'vegetables' => $servedMiddle * $amountConfig->daily_vegetables_middle,
-                    'oil' => $servedMiddle * $amountConfig->daily_oil_middle,
-                    'salt' => $servedMiddle * $amountConfig->daily_salt_middle,
-                    'fuel' => $servedMiddle * $amountConfig->daily_fuel_middle,
+                    'pulses' => $servedMiddle * ($amountConfig->daily_pulses_middle ?? 0),
+                    'vegetables' => $servedMiddle * ($amountConfig->daily_vegetables_middle ?? 0),
+                    'oil' => $servedMiddle * ($amountConfig->daily_oil_middle ?? 0),
+                    'salt' => $servedMiddle * ($amountConfig->daily_salt_middle ?? 0),
+                    'fuel' => $servedMiddle * ($amountConfig->daily_fuel_middle ?? 0),
                 ];
 
                 $data[] = [
@@ -456,8 +488,8 @@ class DashboardApiController extends Controller
             $year = $period['year'];
             $month = $period['month'];
 
-            // Get amount configuration
-            $amountConfig = $this->getAmountConfiguration($user->id);
+            // Get amount configuration for selected period
+            $amountConfig = $this->getAmountConfiguration($user->id, $year, $month);
 
             if (!$amountConfig) {
                 return response()->json([
@@ -673,8 +705,8 @@ class DashboardApiController extends Controller
             $year = $period['year'];
             $month = $period['month'];
 
-            // Get amount configuration (may be null)
-            $amountConfig = $this->getAmountConfiguration($user->id);
+            // Get amount configuration for selected period (may be null)
+            $amountConfig = $this->getAmountConfiguration($user->id, $year, $month);
 
             // Get all consumptions for the selected month
             $consumptions = DailyConsumption::where('user_id', $user->id)
@@ -758,13 +790,18 @@ class DashboardApiController extends Controller
     {
         try {
             $user = $request->user();
-            
-            // Get rice configuration for rice stock
-            $riceConfig = $this->getRiceConfiguration($user->id);
+            $period = $this->getPeriod($request, $user->id);
+            $year = $period['year'];
+            $month = $period['month'];
+
+            // Get rice configuration for rice stock for selected period
+            $riceConfig = $this->getRiceConfiguration($user->id, $year, $month);
             $riceAvailable = 0;
             if ($riceConfig) {
-                $this->syncConsumedAmounts($riceConfig);
-                $riceAvailable = $riceConfig->closing_balance_primary + $riceConfig->closing_balance_upper_primary;
+                // Ensure month-specific totals are in sync
+                $riceConfig->syncConsumedFromDaily();
+                $riceAvailable = ($riceConfig->closing_balance_primary ?? 0)
+                    + ($riceConfig->closing_balance_upper_primary ?? 0);
             }
 
             // Mock data for other inventory items (you can replace with actual inventory models)
@@ -815,10 +852,10 @@ class DashboardApiController extends Controller
                 return response()->json([]);
             }
 
-            // Get total students enrolled (from rice config or assume 100 per section)
-            $riceConfig = $this->getRiceConfiguration($user->id);
-            $totalPrimaryStudents = 100; // Default assumption
-            $totalMiddleStudents = 100;  // Default assumption
+            // Get total students enrolled from user enrollment data
+            $enrollment = $user->getEnrollmentData();
+            $totalPrimaryStudents = (int) ($enrollment['primary'] ?? 0);
+            $totalMiddleStudents = (int) ($enrollment['middle'] ?? 0);
 
             $data = [];
 
@@ -827,6 +864,8 @@ class DashboardApiController extends Controller
                 $servedMiddle = $consumption->served_middle ?? 0;
                 $totalServed = $servedPrimary + $servedMiddle;
 
+                $totalStudents = $totalPrimaryStudents + $totalMiddleStudents;
+
                 // Calculate attendance rates (percentage)
                 $primaryRate = $totalPrimaryStudents > 0 
                     ? round(($servedPrimary / $totalPrimaryStudents) * 100, 1) 
@@ -834,8 +873,8 @@ class DashboardApiController extends Controller
                 $middleRate = $totalMiddleStudents > 0 
                     ? round(($servedMiddle / $totalMiddleStudents) * 100, 1) 
                     : 0;
-                $overallRate = ($totalPrimaryStudents + $totalMiddleStudents) > 0
-                    ? round(($totalServed / ($totalPrimaryStudents + $totalMiddleStudents)) * 100, 1)
+                $overallRate = $totalStudents > 0
+                    ? round(($totalServed / $totalStudents) * 100, 1)
                     : 0;
 
                 $data[] = [
@@ -844,6 +883,12 @@ class DashboardApiController extends Controller
                     'served_primary' => $servedPrimary,
                     'served_middle' => $servedMiddle,
                     'total_served' => $totalServed,
+                    // Fields expected by StudentAttendanceChart
+                    'total_students' => $totalStudents,
+                    'present_students' => $totalServed,
+                    'primary_present' => $servedPrimary,
+                    'middle_present' => $servedMiddle,
+                    // Precomputed rates for any consumers that use them
                     'primary_rate' => $primaryRate,
                     'middle_rate' => $middleRate,
                     'attendance_rate' => $overallRate,

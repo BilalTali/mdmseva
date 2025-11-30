@@ -78,10 +78,19 @@ return new class extends Migration
             $table->decimal('salt_percentage_coriander', 5, 2)->default(15.00);
             $table->decimal('salt_percentage_other', 5, 2)->default(15.00);
             
+            // ============ LOCK/UNLOCK TRACKING ============
+            $table->boolean('is_locked')->default(false);
+            $table->timestamp('locked_at')->nullable();
+            $table->foreignId('locked_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('lock_reason')->nullable();
+            $table->timestamp('unlocked_at')->nullable();
+            $table->foreignId('unlocked_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('unlock_reason')->nullable();
+            
             $table->timestamps();
             
             // Indexes
-            $table->unique('user_id', 'unique_user_config');
+            $table->unique(['user_id', 'year', 'month'], 'unique_user_config');
             $table->index(['year', 'month'], 'idx_year_month');
         });
 
@@ -123,8 +132,14 @@ return new class extends Migration
                   ->references('id')->on('monthly_amount_configurations')
                   ->nullOnDelete();
             
-            // Locking
+            // ============ LOCK/UNLOCK TRACKING ============
             $table->boolean('is_locked')->default(false);
+            $table->timestamp('locked_at')->nullable();
+            $table->foreignId('locked_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('lock_reason')->nullable();
+            $table->timestamp('unlocked_at')->nullable();
+            $table->foreignId('unlocked_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('unlock_reason')->nullable();
             
             $table->timestamps();
             

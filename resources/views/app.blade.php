@@ -30,7 +30,7 @@
         <link rel="canonical" href="{{ url()->current() }}">
 
         <!-- Favicon -->
-        <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
         <!-- Fonts - Temporarily disabled to test CSS transition parsing error -->
         <!-- <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -74,6 +74,8 @@ class RegisteredUserController extends Controller
                 'district_id' => $validated['district_id'],
                 'zone_id' => $validated['zone_id'],
                 'state' => $district?->state ?? $validated['state'],
+                'district' => $district?->name,
+                'zone' => $zone?->name,
                 
                 // Status (enum: active, inactive, pending)
                 'status' => 'active',

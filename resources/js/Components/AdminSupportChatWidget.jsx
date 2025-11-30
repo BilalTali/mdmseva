@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePage } from '@inertiajs/react';
-import { MessageCircle, X, Send, Minimize2, Smile, Paperclip, Check, CheckCheck, Search, MoreVertical, Archive, Mic } from 'lucide-react';
+import { MessageCircle, X, Send, Minimize2, Smile, Check, CheckCheck, Search, MoreVertical, Archive, Mic, Bot } from 'lucide-react';
 import axios from 'axios';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 import EmojiPicker from 'emoji-picker-react';
@@ -404,6 +404,18 @@ export default function AdminSupportChatWidget() {
 
     const selectedChat = chats.find(c => c.id === selectedChatId);
 
+    const disableAI = async () => {
+        if (!selectedChatId) return;
+        try {
+            await axios.post(`/api/admin/support-chat/${selectedChatId}/disable-ai`);
+            setChats(prev => prev.map(c =>
+                c.id === selectedChatId ? { ...c, ai_enabled: false } : c
+            ));
+        } catch (error) {
+            console.error('Failed to disable AI:', error);
+        }
+    };
+
     return (
         <>
             {!isOpen && (
@@ -503,8 +515,11 @@ export default function AdminSupportChatWidget() {
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center justify-between mb-1">
-                                                            <h4 className="font-semibold text-sm text-gray-900 truncate">
+                                                            <h4 className="font-semibold text-sm text-gray-900 truncate flex items-center">
                                                                 {chat.user?.name || 'Unknown User'}
+                                                                {chat.ai_enabled && (
+                                                                    <Bot className="w-3 h-3 ml-1 text-purple-500" />
+                                                                )}
                                                             </h4>
                                                             {chat.last_message_at && (
                                                                 <span className="text-xs text-gray-500 ml-2">
@@ -546,6 +561,16 @@ export default function AdminSupportChatWidget() {
                                                 </div>
                                             </div>
                                             <div className="flex items-center space-x-2">
+                                                {selectedChat.ai_enabled && (
+                                                    <button
+                                                        onClick={disableAI}
+                                                        className="px-3 py-1 bg-purple-100 text-purple-700 text-xs rounded-full hover:bg-purple-200 transition-colors mr-2 flex items-center"
+                                                        title="Disable AI and take over chat"
+                                                    >
+                                                        <Bot className="w-3 h-3 mr-1" />
+                                                        Take Over
+                                                    </button>
+                                                )}
                                                 <button className="p-2 hover:bg-gray-200 rounded-full transition-colors">
                                                     <MoreVertical className="w-5 h-5 text-gray-600" />
                                                 </button>
@@ -592,7 +617,7 @@ export default function AdminSupportChatWidget() {
 
                                                             <div className={`flex ${message.is_admin ? 'justify-end' : 'justify-start'} mb-1`}>
                                                                 <div
-                                                                    className={`max-w-[75%] rounded-lg px-3 py-2 shadow-sm relative ${message.is_admin
+                                                                    className={`max-w-[75%] rounded-lg px-4 py-3 shadow-sm relative ${message.is_admin
                                                                         ? 'bg-[#d9fdd3]'
                                                                         : 'bg-white'
                                                                         } ${message.temp ? 'opacity-60' : ''}`}
@@ -659,9 +684,14 @@ export default function AdminSupportChatWidget() {
                                                                         message.attachments.length > 0 &&
                                                                         message.message === message.attachments[0].file_name
                                                                     ) && (
-                                                                        <p className="text-sm text-gray-900 break-words">{message.message}</p>
-                                                                    )}
+                                                                            <p className="text-sm text-gray-900 break-words">{message.message}</p>
+                                                                        )}
                                                                     <div className={`flex items-center justify-end space-x-1 mt-1 ${message.is_admin ? 'text-gray-600' : 'text-gray-400'}`}>
+                                                                        {message.is_ai_generated && (
+                                                                            <span className="bg-purple-100 text-purple-700 text-[10px] font-medium px-1.5 py-0.5 rounded mr-1 border border-purple-200 flex items-center">
+                                                                                <Bot className="w-3 h-3 mr-1" /> AI
+                                                                            </span>
+                                                                        )}
                                                                         <span className="text-[10px]">
                                                                             {formatMessageTime(message.created_at)}
                                                                         </span>
@@ -755,20 +785,6 @@ export default function AdminSupportChatWidget() {
                                                     className="p-2 text-gray-500 hover:text-[#00a884] rounded-full hover:bg-gray-100 transition-colors"
                                                 >
                                                     <Smile className="w-5 h-5" />
-                                                </button>
-                                                <input
-                                                    ref={fileInputRef}
-                                                    type="file"
-                                                    onChange={handleFileSelect}
-                                                    accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-                                                    className="hidden"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                    className="p-2 text-gray-500 hover:text-[#00a884] rounded-full hover:bg-gray-100 transition-colors"
-                                                >
-                                                    <Paperclip className="w-5 h-5" />
                                                 </button>
                                                 <button
                                                     type="button"

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\DailyConsumption;
 use App\Models\MonthlyRiceConfiguration;
 use App\Models\MonthlyAmountConfiguration;
-use App\Models\AmountConfiguration;
 use App\Services\ConsumptionCalculationService;
 use App\Http\Requests\DailyConsumptionRequest;
 use Illuminate\Http\Request;
@@ -26,6 +25,7 @@ use Carbon\Carbon;
  * 2. Implemented month-based filtering for all calculations
  * 3. Added automatic redirection to configuration workflow if not completed
  * 4. Updated balance calculations to use only current month's data
+ * 5. ✅ UPDATED: Uses MonthlyAmountConfiguration instead of AmountConfiguration
  */
 class DailyConsumptionController extends Controller
 {
@@ -181,9 +181,6 @@ class DailyConsumptionController extends Controller
     /**
      * ✅ NEW: Display daily consumption list for selected month
      */
-    /**
-     * ✅ NEW: Display daily consumption list for selected month
-     */
     public function list(Request $request): Response|RedirectResponse
     {
         $month = (int) $request->input('month', now()->month);
@@ -249,9 +246,16 @@ class DailyConsumptionController extends Controller
             $ricePrimary = $servedPrimary * $primaryRiceRate;
             $riceMiddle = $servedMiddle * $middleRiceRate;
             $riceConsumed = $ricePrimary + $riceMiddle;
-            
+
+            $primaryAmount = 0;
+            $middleAmount = 0;
+            if ($amountConfig) {
+                $primaryAmount = $servedPrimary * ($amountConfig->daily_amount_per_student_primary ?? 0);
+                $middleAmount = $servedMiddle * ($amountConfig->daily_amount_per_student_upper_primary ?? 0);
+            }
+
             $runningBalance -= $riceConsumed;
-            
+
             $consumptionDetails[] = [
                 'id' => $consumption->id,
                 'date' => $consumption->date->format('Y-m-d'),
@@ -265,6 +269,8 @@ class DailyConsumptionController extends Controller
                 'rice_consumed' => round($riceConsumed, 2),
                 'rice_balance' => round($runningBalance, 2),
                 'amount_consumed' => $consumption->amount_consumed ?? 0,
+                'amount_primary' => round($primaryAmount, 2),
+                'amount_middle' => round($middleAmount, 2),
                 'remarks' => $consumption->remarks,
             ];
         }
@@ -273,7 +279,9 @@ class DailyConsumptionController extends Controller
         $totalPrimaryStudents = $consumptions->sum('served_primary');
         $totalMiddleStudents = $consumptions->sum('served_middle');
         $totalRiceConsumed = collect($consumptionDetails)->sum('rice_consumed');
-        $totalAmountConsumed = $consumptions->sum('amount_consumed');
+        $totalAmountPrimary = collect($consumptionDetails)->sum('amount_primary');
+        $totalAmountMiddle = collect($consumptionDetails)->sum('amount_middle');
+        $totalAmountConsumed = $totalAmountPrimary + $totalAmountMiddle;
         $closingBalance = $openingBalance - $totalRiceConsumed;
 
         return Inertia::render('DailyConsumption/Index', [
@@ -290,16 +298,25 @@ class DailyConsumptionController extends Controller
             'totalMiddleStudents' => $totalMiddleStudents,
             'totalStudents' => $totalPrimaryStudents + $totalMiddleStudents,
             'totalRiceConsumed' => round($totalRiceConsumed, 2),
+            'totalAmountPrimary' => round($totalAmountPrimary, 2),
+            'totalAmountMiddle' => round($totalAmountMiddle, 2),
             'totalAmountConsumed' => round($totalAmountConsumed, 2),
             'totalDays' => $consumptions->count(),
             'primaryRiceRate' => $primaryRiceRate,
             'middleRiceRate' => $middleRiceRate,
+            'primaryAmountRate' => optional($amountConfig)->daily_amount_per_student_primary ?? 0,
+            'middleAmountRate' => optional($amountConfig)->daily_amount_per_student_upper_primary ?? 0,
+            'riceConfig' => $riceConfig ? [
+                'is_completed' => (bool) $riceConfig->is_completed,
+                'is_locked' => (bool) $riceConfig->is_locked,
+                'completed_at' => optional($riceConfig->completed_at)?->toIso8601String(),
+            ] : null,
+            'amountConfig' => $amountConfig ? [
+                'is_completed' => (bool) $amountConfig->is_completed,
+            ] : null,
         ]);
     }
 
-    /**
-     * ✅ UPDATED: Create form - Added configuration check
-     */
     /**
      * ✅ UPDATED: Create form - Added configuration check
      */
@@ -353,18 +370,28 @@ class DailyConsumptionController extends Controller
 
         $previousDate = $lastConsumption ? $lastConsumption->date->format('Y-m-d') : null;
 
-        // Fetch AmountConfiguration for detailed rates
-        $amountConfig = AmountConfiguration::where('user_id', $user->id)
+        // Fetch MonthlyAmountConfiguration for detailed rates
+        $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)
             ->where('month', $period['month'])
             ->where('year', $period['year'])
             ->first();
             
         // Fallback to latest if specific month not found
         if (!$amountConfig) {
-            $amountConfig = AmountConfiguration::where('user_id', $user->id)->latest()->first();
+            $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)->latest()->first();
         }
 
         $amountRates = $this->getAmountRatesArray($amountConfig);
+
+        // Fetch existing consumption dates for this month to highlight in calendar
+        $existingDates = DailyConsumption::where('user_id', $user->id)
+            ->whereMonth('date', $period['month'])
+            ->whereYear('date', $period['year'])
+            ->pluck('date')
+            ->map(function ($date) {
+                return $date->format('j'); // Return just the day number (1-31)
+            })
+            ->toArray();
 
         return Inertia::render('DailyConsumption/Create', [
             'sections' => $sections,
@@ -379,12 +406,10 @@ class DailyConsumptionController extends Controller
             ],
             'currentMonth' => $period['month'],
             'currentYear' => $period['year'],
+            'existingDates' => $existingDates, // Pass existing dates to view
         ]);
     }
 
-    /**
-     * ✅ UPDATED: Store - Added configuration check and month validation
-     */
     /**
      * ✅ UPDATED: Store - Added configuration check and month validation
      */
@@ -422,48 +447,51 @@ class DailyConsumptionController extends Controller
         $riceCalc = $this->calculateRiceConsumptionWithConfig($user, $servedPrimary, $servedMiddle, $consumptionDate);
 
         $availableStock = $this->calculationService->getAvailableStockAtDate($user, $validated['date']);
+        $riceBalanceAfter = !is_null($availableStock)
+            ? round($availableStock - $riceCalc['total'], 2)
+            : null;
         
-        // Fetch AmountConfiguration for detailed calculation
-        $amountConfig = AmountConfiguration::where('user_id', $user->id)
+        // Fetch MonthlyAmountConfiguration for detailed calculation
+        $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)
             ->where('month', $consumptionDate->month)
             ->where('year', $consumptionDate->year)
             ->first();
             
         if (!$amountConfig) {
-            $amountConfig = AmountConfiguration::where('user_id', $user->id)->latest()->first();
+            $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)->latest()->first();
         }
 
         $amountBreakdown = $amountConfig 
             ? $this->calculationService->calculateAmountConsumption($servedPrimary, $servedMiddle, $amountConfig)
             : null;
 
-        // ✅ UPDATED: Allow negative balance
-        $riceBalanceAfter = $availableStock - $riceCalc['total'];
-
         DailyConsumption::create([
             'user_id' => $user->id,
             'date' => $validated['date'],
-            'day' => \Carbon\Carbon::parse($validated['date'])->format('l'),
+            'day' => $consumptionDate->format('l'),
             'served_primary' => $servedPrimary,
             'served_middle' => $servedMiddle,
             'rice_consumed' => $riceCalc['total'],
-            'rice_balance_after' => $riceBalanceAfter, // Can be negative
-            'amount_consumed' => $amountBreakdown ? $amountBreakdown['grandTotal'] : 0,
+            'rice_balance_after' => $riceBalanceAfter,
+            'amount_consumed' => $amountBreakdown['grandTotal'] ?? 0,
             'remarks' => $validated['remarks'] ?? null,
         ]);
 
-        // Update rice configuration and monthly configuration balances
-        $this->updateRiceConfigurationBalances($user, $consumptionDate->month, $consumptionDate->year);
+        // ✅ Sync consumed amounts to rice configuration
+        $riceConfig = MonthlyRiceConfiguration::forUser($user->id)
+            ->forPeriod($consumptionDate->month, $consumptionDate->year)
+            ->first();
+        if ($riceConfig) {
+            $riceConfig->syncConsumedFromDaily();
+            $riceConfig->save();
+        }
         $this->recalculateSubsequentBalances($user, \Carbon\Carbon::parse($validated['date']));
 
         return redirect()
-            ->route('daily-consumptions.list', ['month' => $consumptionDate->month, 'year' => $consumptionDate->year])
-            ->with('success', 'Daily consumption record created successfully.');
+            ->route('daily-consumptions.create', ['month' => $consumptionDate->month, 'year' => $consumptionDate->year])
+            ->with('success', 'Daily consumption record created successfully!');
     }
 
-    /**
-     * Edit form
-     */
     /**
      * Edit form
      */
@@ -491,14 +519,14 @@ class DailyConsumptionController extends Controller
 
         $previousDate = $previousConsumption ? $previousConsumption->date->format('Y-m-d') : null;
 
-        // Fetch AmountConfiguration for detailed rates
-        $amountConfig = AmountConfiguration::where('user_id', $user->id)
+        // Fetch MonthlyAmountConfiguration for detailed rates
+        $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)
             ->where('month', $dailyConsumption->date->month)
             ->where('year', $dailyConsumption->date->year)
             ->first();
             
         if (!$amountConfig) {
-            $amountConfig = AmountConfiguration::where('user_id', $user->id)->latest()->first();
+            $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)->latest()->first();
         }
             
         $amountRates = $this->getAmountRatesArray($amountConfig);
@@ -530,10 +558,6 @@ class DailyConsumptionController extends Controller
         ]);
     }
 
-    /**
-     * ✅ UPDATED: Update - Removed insufficient stock validation
-     * and moved validation rules into DailyConsumptionRequest
-     */
     /**
      * ✅ UPDATED: Update - Removed insufficient stock validation
      * and moved validation rules into DailyConsumptionRequest
@@ -572,14 +596,14 @@ class DailyConsumptionController extends Controller
             false
         );
 
-        // Fetch AmountConfiguration for detailed calculation
-        $amountConfig = AmountConfiguration::where('user_id', $user->id)
+        // Fetch MonthlyAmountConfiguration for detailed calculation
+        $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)
             ->where('month', $consumptionDate->month)
             ->where('year', $consumptionDate->year)
             ->first();
             
         if (!$amountConfig) {
-            $amountConfig = AmountConfiguration::where('user_id', $user->id)->latest()->first();
+            $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)->latest()->first();
         }
             
         $amountBreakdown = $amountConfig 
@@ -600,7 +624,14 @@ class DailyConsumptionController extends Controller
             'remarks' => $validated['remarks'] ?? null,
         ]);
 
-        $this->updateRiceConfigurationBalances($user, $consumptionDate->month, $consumptionDate->year);
+        // ✅ Sync consumed amounts to rice configuration
+        $riceConfig = MonthlyRiceConfiguration::forUser($user->id)
+            ->forPeriod($consumptionDate->month, $consumptionDate->year)
+            ->first();
+        if ($riceConfig) {
+            $riceConfig->syncConsumedFromDaily();
+            $riceConfig->save();
+        }
         $this->recalculateSubsequentBalances($user, $dailyConsumption->date);
 
         return redirect()
@@ -608,9 +639,6 @@ class DailyConsumptionController extends Controller
             ->with('success', 'Daily consumption record updated successfully.');
     }
 
-    /**
-     * Remove a consumption record
-     */
     /**
      * Remove a consumption record
      */
@@ -626,7 +654,14 @@ class DailyConsumptionController extends Controller
 
         $dailyConsumption->delete();
 
-        $this->updateRiceConfigurationBalances($user, $deletedDate->month, $deletedDate->year);
+        // ✅ Sync consumed amounts to rice configuration
+        $riceConfig = MonthlyRiceConfiguration::forUser($user->id)
+            ->forPeriod($deletedDate->month, $deletedDate->year)
+            ->first();
+        if ($riceConfig) {
+            $riceConfig->syncConsumedFromDaily();
+            $riceConfig->save();
+        }
         $this->recalculateSubsequentBalances($user, $deletedDate);
 
         return redirect()
@@ -634,57 +669,7 @@ class DailyConsumptionController extends Controller
             ->with('success', 'Daily consumption record deleted successfully.');
     }
 
-    /**
-     * ✅ UPDATED: Update rice configuration balances - NOW USES MONTH-BASED FILTERING
-     * This is a CRITICAL FIX - previously summed ALL historical records
-     */
-    /**
-     * ✅ UPDATED: Update rice configuration balances - NOW USES MONTH-BASED FILTERING
-     * This is a CRITICAL FIX - previously summed ALL historical records
-     */
-    protected function updateRiceConfigurationBalances($user, int $month, int $year): void
-    {
-        $riceConfig = MonthlyRiceConfiguration::forUser($user->id)
-            ->forPeriod($month, $year)
-            ->first();
 
-        if (!$riceConfig) {
-            return;
-        }
-
-        $primaryRate = $riceConfig->daily_consumption_primary / 1000;
-        $middleRate = $riceConfig->daily_consumption_upper_primary / 1000;
-
-        // ✅ CRITICAL FIX: Filter by specific month and year instead of ALL records
-        $totalConsumedPrimary = DailyConsumption::where('user_id', $user->id)
-            ->whereYear('date', $year)
-            ->whereMonth('date', $month)
-            ->selectRaw('SUM(served_primary * ?) as total', [$primaryRate])
-            ->value('total') ?? 0;
-
-        $totalConsumedMiddle = DailyConsumption::where('user_id', $user->id)
-            ->whereYear('date', $year)
-            ->whereMonth('date', $month)
-            ->selectRaw('SUM(served_middle * ?) as total', [$middleRate])
-            ->value('total') ?? 0;
-
-        $riceConfig->consumed_primary = round($totalConsumedPrimary, 2);
-        $riceConfig->consumed_upper_primary = round($totalConsumedMiddle, 2);
-
-        // Recalculate closing balances
-        $totalAvailablePrimary = $riceConfig->opening_balance_primary + 
-            $riceConfig->rice_lifted_primary + 
-            $riceConfig->rice_arranged_primary;
-            
-        $totalAvailableUpperPrimary = $riceConfig->opening_balance_upper_primary + 
-            $riceConfig->rice_lifted_upper_primary + 
-            $riceConfig->rice_arranged_upper_primary;
-
-        $riceConfig->closing_balance_primary = round($totalAvailablePrimary - $riceConfig->consumed_primary, 2);
-        $riceConfig->closing_balance_upper_primary = round($totalAvailableUpperPrimary - $riceConfig->consumed_upper_primary, 2);
-
-        $riceConfig->save();
-    }
 
     /**
      * ✅ UPDATED: Recalculate balances - Allow negative values
@@ -719,9 +704,6 @@ class DailyConsumptionController extends Controller
     /**
      * Calculate rice consumption using configured rates
      */
-    /**
-     * Calculate rice consumption using configured rates
-     */
     protected function calculateRiceConsumptionWithConfig($user, int $servedPrimary, int $servedMiddle, ?Carbon $date = null): array
     {
         if (!$date) {
@@ -753,7 +735,7 @@ class DailyConsumptionController extends Controller
     /**
      * Get amount rates array from configuration
      */
-    protected function getAmountRatesArray(?AmountConfiguration $amountConfig): ?array
+    protected function getAmountRatesArray(?MonthlyAmountConfiguration $amountConfig): ?array
     {
         if (!$amountConfig) {
             return null;
@@ -764,33 +746,41 @@ class DailyConsumptionController extends Controller
         $saltMiddle = $amountConfig->daily_salt_middle ?? 0;
 
         // Helper to safely get percentage
-        $getPct = fn($key) => $amountConfig->$key ?? 0;
+        $getPercent = fn($key) => ($amountConfig->{$key} ?? 0) / 100;
 
         return [
             'primary' => [
                 'pulses' => $amountConfig->daily_pulses_primary,
                 'vegetables' => $amountConfig->daily_vegetables_primary,
                 'oil' => $amountConfig->daily_oil_primary,
+                'salt' => $saltPrimary,
                 'fuel' => $amountConfig->daily_fuel_primary,
-                // Breakdown
-                'common_salt' => round($saltPrimary * $getPct('salt_percentage_common') / 100, 4),
-                'chilli_powder' => round($saltPrimary * $getPct('salt_percentage_chilli') / 100, 4),
-                'turmeric' => round($saltPrimary * $getPct('salt_percentage_turmeric') / 100, 4),
-                'coriander' => round($saltPrimary * $getPct('salt_percentage_coriander') / 100, 4),
-                'other_condiments' => round($saltPrimary * $getPct('salt_percentage_other') / 100, 4),
+                'total' => $amountConfig->daily_amount_per_student_primary,
+                // Salt breakdown
+                'salt_breakdown' => [
+                    'common' => round($saltPrimary * $getPercent('salt_percentage_common'), 3),
+                    'chilli' => round($saltPrimary * $getPercent('salt_percentage_chilli'), 3),
+                    'turmeric' => round($saltPrimary * $getPercent('salt_percentage_turmeric'), 3),
+                    'coriander' => round($saltPrimary * $getPercent('salt_percentage_coriander'), 3),
+                    'other' => round($saltPrimary * $getPercent('salt_percentage_other'), 3),
+                ]
             ],
             'middle' => [
                 'pulses' => $amountConfig->daily_pulses_middle,
                 'vegetables' => $amountConfig->daily_vegetables_middle,
                 'oil' => $amountConfig->daily_oil_middle,
+                'salt' => $saltMiddle,
                 'fuel' => $amountConfig->daily_fuel_middle,
-                // Breakdown
-                'common_salt' => round($saltMiddle * $getPct('salt_percentage_common') / 100, 4),
-                'chilli_powder' => round($saltMiddle * $getPct('salt_percentage_chilli') / 100, 4),
-                'turmeric' => round($saltMiddle * $getPct('salt_percentage_turmeric') / 100, 4),
-                'coriander' => round($saltMiddle * $getPct('salt_percentage_coriander') / 100, 4),
-                'other_condiments' => round($saltMiddle * $getPct('salt_percentage_other') / 100, 4),
-            ],
+                'total' => $amountConfig->daily_amount_per_student_upper_primary,
+                // Salt breakdown
+                'salt_breakdown' => [
+                    'common' => round($saltMiddle * $getPercent('salt_percentage_common'), 3),
+                    'chilli' => round($saltMiddle * $getPercent('salt_percentage_chilli'), 3),
+                    'turmeric' => round($saltMiddle * $getPercent('salt_percentage_turmeric'), 3),
+                    'coriander' => round($saltMiddle * $getPercent('salt_percentage_coriander'), 3),
+                    'other' => round($saltMiddle * $getPercent('salt_percentage_other'), 3),
+                ]
+            ]
         ];
     }
 }

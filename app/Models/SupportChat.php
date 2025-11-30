@@ -27,10 +27,14 @@ class SupportChat extends Model
         'status',
         'assigned_to',
         'last_message_at',
+        'ai_enabled',
+        'last_human_admin_at',
     ];
 
     protected $casts = [
         'last_message_at' => 'datetime',
+        'ai_enabled' => 'boolean',
+        'last_human_admin_at' => 'datetime',
     ];
 
     /**
@@ -136,5 +140,34 @@ class SupportChat extends Model
     public function reopen(): void
     {
         $this->update(['status' => 'open']);
+    }
+
+    /**
+     * Check if AI should respond to this chat
+     */
+    public function shouldAIRespond(): bool
+    {
+        $config = AIConfiguration::current();
+        
+        return $this->ai_enabled 
+            && $config->is_enabled 
+            && $config->auto_respond
+            && !$this->hasHumanAdminResponded();
+    }
+
+    /**
+     * Check if a human admin has taken over this chat
+     */
+    public function hasHumanAdminResponded(): bool
+    {
+        return $this->last_human_admin_at !== null;
+    }
+
+    /**
+     * Disable AI for this chat (admin takeover)
+     */
+    public function disableAI(): void
+    {
+        $this->update(['last_human_admin_at' => now()]);
     }
 }

@@ -231,7 +231,7 @@ export default function Edit({ mustVerifyEmail, status, user, states, districts,
                                             <TextInput
                                                 id="udise"
                                                 className="mt-1 block w-full bg-gray-100 dark:bg-gray-800"
-                                                value={user.udise || 'Not Set'}
+                                                value={user.udise_code || 'Not Set'}
                                                 disabled
                                                 readOnly
                                             />

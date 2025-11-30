@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\RiceReport;
 use App\Models\RollStatement;
 use App\Models\MonthlyRiceConfiguration;
+use App\Models\RiceInventoryActivity;
 use App\Services\RiceReportService;
 use App\Services\ConsumptionCalculationService;
 use Illuminate\Http\Request;
@@ -72,24 +73,68 @@ class RiceReportController extends Controller
      * 
      * GET /rice-reports
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $user = Auth::user();
+        
+        // Get month/year from query params or default to current month
+        $selectedMonth = (int) ($request->query('month') ?? now()->month);
+        $selectedYear = (int) ($request->query('year') ?? now()->year);
+        
+        // Verify the selected month has a rice configuration
+        $riceConfig = MonthlyRiceConfiguration::where('user_id', $user->id)
+            ->where('month', $selectedMonth)
+            ->where('year', $selectedYear)
+            ->first();
+        
+        // If no config for selected month, fall back to most recent month with data
+        if (!$riceConfig) {
+            $latestConfig = MonthlyRiceConfiguration::where('user_id', $user->id)
+                ->whereHas('dailyConsumptions') // Only months with consumption data
+                ->latest('year')
+                ->latest('month')
+                ->first();
+            
+            if ($latestConfig) {
+                $selectedMonth = $latestConfig->month;
+                $selectedYear = $latestConfig->year;
+                $riceConfig = $latestConfig;
+            }
+        }
+        
+        // Get list of available months for selector
+        $availableMonths = MonthlyRiceConfiguration::where('user_id', $user->id)
+            ->select('month', 'year')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get()
+            ->map(function($config) {
+                return [
+                    'month' => $config->month,
+                    'year' => $config->year,
+                    'label' => date('F Y', mktime(0, 0, 0, $config->month, 1, $config->year))
+                ];
+            });
         
         // Use RiceReportService for report data
         $reports = $this->reportService->getAllReports($user);
         $overallStats = $this->reportService->getOverallStatistics($user);
         
-        // Use ConsumptionCalculationService for live consumption data
-        $summary = $this->calculationService->getSummary($user);
-        $availableStock = $this->calculationService->getAvailableStock($user);
+        // Use getMonthSummary for selected month
+        $summary = $this->calculationService->getMonthSummary($user, $selectedMonth, $selectedYear);
+        
+        // Calculate available stock for selected month
+        $availableStock = $riceConfig 
+            ? round(
+                ($riceConfig->closing_balance_primary ?? 0) + 
+                ($riceConfig->closing_balance_upper_primary ?? 0),
+                2
+            )
+            : 0;
         
         // Get required sections and enrollment
         $sections = $user->getRequiredSections();
         $enrollment = $user->getEnrollmentData();
-        
-        // Get rice configuration
-        $riceConfig = MonthlyRiceConfiguration::where('user_id', $user->id)->latest()->first();
         
         // Get roll statements
         $rollStatements = $this->getLatestRollStatements($user);
@@ -101,6 +146,7 @@ class RiceReportController extends Controller
             'enrollment' => $enrollment,
             'availableStock' => $availableStock,
             'rollStatements' => $rollStatements,
+            'availableMonths' => $availableMonths, // NEW
             
             // Merged statistics from both services
             'statistics' => [
@@ -156,6 +202,10 @@ class RiceReportController extends Controller
                 'primary' => 0.1,
                 'middle' => 0.15,
             ],
+            
+            // Selected month/year for context (latest month with data)
+            'currentMonth' => $selectedMonth,
+            'currentYear' => $selectedYear,
         ]);
     }
 
@@ -164,9 +214,13 @@ class RiceReportController extends Controller
      * 
      * GET /rice-reports/create
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         $user = Auth::user();
+        
+        // Get month/year from query params or default to current month
+        $selectedMonth = (int) ($request->query('month') ?? now()->month);
+        $selectedYear = (int) ($request->query('year') ?? now()->year);
         
         // Check rice configuration
         $riceConfig = MonthlyRiceConfiguration::where('user_id', $user->id)->latest()->first();
@@ -181,8 +235,8 @@ class RiceReportController extends Controller
         $monthsWithData = $this->reportService->getMonthsWithConsumptionData($user);
         
         return Inertia::render('RiceReport/Create', [
-            'currentMonth' => now()->month,
-            'currentYear' => now()->year,
+            'currentMonth' => $selectedMonth,
+            'currentYear' => $selectedYear,
             'schoolType' => $user->school_type,
             'availableMonths' => $availableMonths,
             'monthsWithData' => $monthsWithData,
@@ -245,6 +299,42 @@ class RiceReportController extends Controller
                 $validated['year']
             );
             
+            // Get rice configuration for this month
+            $riceConfig = MonthlyRiceConfiguration::forUser($user->id)
+                ->forPeriod($validated['month'], $validated['year'])
+                ->first();
+            
+            if ($riceConfig) {
+                // Calculate next month
+                $nextMonth = $validated['month'] == 12 ? 1 : $validated['month'] + 1;
+                $nextYear = $validated['month'] == 12 ? $validated['year'] + 1 : $validated['year'];
+                
+                // Check if next month config exists
+                $nextMonthExists = MonthlyRiceConfiguration::forUser($user->id)
+                    ->forPeriod($nextMonth, $nextYear)
+                    ->exists();
+                
+                // Pass carryforward information to frontend
+                if (!$nextMonthExists) {
+                    return redirect()
+                        ->route('rice-reports.view-pdf', $report->id)
+                        ->with('success', "Report generated successfully for {$report->period}")
+                        ->with('can_carryforward', true)
+                        ->with('closing_balance', [
+                            'primary' => $riceConfig->closing_balance_primary,
+                            'upper_primary' => $riceConfig->closing_balance_upper_primary,
+                            'total' => $riceConfig->closing_balance_primary + $riceConfig->closing_balance_upper_primary
+                        ])
+                        ->with('next_month_info', [
+                            'month' => $nextMonth,
+                            'year' => $nextYear,
+                            'current_month' => $validated['month'],
+                            'current_year' => $validated['year']
+                        ])
+                        ->with('report_id', $report->id);
+                }
+            }
+            
             return redirect()
                 ->route('rice-reports.view-pdf', $report->id)
                 ->with('success', "Report generated successfully for {$report->period}");
@@ -282,12 +372,22 @@ class RiceReportController extends Controller
         
         $user = Auth::user();
         
-        // Use ConsumptionCalculationService for live statistics
-        $availableStock = $this->calculationService->getAvailableStock($user);
-        $summary = $this->calculationService->getSummary($user);
+        // ✅ FIX: Use getMonthSummary for THIS REPORT'S month, not ->latest()
+        $summary = $this->calculationService->getMonthSummary($user, $report->month, $report->year);
         
-        // Get rice configuration
-        $riceConfig = MonthlyRiceConfiguration::where('user_id', $user->id)->latest()->first();
+        // Get rice configuration for THIS report's month
+        $riceConfig = MonthlyRiceConfiguration::forUser($user->id)
+            ->forPeriod($report->month, $report->year)
+            ->first();
+        
+        // Calculate available stock for THIS report's month
+        $availableStock = $riceConfig 
+            ? round(
+                ($riceConfig->closing_balance_primary ?? 0) + 
+                ($riceConfig->closing_balance_upper_primary ?? 0),
+                2
+            )
+            : 0;
         
         // Get all reports for navigation dropdown
         $allReports = RiceReport::forUser($user->id)
@@ -303,6 +403,38 @@ class RiceReportController extends Controller
             });
         
         $dailyRecords = $this->ensureDailyRiceValues($report, $user);
+
+        // CHECK FOR CARRYFORWARD AVAILABILITY (always, not just from flash)
+        $canCarryforward = false;
+        $closingBalance = null;
+        $nextMonthInfo = null;
+        
+        if ($riceConfig) {
+            // Calculate next month
+            $nextMonth = $report->month == 12 ? 1 : $report->month + 1;
+            $nextYear = $report->month == 12 ? $report->year + 1 : $report->year;
+            
+            // Check if next month config exists
+            $nextMonthExists = MonthlyRiceConfiguration::forUser($user->id)
+                ->forPeriod($nextMonth, $nextYear)
+                ->exists();
+            
+            // Only show carryforward if next month doesn't exist
+            if (!$nextMonthExists) {
+                $canCarryforward = true;
+                $closingBalance = [
+                    'primary' => (float) $riceConfig->closing_balance_primary,
+                    'upper_primary' => (float) $riceConfig->closing_balance_upper_primary,
+                    'total' => (float) ($riceConfig->closing_balance_primary + $riceConfig->closing_balance_upper_primary)
+                ];
+                $nextMonthInfo = [
+                    'month' => $nextMonth,
+                    'year' => $nextYear,
+                    'current_month' => $report->month,
+                    'current_year' => $report->year
+                ];
+            }
+        }
 
         return Inertia::render('RiceReport/ViewPdf', [
             'report' => [
@@ -366,6 +498,11 @@ class RiceReportController extends Controller
                 'primary' => $riceConfig->daily_consumption_primary / 1000,
                 'middle' => $riceConfig->daily_consumption_upper_primary / 1000,
             ] : null,
+            
+            // Carryforward data (checked on every page load, not just flash)
+            'can_carryforward' => $canCarryforward,
+            'closing_balance' => $closingBalance,
+            'next_month_info' => $nextMonthInfo,
         ]);
     }
 
@@ -381,7 +518,12 @@ class RiceReportController extends Controller
         }
         
         $user = Auth::user();
-        $riceConfig = MonthlyRiceConfiguration::where('user_id', $user->id)->latest()->first();
+        
+        // ✅ FIX: Get rice configuration for THIS report's month
+        $riceConfig = MonthlyRiceConfiguration::where('user_id', $user->id)
+            ->where('month', $report->month)
+            ->where('year', $report->year)
+            ->first();
         
         // Validate theme parameter
         $theme = $request->query('theme', 'bw');
@@ -397,9 +539,17 @@ class RiceReportController extends Controller
         // Prepare computed balances
         $computedBalances = $this->prepareComputedBalances($riceConfig);
         
-        // Use ConsumptionCalculationService for live statistics
-        $availableStock = $this->calculationService->getAvailableStock($user);
-        $summary = $this->calculationService->getSummary($user);
+        // ✅ FIX: Use getMonthSummary for THIS report's month
+        $summary = $this->calculationService->getMonthSummary($user, $report->month, $report->year);
+        
+        // Calculate available stock for THIS report's month (closing balance)
+        $availableStock = $riceConfig 
+            ? round(
+                ($riceConfig->closing_balance_primary ?? 0) + 
+                ($riceConfig->closing_balance_upper_primary ?? 0),
+                2
+            )
+            : 0;
         
         // Prepare statistics for PDF blade template
         $liveStatistics = [
@@ -595,6 +745,88 @@ class RiceReportController extends Controller
     }
 
     /**
+     * Carryforward closing balance to next month
+     * 
+     * POST /rice-reports/{report}/carryforward
+     */
+    public function carryforwardToNextMonth(RiceReport $report): RedirectResponse
+    {
+        if ($report->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this report.');
+        }
+        
+        $user = Auth::user();
+        
+        try {
+            // Get rice configuration for this report's month
+            $riceConfig = MonthlyRiceConfiguration::forUser($user->id)
+                ->forPeriod($report->month, $report->year)
+                ->firstOrFail();
+            
+            // Calculate next month
+            $nextMonth = $report->month == 12 ? 1 : $report->month + 1;
+            $nextYear = $report->month == 12 ? $report->year + 1 : $report->year;
+            
+            // Check if next month config already exists
+            $existingNext = MonthlyRiceConfiguration::forUser($user->id)
+                ->forPeriod($nextMonth, $nextYear)
+                ->first();
+            
+            if ($existingNext) {
+                return back()->withErrors(['error' => 'Next month configuration already exists.']);
+            }
+            
+            // Create next month with carried forward balances
+            $nextConfig = MonthlyRiceConfiguration::create([
+                'user_id' => $user->id,
+                'month' => $nextMonth,
+                'year' => $nextYear,
+                'school_type' => $riceConfig->school_type,
+                'opening_balance_primary' => $riceConfig->closing_balance_primary,
+                'opening_balance_upper_primary' => $riceConfig->closing_balance_upper_primary,
+                'daily_consumption_primary' => $riceConfig->daily_consumption_primary,
+                'daily_consumption_upper_primary' => $riceConfig->daily_consumption_upper_primary,
+                'rice_lifted_primary' => 0,
+                'rice_lifted_upper_primary' => 0,
+                'rice_arranged_primary' => 0,
+                'rice_arranged_upper_primary' => 0,
+                'consumed_primary' => 0,
+                'consumed_upper_primary' => 0,
+            ]);
+            
+            // Recompute totals
+            $nextConfig->recomputeTotals();
+            $nextConfig->save();
+            
+            // Log activity
+            RiceInventoryActivity::create([
+                'user_id' => $user->id,
+                'config_id' => $nextConfig->id,
+                'month' => $nextConfig->month,
+                'year' => $nextConfig->year,
+                'action' => RiceInventoryActivity::ACTION_OPENED,
+                'amount_primary' => $nextConfig->opening_balance_primary,
+                'amount_upper_primary' => $nextConfig->opening_balance_upper_primary,
+                'notes' => "Balance carried forward from {$report->month_name} {$report->year}",
+                'created_by' => $user->id
+            ]);
+            
+            return redirect()->route('monthly-rice-config.index', [
+                'month' => $nextMonth,
+                'year' => $nextYear
+            ])->with('success', "Next month configuration created! Opening balance carried forward from {$report->month_name} {$report->year}.");
+            
+        } catch (\Exception $e) {
+            Log::error('Carryforward failed', [
+                'report_id' => $report->id,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return back()->withErrors(['error' => 'Failed to carryforward balance: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Show report details (detailed view)
      * 
      * GET /rice-reports/{report}
@@ -709,7 +941,7 @@ class RiceReportController extends Controller
                 '4th' => 5, '5th' => 6, '6th' => 7, '7th' => 8, '8th' => 9
             ];
             
-            $rollStatements = RollStatement::where('udise', $user->udise)
+            $rollStatements = RollStatement::where('udise', $user->udise_code)
                 ->get()
                 ->groupBy('class')
                 ->map(function ($classGroup) {
@@ -784,5 +1016,31 @@ class RiceReportController extends Controller
             'total_consumed' => (float) (($riceConfig->consumed_primary ?? 0) + ($riceConfig->consumed_upper_primary ?? 0)),
             'total_closing_balance' => (float) (($riceConfig->closing_balance_primary ?? 0) + ($riceConfig->closing_balance_upper_primary ?? 0)),
         ];
+    }
+
+    /**
+     * Export rice report to Excel/CSV
+     * 
+     * GET /rice-reports/export?month=1&year=2025&format=xlsx
+     */
+    public function export(Request $request)
+    {
+        $validated = $request->validate([
+            'month' => 'required|integer|between:1,12',
+            'year' => 'required|integer|min:2020',
+            'format' => 'nullable|string|in:xlsx,csv',
+        ]);
+
+        $user = Auth::user();
+        $month = $validated['month'];
+        $year = $validated['year'];
+        $format = $validated['format'] ?? 'xlsx';
+
+        $export = new \App\Exports\RiceReportExport($user->id, $month, $year);
+        
+        $monthName = date('F', mktime(0, 0, 0, $month, 1));
+        $filename = sprintf('rice-report-%s-%d.%s', strtolower($monthName), $year, $format);
+
+        return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
     }
 }

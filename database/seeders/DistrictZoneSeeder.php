@@ -59,7 +59,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Budgam', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($budgam, [
-            'Budgam Zone', 'Beerwah Zone', 'Khansahib Zone', 'Chadoora Zone','Khag Zone'
+            'Budgam Zone', 'Beerwah Zone', 'Khansahib Zone', 'Chadoora Zone','Khag'
         ]);
 
         // 4. Anantnag

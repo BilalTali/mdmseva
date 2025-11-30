@@ -1,153 +1,156 @@
-import { Head, Link, router } from '@inertiajs/react';
+import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Plus, Eye, FileDown, Trash2, BarChart3, Calendar, TrendingUp, Package, Users, Scale } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import { BarChart3, TrendingDown, Users, Plus, Eye, FileDown, Trash2, FileText, Download } from 'lucide-react';
+import { router, Link } from '@inertiajs/react';
 
-/**
- * RiceReport Index Page - WITH RICE CONFIG DISPLAY
- * 
- * ✅ Shows synced rice configuration details
- * ✅ Displays rice rates per student
- * ✅ Shows opening/closing balances by section
- * ✅ FIXED: Changed "Received" to "Rice Lifted"
- */
-export default function Index({ 
-    reports, 
-    schoolType, 
+export default function Index({
+    auth,
+    reports,
+    schoolType,
     sections,
     enrollment,
     availableStock,
     rollStatements,
     statistics,
-    riceConfig,        // ✅ Rice configuration details
-    riceRates          // ✅ Rice rates per student
+    riceConfig,
+    riceRates,
+    currentMonth,
+    currentYear,
+    availableMonths = []
 }) {
-    // Safely decode any HTML entities from paginator labels
-    const decodeLabel = (label) => {
-        if (typeof label !== 'string') return '';
-        const textarea = document.createElement('textarea');
-        textarea.innerHTML = label;
-        return textarea.value.replace(/<[^>]*>/g, '');
+    const monthName = currentMonth ? new Date(currentYear, currentMonth - 1, 1).toLocaleDateString('en-US', { month: 'long' }) : '';
+
+    const handleMonthChange = (e) => {
+        const [month, year] = e.target.value.split('-');
+        router.get('/rice-reports', { month, year }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
     };
+
+    const currentValue = currentMonth && currentYear ? `${currentMonth}-${currentYear}` : '';
+
     const handleDelete = (reportId, period) => {
-        if (confirm(`Are you sure you want to delete the report for ${period}?`)) {
+        if (confirm(`Delete rice report for ${period}? This action cannot be undone.`)) {
             router.delete(`/rice-reports/${reportId}`, {
-                preserveScroll: true,
+                preserveScroll: true
             });
         }
     };
 
-    const handleDownload = (reportId, theme = 'bw') => {
-        window.open(`/rice-reports/${reportId}/generate-pdf?theme=${theme}&download=1`, '_blank');
+    const handleDownload = (reportId) => {
+        window.location.href = `/rice-reports/${reportId}/download-pdf`;
+    };
+
+    const decodeLabel = (label) => {
+        const temp = document.createElement('div');
+        temp.innerHTML = label;
+        return temp.textContent || temp.innerText || '';
     };
 
     return (
         <AuthenticatedLayout
+            user={auth.user}
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Rice Reports
-                    </h2>
-                    <Link
-                        href="/rice-reports/create"
-                        className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Generate New Report
-                    </Link>
+                <div className="flex justify-between items-center">
+                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">Rice Reports</h2>
+                    <div className="flex gap-2">
+                        {/* Month Selector */}
+                        {availableMonths.length > 0 && (
+                            <select
+                                value={currentValue}
+                                onChange={handleMonthChange}
+                                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                                {availableMonths.map((month) => (
+                                    <option
+                                        key={`${month.month}-${month.year}`}
+                                        value={`${month.month}-${month.year}`}
+                                    >
+                                        {month.label}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+
+                        {currentMonth && currentYear && (
+                            <a
+                                href={`/rice-reports/export?month=${currentMonth}&year=${currentYear}&format=xlsx`}
+                                className="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 transition"
+                            >
+                                <Download className="w-4 h-4 mr-2" />
+                                Export
+                            </a>
+                        )}
+
+                        <Link
+                            href={`/rice-reports/create${currentMonth && currentYear ? `?month=${currentMonth}&year=${currentYear}` : ''}`}
+                            className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            New Report
+                        </Link>
+                    </div>
                 </div>
             }
         >
             <Head title="Rice Reports" />
 
-            <div className="py-6">
+            <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                    
-                    {/* STATISTICS CARDS */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white shadow-sm sm:rounded-lg p-6">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0 p-3 bg-blue-100 rounded-lg">
-                                    <BarChart3 className="w-6 h-6 text-blue-600" />
-                                </div>
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-500">Total Reports</p>
-                                    <p className="text-2xl font-bold text-gray-900">
-                                        {statistics?.total_reports || 0}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div className="bg-white shadow-sm sm:rounded-lg p-6">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0 p-3 bg-green-100 rounded-lg">
-                                    <Package className="w-6 h-6 text-green-600" />
-                                </div>
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-500">Available Stock</p>
-                                    <p className="text-2xl font-bold text-green-600">
-                                        {availableStock?.toFixed(2) || '0.00'} kg
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">Live balance</p>
-                                </div>
-                            </div>
+                    {/* Period Indicator */}
+                    {currentMonth && currentYear && (
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                            <p className="text-blue-800 text-sm font-semibold">
+                                📊 Showing statistics for: <span className="font-bold">{monthName} {currentYear}</span>
+                            </p>
                         </div>
+                    )}
 
-                        <div className="bg-white shadow-sm sm:rounded-lg p-6">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0 p-3 bg-red-100 rounded-lg">
-                                    <TrendingUp className="w-6 h-6 text-red-600" />
-                                </div>
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-500">Total Consumed</p>
-                                    <p className="text-2xl font-bold text-red-600">
-                                        {statistics?.total_rice_consumed?.toFixed(2) || '0.00'} kg
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">All time</p>
-                                </div>
-                            </div>
+                    {/* SUMMARY CARDS */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <p className="text-sm text-gray-600 mb-1">Available Stock</p>
+                            <p className="text-3xl font-bold text-green-600">{availableStock.toFixed(2)} kg</p>
                         </div>
-
-                        <div className="bg-white shadow-sm sm:rounded-lg p-6">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0 p-3 bg-purple-100 rounded-lg">
-                                    <Calendar className="w-6 h-6 text-purple-600" />
-                                </div>
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-500">Avg Daily</p>
-                                    <p className="text-2xl font-bold text-purple-600">
-                                        {statistics?.average_daily_consumption?.toFixed(2) || '0.00'} kg
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {statistics?.latest_period || 'No reports'}
-                                    </p>
-                                </div>
-                            </div>
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <p className="text-sm text-gray-600 mb-1">Total Consumed</p>
+                            <p className="text-3xl font-bold text-red-600">
+                                {statistics.total_rice_consumed?.toFixed(2) || '0.00'} kg
+                            </p>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <p className="text-sm text-gray-600 mb-1">Avg Daily Consumption</p>
+                            <p className="text-3xl font-bold text-blue-600">
+                                {statistics.average_daily_consumption?.toFixed(2) || '0.00'} kg
+                            </p>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <p className="text-sm text-gray-600 mb-1">Total Reports</p>
+                            <p className="text-3xl font-bold text-purple-600">{statistics.total_reports || 0}</p>
                         </div>
                     </div>
 
-                    {/* ============================================
-                        RICE CONFIGURATION DETAILS CARD
-                        Shows synced rice config (like Dashboard)
-                        ✅ FIXED: Changed "Received" to "Rice Lifted"
-                        ============================================ */}
+                    {/* RICE CONFIG CARD */}
                     {riceConfig && (
                         <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-6">
                             <div className="flex items-start">
-                                <Scale className="w-8 h-8 text-amber-600 mr-4 flex-shrink-0 mt-1" />
+                                <BarChart3 className="w-8 h-8 text-amber-600 mr-4 flex-shrink-0" />
                                 <div className="flex-1">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                                        Rice Configuration Details (Synced)
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                                        Rice Configuration - {monthName} {currentYear}
                                     </h3>
-                                    
+
                                     {/* Rice Rates */}
                                     {riceRates && (
                                         <div className="mb-4 p-3 bg-white rounded-lg border border-amber-200">
-                                            <h4 className="text-sm font-semibold text-gray-700 mb-2">Daily Rice Rates per Student</h4>
+                                            <h4 className="text-sm font-semibold text-amber-900 mb-2">Rice per Student (Daily)</h4>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {sections?.includes('primary') && (
                                                     <div>
-                                                        <p className="text-xs text-gray-600">Primary (I-V)</p>
+                                                        <p className="text-xs text-gray-600">Primary (KG-V)</p>
                                                         <p className="text-lg font-bold text-blue-700">
                                                             {riceRates.primary?.toFixed(3) || '0.000'} kg
                                                         </p>
@@ -164,7 +167,7 @@ export default function Index({
                                             </div>
                                         </div>
                                     )}
-                                    
+
                                     {/* Balance Details */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {/* Primary Section */}
@@ -195,7 +198,7 @@ export default function Index({
                                                 </div>
                                             </div>
                                         )}
-                                        
+
                                         {/* Middle Section */}
                                         {sections?.includes('middle') && (
                                             <div className="p-3 bg-white rounded-lg border border-indigo-200">
@@ -225,7 +228,7 @@ export default function Index({
                                             </div>
                                         )}
                                     </div>
-                                    
+
                                     {/* Grand Total */}
                                     <div className="mt-4 p-3 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg border border-purple-300">
                                         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
@@ -261,7 +264,7 @@ export default function Index({
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <p className="text-xs text-amber-700 mt-3 flex items-center">
                                         <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
                                         ✓ All values are synced with live RiceConfiguration data
@@ -313,7 +316,7 @@ export default function Index({
                     <div className="bg-white shadow-sm sm:rounded-lg">
                         <div className="p-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Generated Reports</h3>
-                            
+
                             {reports.data.length === 0 ? (
                                 <div className="text-center py-12">
                                     <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
@@ -385,6 +388,13 @@ export default function Index({
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <div className="flex items-center justify-end gap-2">
                                                             <Link
+                                                                href={`/amount-reports?month=${report.month}&year=${report.year}`}
+                                                                className="text-blue-600 hover:text-blue-900"
+                                                                title="View Amount Report"
+                                                            >
+                                                                <FileText className="w-5 h-5" />
+                                                            </Link>
+                                                            <Link
                                                                 href={`/rice-reports/${report.id}/view-pdf`}
                                                                 className="text-indigo-600 hover:text-indigo-900"
                                                                 title="View PDF"
@@ -428,13 +438,12 @@ export default function Index({
                                                 key={index}
                                                 href={link.url || '#'}
                                                 preserveScroll
-                                                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                                                    link.active
-                                                        ? 'bg-indigo-600 text-white'
-                                                        : link.url
+                                                className={`px-3 py-2 rounded-md text-sm font-medium ${link.active
+                                                    ? 'bg-indigo-600 text-white'
+                                                    : link.url
                                                         ? 'bg-white text-gray-700 hover:bg-gray-50'
                                                         : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                }`}
+                                                    }`}
                                             >
                                                 {decodeLabel(link.label)}
                                             </Link>

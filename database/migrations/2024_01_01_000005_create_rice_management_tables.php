@@ -59,9 +59,14 @@ return new class extends Migration
                   ->references('id')->on('monthly_rice_configurations')
                   ->nullOnDelete();
             
-            // Locking mechanism
+            // ============ LOCK/UNLOCK TRACKING ============
             $table->boolean('is_locked')->default(false);
-            $table->text('locked_reason')->nullable();
+            $table->timestamp('locked_at')->nullable();
+            $table->foreignId('locked_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('lock_reason')->nullable();
+            $table->timestamp('unlocked_at')->nullable();
+            $table->foreignId('unlocked_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('unlock_reason')->nullable();
             
             $table->timestamps();
             

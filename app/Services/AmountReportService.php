@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\AmountReport;
 use App\Models\DailyConsumption;
 use App\Models\User;
-use App\Models\AmountConfiguration;
+use App\Models\MonthlyAmountConfiguration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -15,7 +15,7 @@ use App\Services\ConsumptionCalculationService;
  * AmountReportService
  * 
  * Handles business logic for amount report generation, validation, and management.
- * ✅ UPDATED: Uses UNIFIED salt percentages from AmountConfiguration
+ * ✅ UPDATED: Uses UNIFIED salt percentages from MonthlyAmountConfiguration
  */
 class AmountReportService
 {
@@ -39,21 +39,24 @@ class AmountReportService
         try {
             DB::beginTransaction();
 
-            // Get amount configuration
-            $amountConfig = AmountConfiguration::where('user_id', $user->id)->first();
+            // Get amount configuration for this specific month
+            $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)
+                ->where('month', $month)
+                ->where('year', $year)
+                ->first();
             
             if (!$amountConfig) {
-                throw new \Exception('Amount configuration not found. Please create configuration first.');
+                throw new \Exception('Amount configuration not found for this month. Please create configuration first.');
             }
 
             // ✅ Use unified salt percentages from configuration if not provided
             if (!$saltPercentages) {
                 $unifiedPercentages = [
-                    'common' => $amountConfig->salt_percentage_common ?? 30,
-                    'chilli' => $amountConfig->salt_percentage_chilli ?? 20,
+                    'common' => $amountConfig->salt_percentage_common ?? 5,
+                    'chilli' => $amountConfig->salt_percentage_chilli ?? 35,
                     'turmeric' => $amountConfig->salt_percentage_turmeric ?? 20,
                     'coriander' => $amountConfig->salt_percentage_coriander ?? 15,
-                    'other' => $amountConfig->salt_percentage_other ?? 15,
+                    'other' => $amountConfig->salt_percentage_other ?? 25,
                 ];
 
                 // Apply same percentages to both sections
@@ -121,7 +124,7 @@ class AmountReportService
 
             // Grand totals and averages from monthly totals
             $totalServingDays = $monthlyTotals['total_serving_days'];
-            $grandTotalAmount = $monthlyTotals['grand_total_amount'];
+            $grandTotalAmount = $monthlyTotals['grand_total'];
             $averageDailyAmount = $monthlyTotals['average_daily_amount'];
 
             // Get opening/closing balances (from first/last records or config)
@@ -324,10 +327,14 @@ class AmountReportService
     {
         $errors = [];
 
-        // Check if amount configuration exists
-        $amountConfig = AmountConfiguration::where('user_id', $user->id)->first();
+        // Check if amount configuration exists for this month
+        $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+            
         if (!$amountConfig) {
-            $errors[] = 'Amount configuration not found. Please create configuration first.';
+            $errors[] = 'Amount configuration not found for this month. Please create configuration first.';
         }
 
         // Check if report already exists
@@ -389,11 +396,12 @@ class AmountReportService
 
     /**
      * Get paginated reports for a user.
+     * ✅ OPTIMIZED: Added nested eager loading to prevent N+1 queries
      */
     public function getPaginatedReports(int $userId, int $perPage = 15)
     {
         return AmountReport::where('user_id', $userId)
-            ->with(['bills'])
+            ->with(['bills.items'])  // ✅ Load bills AND their items upfront
             ->latestPeriod()
             ->paginate($perPage);
     }

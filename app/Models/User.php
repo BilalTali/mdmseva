@@ -19,7 +19,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $phone
  * @property string|null $date_of_birth
  * @property string|null $address
- * @property string|null $udise
+ * @property string|null $udise_code
  * @property string|null $state
  * @property string|null $district
  * @property string|null $zone
@@ -54,13 +54,14 @@ class User extends Authenticatable
         'phone',
         'date_of_birth',
         'address',
-        'udise',
+        'udise_code',
         'state',
         'district',
         'zone',
         'district_id',
         'zone_id',
-        'is_active',
+        'status',
+        // 'is_active', // Removed: handled by status enum
         'school_name',
         'school_type',
         'institute_address',
@@ -76,6 +77,13 @@ class User extends Authenticatable
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     */
+    protected $appends = [
+        'is_active',
+    ];
+
+    /**
      * The attributes that should be cast.
      */
     protected function casts(): array
@@ -84,7 +92,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'date_of_birth' => 'date',
             'password' => 'hashed',
-            'is_active' => 'boolean',
+            // 'is_active' => 'boolean', // Removed: handled by accessor
         ];
     }
 
@@ -143,7 +151,7 @@ class User extends Authenticatable
      */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('is_active', true);
+        return $query->where('status', 'active');
     }
 
     /**
@@ -151,7 +159,7 @@ class User extends Authenticatable
      */
     public function scopeInactive(Builder $query): Builder
     {
-        return $query->where('is_active', false);
+        return $query->where('status', '!=', 'active');
     }
 
     /**
@@ -205,6 +213,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get is_active attribute from status enum.
+     */
+    public function getIsActiveAttribute(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    /**
      * Get status badge text.
      */
     public function getStatusBadgeAttribute(): string
@@ -234,10 +250,11 @@ class User extends Authenticatable
 
     /**
      * Get amount configurations for this user
+     * ✅ UPDATED: Now points to MonthlyAmountConfiguration
      */
     public function amountConfigurations(): HasMany
     {
-        return $this->hasMany(AmountConfiguration::class);
+        return $this->hasMany(MonthlyAmountConfiguration::class);
     }
 
     /**
@@ -254,7 +271,7 @@ class User extends Authenticatable
     public function rollStatements(): HasMany
     {
         // RollStatements are linked by UDISE code, not user_id
-        return $this->hasMany(RollStatement::class, 'udise', 'udise');
+        return $this->hasMany(RollStatement::class, 'udise', 'udise_code');
     }
 
     /**
@@ -262,7 +279,7 @@ class User extends Authenticatable
      */
     public function getLatestRollStatement(): ?RollStatement
     {
-        return RollStatement::where('udise', $this->udise)
+        return RollStatement::where('udise', $this->udise_code)
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
             ->first();
@@ -285,7 +302,7 @@ class User extends Authenticatable
      */
     public function getEnrollmentData(): array
     {
-        if (!$this->udise) {
+        if (!$this->udise_code) {
             return [
                 'primary' => 0,
                 'middle' => 0,
@@ -294,7 +311,7 @@ class User extends Authenticatable
         }
 
         // Get the most recent date for this UDISE
-        $latestDate = RollStatement::where('udise', $this->udise)
+        $latestDate = RollStatement::where('udise', $this->udise_code)
             ->orderBy('date', 'desc')
             ->value('date');
 
@@ -307,7 +324,7 @@ class User extends Authenticatable
         }
 
         // Get all class entries for that latest date
-        $statements = RollStatement::where('udise', $this->udise)
+        $statements = RollStatement::where('udise', $this->udise_code)
             ->where('date', $latestDate)
             ->get();
 
@@ -516,11 +533,13 @@ class User extends Authenticatable
 
     /**
      * Get latest amount configuration
+     * ✅ UPDATED: Now returns MonthlyAmountConfiguration
      */
-    public function getLatestAmountConfiguration(): ?AmountConfiguration
+    public function getLatestAmountConfiguration(): ?MonthlyAmountConfiguration
     {
         return $this->amountConfigurations()
-            ->latest()
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
             ->first();
     }
 
@@ -534,6 +553,7 @@ class User extends Authenticatable
 
     /**
      * Check if amount configuration exists
+     * ✅ UPDATED: Checks MonthlyAmountConfiguration
      */
     public function hasAmountConfiguration(): bool
     {

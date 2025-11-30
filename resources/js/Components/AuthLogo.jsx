@@ -1,30 +1,12 @@
-import { themeConfig } from '@/config/themeConfig';
-
-export default function AuthLogo({ title, subtitle }) {
+export default function AuthLogo({ className = '' }) {
     return (
-        <div className="text-center mb-8 fade-in">
-            {/* Logo */}
-            <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br ${themeConfig.colors.logoGradientFrom} ${themeConfig.colors.logoGradientTo} flex items-center justify-center shadow-lg`}>
-                {themeConfig.logo.type === 'image' && themeConfig.logo.imagePath ? (
-                    <img 
-                        src={themeConfig.logo.imagePath} 
-                        alt={themeConfig.logo.alt}
-                        className="w-10 h-10 object-contain"
-                    />
-                ) : (
-                    themeConfig.logo.svgIcon
-                )}
-            </div>
-
-            {/* Title */}
-            <h1 className={`text-3xl font-bold ${themeConfig.colors.primaryText} mb-2`}>
-                {title}
+        <div className={`flex flex-col items-center justify-center gap-6 ${className}`}>
+            {/* MDM SEVA Text */}
+            <h1 className="text-4xl font-extrabold tracking-tight text-center">
+                <span className="text-gray-800 dark:text-gray-200">MDM</span>
+                {' '}
+                <span className="bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">SEVA</span>
             </h1>
-
-            {/* Subtitle */}
-            <p className={themeConfig.colors.secondaryText}>
-                {subtitle}
-            </p>
         </div>
     );
 }

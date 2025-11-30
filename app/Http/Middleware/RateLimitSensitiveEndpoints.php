@@ -38,6 +38,13 @@ class RateLimitSensitiveEndpoints
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             $seconds = RateLimiter::availableIn($key);
             
+            // Return appropriate response based on request type
+            if ($request->inertia()) {
+                return back()->withErrors([
+                    'rate_limit' => 'Too many attempts. Please try again in ' . $seconds . ' seconds.',
+                ])->with('retry_after', $seconds);
+            }
+            
             return response()->json([
                 'message' => 'Too many attempts. Please try again in ' . $seconds . ' seconds.',
                 'retry_after' => $seconds,

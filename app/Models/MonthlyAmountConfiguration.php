@@ -37,7 +37,24 @@ class MonthlyAmountConfiguration extends Model
         'completed_by',
         'opening_carried_from_previous',
         'previous_month_id',
-        'is_locked'
+        'is_locked',
+        // New rate fields
+        'daily_pulses_primary',
+        'daily_vegetables_primary',
+        'daily_oil_primary',
+        'daily_salt_primary',
+        'daily_fuel_primary',
+        'daily_pulses_middle',
+        'daily_vegetables_middle',
+        'daily_oil_middle',
+        'daily_salt_middle',
+        'daily_fuel_middle',
+        // Salt percentages
+        'salt_percentage_common',
+        'salt_percentage_chilli',
+        'salt_percentage_turmeric',
+        'salt_percentage_coriander',
+        'salt_percentage_other',
     ];
 
     protected $casts = [
@@ -58,7 +75,24 @@ class MonthlyAmountConfiguration extends Model
         'is_completed' => 'boolean',
         'is_locked' => 'boolean',
         'opening_carried_from_previous' => 'boolean',
-        'completed_at' => 'datetime'
+        'completed_at' => 'datetime',
+        // New rate fields
+        'daily_pulses_primary' => 'decimal:2',
+        'daily_vegetables_primary' => 'decimal:2',
+        'daily_oil_primary' => 'decimal:2',
+        'daily_salt_primary' => 'decimal:2',
+        'daily_fuel_primary' => 'decimal:2',
+        'daily_pulses_middle' => 'decimal:2',
+        'daily_vegetables_middle' => 'decimal:2',
+        'daily_oil_middle' => 'decimal:2',
+        'daily_salt_middle' => 'decimal:2',
+        'daily_fuel_middle' => 'decimal:2',
+        // Salt percentages
+        'salt_percentage_common' => 'decimal:2',
+        'salt_percentage_chilli' => 'decimal:2',
+        'salt_percentage_turmeric' => 'decimal:2',
+        'salt_percentage_coriander' => 'decimal:2',
+        'salt_percentage_other' => 'decimal:2',
     ];
 
     // ===============================================
@@ -267,7 +301,24 @@ class MonthlyAmountConfiguration extends Model
             'amount_received_primary' => 0,
             'amount_received_upper_primary' => 0,
             'opening_carried_from_previous' => true,
-            'previous_month_id' => $previousConfig->id
+            'previous_month_id' => $previousConfig->id,
+            // Copy rates
+            'daily_pulses_primary' => $previousConfig->daily_pulses_primary,
+            'daily_vegetables_primary' => $previousConfig->daily_vegetables_primary,
+            'daily_oil_primary' => $previousConfig->daily_oil_primary,
+            'daily_salt_primary' => $previousConfig->daily_salt_primary,
+            'daily_fuel_primary' => $previousConfig->daily_fuel_primary,
+            'daily_pulses_middle' => $previousConfig->daily_pulses_middle,
+            'daily_vegetables_middle' => $previousConfig->daily_vegetables_middle,
+            'daily_oil_middle' => $previousConfig->daily_oil_middle,
+            'daily_salt_middle' => $previousConfig->daily_salt_middle,
+            'daily_fuel_middle' => $previousConfig->daily_fuel_middle,
+            // Copy salt percentages
+            'salt_percentage_common' => $previousConfig->salt_percentage_common,
+            'salt_percentage_chilli' => $previousConfig->salt_percentage_chilli,
+            'salt_percentage_turmeric' => $previousConfig->salt_percentage_turmeric,
+            'salt_percentage_coriander' => $previousConfig->salt_percentage_coriander,
+            'salt_percentage_other' => $previousConfig->salt_percentage_other,
         ], $overrides));
 
         $config->recomputeTotals();
@@ -312,5 +363,134 @@ class MonthlyAmountConfiguration extends Model
             'opening_balance_primary' => 0,
             'opening_balance_upper_primary' => 0
         ], $defaults));
+    }
+
+    // =========================================================================
+    // ✅ UNIFIED SALT SUBCATEGORY CALCULATION METHODS
+    // =========================================================================
+
+    /**
+     * Calculate salt subcategories for primary section.
+     * Uses unified percentages that apply to both primary and middle.
+     * Splits daily_salt_primary into 5 subcategories based on unified percentages.
+     * 
+     * @return array ['common_salt' => float, 'chilli_powder' => float, ...]
+     */
+    public function calculateSaltSubcategoriesPrimary(): array
+    {
+        $totalSalt = (float) $this->daily_salt_primary;
+        
+        return [
+            'common_salt' => round(($totalSalt * $this->salt_percentage_common) / 100, 2),
+            'chilli_powder' => round(($totalSalt * $this->salt_percentage_chilli) / 100, 2),
+            'turmeric' => round(($totalSalt * $this->salt_percentage_turmeric) / 100, 2),
+            'coriander' => round(($totalSalt * $this->salt_percentage_coriander) / 100, 2),
+            'other_condiments' => round(($totalSalt * $this->salt_percentage_other) / 100, 2),
+        ];
+    }
+
+    /**
+     * Calculate salt subcategories for middle section.
+     * Uses unified percentages that apply to both primary and middle.
+     * Splits daily_salt_middle into 5 subcategories based on unified percentages.
+     * 
+     * @return array ['common_salt' => float, 'chilli_powder' => float, ...]
+     */
+    public function calculateSaltSubcategoriesMiddle(): array
+    {
+        $totalSalt = (float) $this->daily_salt_middle;
+        
+        return [
+            'common_salt' => round(($totalSalt * $this->salt_percentage_common) / 100, 2),
+            'chilli_powder' => round(($totalSalt * $this->salt_percentage_chilli) / 100, 2),
+            'turmeric' => round(($totalSalt * $this->salt_percentage_turmeric) / 100, 2),
+            'coriander' => round(($totalSalt * $this->salt_percentage_coriander) / 100, 2),
+            'other_condiments' => round(($totalSalt * $this->salt_percentage_other) / 100, 2),
+        ];
+    }
+
+    /**
+     * Validate that unified salt percentages sum to 100.
+     * Single validation method for both primary and middle.
+     * 
+     * @return array ['valid' => bool, 'total' => float, 'error' => string|null]
+     */
+    public function validateSaltPercentages(): array
+    {
+        $total = 
+            $this->salt_percentage_common +
+            $this->salt_percentage_chilli +
+            $this->salt_percentage_turmeric +
+            $this->salt_percentage_coriander +
+            $this->salt_percentage_other;
+        
+        $valid = abs($total - 100) < 0.01; // Allow 0.01 tolerance for floating point
+        
+        return [
+            'valid' => $valid,
+            'total' => round($total, 2),
+            'error' => $valid ? null : "Salt percentages must sum to 100% (current: {$total}%)",
+        ];
+    }
+
+    /**
+     * Get all unified salt percentages.
+     * Returns a single set that applies to both primary and middle.
+     * 
+     * @return array
+     */
+    public function getSaltPercentages(): array
+    {
+        return [
+            'common_salt' => (float) $this->salt_percentage_common,
+            'chilli_powder' => (float) $this->salt_percentage_chilli,
+            'turmeric' => (float) $this->salt_percentage_turmeric,
+            'coriander' => (float) $this->salt_percentage_coriander,
+            'other_condiments' => (float) $this->salt_percentage_other,
+        ];
+    }
+
+    /**
+     * Calculate and set total for primary.
+     */
+    public function calculatePrimaryTotal()
+    {
+        $this->daily_amount_per_student_primary = 
+            ($this->daily_pulses_primary ?? 0) +
+            ($this->daily_vegetables_primary ?? 0) +
+            ($this->daily_oil_primary ?? 0) +
+            ($this->daily_salt_primary ?? 0) +
+            ($this->daily_fuel_primary ?? 0);
+    }
+
+    /**
+     * Calculate and set total for middle.
+     */
+    public function calculateMiddleTotal()
+    {
+        $this->daily_amount_per_student_upper_primary = 
+            ($this->daily_pulses_middle ?? 0) +
+            ($this->daily_vegetables_middle ?? 0) +
+            ($this->daily_oil_middle ?? 0) +
+            ($this->daily_salt_middle ?? 0) +
+            ($this->daily_fuel_middle ?? 0);
+    }
+
+    /**
+     * Calculate both totals based on user's school type.
+     */
+    public function calculateTotals()
+    {
+        if ($this->user && $this->user->hasPrimaryStudents()) {
+            $this->calculatePrimaryTotal();
+        } else {
+            $this->daily_amount_per_student_primary = 0;
+        }
+
+        if ($this->user && $this->user->hasMiddleStudents()) {
+            $this->calculateMiddleTotal();
+        } else {
+            $this->daily_amount_per_student_upper_primary = 0;
+        }
     }
 }

@@ -16,4 +16,14 @@ class EventServiceProvider extends ServiceProvider
     ];
 
     // ... rest of the file
+    /**
+     * Register any events for your application.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        \App\Models\DailyConsumption::observe(\App\Observers\DailyConsumptionObserver::class);
+        \App\Models\MonthlyRiceConfiguration::observe(\App\Observers\MonthlyRiceConfigurationObserver::class);
+    }
 }

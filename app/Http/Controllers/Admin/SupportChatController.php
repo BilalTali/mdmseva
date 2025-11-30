@@ -98,14 +98,16 @@ class SupportChatController extends Controller
             'user_id' => $admin->id,
             'message' => $request->message,
             'is_admin' => true,
+            'is_ai_generated' => false, // Explicitly mark as human admin
             'is_read' => false,
         ]);
 
-        // Update chat
+        // Update chat - mark human admin takeover to disable AI
         $chat->update([
             'last_message_at' => now(),
             'status' => 'in_progress',
             'assigned_to' => $admin->id,
+            'last_human_admin_at' => now(), // This disables AI for this chat
         ]);
 
         // Broadcast message
@@ -286,6 +288,20 @@ class SupportChatController extends Controller
         return response()->json([
             'success' => true,
             'data' => $message
+        ]);
+    }
+
+    /**
+     * Disable AI for a chat (manual takeover)
+     */
+    public function disableAI(int $chatId): JsonResponse
+    {
+        $chat = SupportChat::findOrFail($chatId);
+        $chat->disableAI();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'AI disabled for this chat. Admin has taken control.'
         ]);
     }
 }

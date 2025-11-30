@@ -46,8 +46,8 @@ const RiceBalanceChart = ({
         tooltipText: isDark ? '#f3f4f6' : '#111827', // gray-100 : gray-900
         opening: '#3b82f6', // blue-500
         closing: '#10b981', // emerald-500
-        primary: '#8b5cf6', // violet-500
-        middle: '#f59e0b', // amber-500
+        primary: '#06b6d4', // cyan-500
+        middle: '#d946ef', // fuchsia-500
         consumed: '#ef4444', // red-500
     };
 
@@ -218,16 +218,17 @@ const RiceBalanceChart = ({
 
                 <Legend content={<CustomLegend />} />
 
-                {/* Opening Balance - Always show */}
+                {/* Opening Balance - Dashed Line for Reference */}
                 <DataComponent
                     type="monotone"
                     dataKey="opening"
                     stroke={colors.opening}
-                    fill={useAreaChart ? "url(#colorOpening)" : undefined}
-                    strokeWidth={3}
+                    fill="none"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
                     name="Opening Balance"
-                    dot={{ fill: colors.opening, strokeWidth: 2, r: 5 }}
-                    activeDot={{ r: 7, strokeWidth: 2 }}
+                    dot={{ fill: colors.opening, r: 4 }}
+                    activeDot={{ r: 6 }}
                 />
 
                 {/* Primary Consumed - Show if data includes it */}
@@ -236,12 +237,12 @@ const RiceBalanceChart = ({
                         type="monotone"
                         dataKey="primary_consumed"
                         stroke={colors.primary}
-                        fill={useAreaChart ? "url(#colorPrimary)" : undefined}
-                        strokeWidth={2.5}
-                        strokeDasharray="5 5"
+                        fill="none"
+                        strokeWidth={2}
+                        strokeDasharray="3 3"
                         name="Primary Consumed"
-                        dot={{ fill: colors.primary, strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6 }}
+                        dot={false}
+                        activeDot={{ r: 4 }}
                     />
                 )}
 
@@ -251,36 +252,25 @@ const RiceBalanceChart = ({
                         type="monotone"
                         dataKey="middle_consumed"
                         stroke={colors.middle}
-                        fill={useAreaChart ? "url(#colorMiddle)" : undefined}
-                        strokeWidth={2.5}
-                        strokeDasharray="5 5"
+                        fill="none"
+                        strokeWidth={2}
+                        strokeDasharray="3 3"
                         name="Middle Consumed"
-                        dot={{ fill: colors.middle, strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6 }}
+                        dot={false}
+                        activeDot={{ r: 4 }}
                     />
                 )}
 
-                {/* Total Consumed - Always show */}
-                <DataComponent
-                    type="monotone"
-                    dataKey="consumed"
-                    stroke={colors.consumed}
-                    strokeWidth={3}
-                    name="Total Consumed"
-                    dot={{ fill: colors.consumed, strokeWidth: 2, r: 5 }}
-                    activeDot={{ r: 7, strokeWidth: 2 }}
-                />
-
-                {/* Closing Balance - Always show with emphasis */}
+                {/* Closing Balance - Solid Area with Gradient */}
                 <DataComponent
                     type="monotone"
                     dataKey="closing"
                     stroke={colors.closing}
                     fill={useAreaChart ? "url(#colorClosing)" : undefined}
-                    strokeWidth={4}
+                    strokeWidth={3}
                     name="Closing Balance"
-                    dot={{ fill: colors.closing, strokeWidth: 2, r: 6, stroke: '#fff' }}
-                    activeDot={{ r: 8, strokeWidth: 2 }}
+                    dot={{ fill: colors.closing, strokeWidth: 2, r: 4, stroke: '#fff' }}
+                    activeDot={{ r: 6, strokeWidth: 2 }}
                 />
             </ChartComponent>
         </ResponsiveContainer>

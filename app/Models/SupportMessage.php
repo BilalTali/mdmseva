@@ -24,17 +24,19 @@ class SupportMessage extends Model
         'user_id',
         'message',
         'is_admin',
+        'is_ai_generated',
         'is_read',
         'read_at',
     ];
 
     protected $casts = [
         'is_admin' => 'boolean',
+        'is_ai_generated' => 'boolean',
         'is_read' => 'boolean',
         'read_at' => 'datetime',
     ];
 
-    protected $appends = ['sender_name'];
+    protected $appends = ['sender_name', 'message_type'];
 
     /**
      * Get the chat this message belongs to
@@ -66,6 +68,15 @@ class SupportMessage extends Model
     public function getSenderNameAttribute(): string
     {
         return $this->user ? $this->user->name : 'Unknown';
+    }
+
+    /**
+     * Get message type attribute ('user', 'admin', or 'ai')
+     */
+    public function getMessageTypeAttribute(): string
+    {
+        if (!$this->is_admin) return 'user';
+        return $this->is_ai_generated ? 'ai' : 'admin';
     }
 
     /**

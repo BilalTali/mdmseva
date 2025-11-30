@@ -7,8 +7,8 @@ use App\Models\User;
 use App\Models\District;
 use App\Models\Zone;
 use App\Models\MonthlyRiceConfiguration;
+use App\Models\MonthlyAmountConfiguration;
 use App\Models\DailyConsumption;
-use App\Models\AmountConfiguration;
 use App\Models\RiceReport;
 use App\Models\AmountReport;
 use App\Models\Bill;
@@ -71,7 +71,7 @@ class SchoolsController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('udise', 'like', "%{$search}%")
+                  ->orWhere('udise_code', 'like', "%{$search}%")
                   ->orWhere('school_name', 'like', "%{$search}%");
             });
         }
@@ -133,6 +133,22 @@ class SchoolsController extends Controller
     }
 
     /**
+     * Show editable profile form for a single school (admin-only).
+     *
+     * GET /admin/schools/{userId}/profile
+     */
+    public function profile(int $userId): Response
+    {
+        $school = User::schools()
+            ->with(['district', 'zone'])
+            ->findOrFail($userId);
+
+        return Inertia::render('Admin/Schools/Profile', [
+            'school' => $school,
+        ]);
+    }
+
+    /**
      * Display detailed view of a single school (READ-ONLY).
      * 
      * GET /admin/schools/{userId}
@@ -173,9 +189,10 @@ class SchoolsController extends Controller
             ->orderBy('date', 'asc')
             ->get();
 
-        // Latest amount configuration for ingredient breakdown
-        $amountConfig = AmountConfiguration::where('user_id', $userId)
-            ->latest()
+        // Latest monthly amount configuration for ingredient breakdown
+        $amountConfig = MonthlyAmountConfiguration::where('user_id', $userId)
+            ->latest('year')
+            ->latest('month')
             ->first();
 
         // Apply cumulative rice balance and amount breakdowns using current config
@@ -338,30 +355,88 @@ class SchoolsController extends Controller
     }
 
     /**
+     * Update a school's user profile (admin-only).
+     * Allows editing registration fields and optional password reset.
+     */
+    public function update(Request $request, int $userId)
+    {
+        $user = User::schools()->findOrFail($userId);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'date_of_birth' => ['nullable', 'date'],
+
+            'state' => ['nullable', 'string', 'max:255'],
+            'district_id' => ['nullable', 'exists:districts,id'],
+            'zone_id' => ['nullable', 'exists:zones,id'],
+
+            'udise_code' => ['required', 'string', 'max:20', 'unique:users,udise_code,' . $user->id],
+            'school_name' => ['required', 'string', 'max:255'],
+            'school_type' => ['required', 'in:primary,middle,secondary'],
+            'institute_address' => ['nullable', 'string'],
+            'school_pincode' => ['nullable', 'string', 'max:10'],
+
+            'password' => ['nullable', 'confirmed', 'min:8'],
+        ]);
+
+        // Handle optional password reset
+        if (!empty($validated['password'])) {
+            $user->password = bcrypt($validated['password']);
+        }
+        unset($validated['password'], $validated['password_confirmation']);
+
+        // Map udise_code to model field name if different
+        if (isset($validated['udise_code'])) {
+            $validated['udise_code'] = $validated['udise_code'];
+        }
+
+        $user->fill($validated);
+
+        // If email changed, reset verification
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        return redirect()
+            ->route('admin.schools.show', $userId)
+            ->with('success', 'School profile updated successfully.');
+    }
+
+    /**
      * Activate a school account.
      * 
      * POST /admin/schools/{userId}/activate
      */
     public function activate(int $userId)
     {
-        // Find user
-        $user = User::findOrFail($userId);
+        try {
+            // Find user
+            $user = User::findOrFail($userId);
 
-        // Verify user is a school (not admin)
-        if ($user->isAdmin()) {
-            return redirect()->back()->with('error', 'Cannot activate admin accounts.');
+            // Verify user is a school (not admin)
+            if ($user->isAdmin()) {
+                return back()->with('error', 'Cannot activate admin accounts.');
+            }
+
+            // Check if already active
+            if ($user->status === 'active') {
+                return back()->with('info', 'School account is already active.');
+            }
+
+            // Activate
+            $user->status = 'active';
+            $user->save();
+
+            return back()->with('success', 'School account activated successfully.');
+            
+        } catch (\Exception $e) {
+            \Log::error('Error activating school account: ' . $e->getMessage());
+            return back()->with('error', 'Failed to activate school account. Please try again.');
         }
-
-        // Check if already active
-        if ($user->is_active) {
-            return redirect()->back()->with('info', 'School account is already active.');
-        }
-
-        // Activate
-        $user->is_active = true;
-        $user->save();
-
-        return redirect()->back()->with('success', 'School account activated successfully.');
     }
 
     /**
@@ -371,29 +446,143 @@ class SchoolsController extends Controller
      */
     public function deactivate(int $userId)
     {
+        try {
+            // Find user
+            $user = User::findOrFail($userId);
+
+            // Verify user is a school (not admin)
+            if ($user->isAdmin()) {
+                return back()->with('error', 'Cannot deactivate admin accounts.');
+            }
+
+            // Prevent self-deactivation
+            if ($user->id === auth()->id()) {
+                return back()->with('error', 'You cannot deactivate your own account.');
+            }
+
+            // Check if already inactive
+            if ($user->status === 'inactive') {
+                return back()->with('info', 'School account is already inactive.');
+            }
+
+            // Deactivate
+            $user->status = 'inactive';
+            $user->save();
+
+            return back()->with('success', 'School account deactivated successfully.');
+            
+        } catch (\Exception $e) {
+            \Log::error('Error deactivating school account: ' . $e->getMessage());
+            return back()->with('error', 'Failed to deactivate school account. Please try again.');
+        }
+    }
+
+    /**
+     * Permanently delete a school account and all associated data.
+     * 
+     * DELETE /admin/schools/{userId}
+     */
+    public function destroy(int $userId)
+    {
         // Find user
         $user = User::findOrFail($userId);
 
         // Verify user is a school (not admin)
         if ($user->isAdmin()) {
-            return redirect()->back()->with('error', 'Cannot deactivate admin accounts.');
+            return redirect()->route('admin.schools.index')->with('error', 'Cannot delete admin accounts.');
         }
 
-        // Prevent self-deactivation
+        // Prevent self-deletion
         if ($user->id === auth()->id()) {
-            return redirect()->back()->with('error', 'You cannot deactivate your own account.');
+            return redirect()->route('admin.schools.index')->with('error', 'You cannot delete your own account.');
         }
 
-        // Check if already inactive
-        if (!$user->is_active) {
-            return redirect()->back()->with('info', 'School account is already inactive.');
+        // Store school name for flash message
+        $schoolName = $user->school_name;
+
+        try {
+            // Manually delete all related records to avoid foreign key constraint errors
+            \DB::transaction(function () use ($user) {
+                // 1. Delete daily consumptions
+                \DB::table('daily_consumptions')->where('user_id', $user->id)->delete();
+                
+                // 2. Delete rice reports
+                \DB::table('rice_reports')->where('user_id', $user->id)->delete();
+                
+                // 3. Delete amount reports (and related bills will cascade)
+                \DB::table('amount_reports')->where('user_id', $user->id)->delete();
+                
+                // 4. Delete bills directly if they don't cascade
+                \DB::table('bills')->where('user_id', $user->id)->delete();
+                
+                // 5. Delete monthly rice configurations
+                \DB::table('monthly_rice_configurations')->where('user_id', $user->id)->delete();
+                
+                // 6. Delete monthly amount configurations
+                \DB::table('monthly_amount_configurations')->where('user_id', $user->id)->delete();
+                
+                // 6b. Delete monthly configurations (General)
+                \DB::table('monthly_configurations')->where('user_id', $user->id)->delete();
+                
+                // 7. Delete roll statements (Fixed table name)
+                \DB::table('roll_statements')->where('user_id', $user->id)->delete();
+                
+                // 8. Delete Rice Inventory Activities (New)
+                \DB::table('rice_inventory_activities')->where('user_id', $user->id)->delete();
+                
+                // 9. Delete Month Completions (New)
+                \DB::table('month_completions')->where('user_id', $user->id)->delete();
+                
+                // 10. Delete Support System Data (Comprehensive)
+                // Get all chat IDs for this user
+                $chatIds = \DB::table('support_chats')->where('user_id', $user->id)->pluck('id');
+                
+                if ($chatIds->isNotEmpty()) {
+                    // Get all message IDs in these chats
+                    $messageIds = \DB::table('support_messages')->whereIn('support_chat_id', $chatIds)->pluck('id');
+                    
+                    if ($messageIds->isNotEmpty()) {
+                        // Delete attachments
+                        \DB::table('message_attachments')->whereIn('support_message_id', $messageIds)->delete();
+                        
+                        // Delete messages
+                        \DB::table('support_messages')->whereIn('id', $messageIds)->delete();
+                    }
+                    
+                    // Delete typing indicators
+                    \DB::table('chat_typing_indicators')->whereIn('support_chat_id', $chatIds)->delete();
+                    
+                    // Delete chats
+                    \DB::table('support_chats')->whereIn('id', $chatIds)->delete();
+                }
+                
+                // 11. Delete feedback
+                \DB::table('feedback')->where('user_id', $user->id)->delete();
+                
+                // 12. Delete user tokens (Check if table exists first)
+                if (\Illuminate\Support\Facades\Schema::hasTable('personal_access_tokens')) {
+                    \DB::table('personal_access_tokens')->where('tokenable_id', $user->id)
+                        ->where('tokenable_type', 'App\\Models\\User')
+                        ->delete();
+                }
+                
+                // 13. Finally, delete the user
+                $user->delete();
+            });
+
+            return redirect()->route('admin.schools.index')->with('success', "School \"{$schoolName}\" and all associated data have been permanently deleted.");
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to delete user', [
+                'user_id' => $userId,
+                'error' => $e->getMessage()
+            ]);
+            
+            // Write to a specific file for easier debugging
+            file_put_contents(storage_path('logs/delete_error.log'), $e->getMessage() . "\n" . $e->getTraceAsString());
+            
+            return redirect()->route('admin.schools.index')->with('error', 'Failed to delete school. Error: ' . $e->getMessage());
         }
-
-        // Deactivate
-        $user->is_active = false;
-        $user->save();
-
-        return redirect()->back()->with('success', 'School account deactivated successfully.');
     }
 
     /**
@@ -506,4 +695,6 @@ class SchoolsController extends Controller
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
+
+
 }

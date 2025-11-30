@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePage } from '@inertiajs/react';
-import { MessageCircle, X, Send, Minimize2, Smile, Paperclip, Check, CheckCheck, FileText, Image as ImageIcon, Mic } from 'lucide-react';
+import { MessageCircle, X, Send, Minimize2, Smile, Check, CheckCheck, FileText, Image as ImageIcon, Mic, Bot } from 'lucide-react';
 
 import axios from 'axios';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
@@ -26,6 +26,8 @@ export default function SupportChatWidget() {
     const [previewImage, setPreviewImage] = useState(null); // { src, alt }
     const [isRecording, setIsRecording] = useState(false);
     const [recordingError, setRecordingError] = useState(null);
+    const [isListening, setIsListening] = useState(false);
+    const [speechError, setSpeechError] = useState(null);
 
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
@@ -34,6 +36,7 @@ export default function SupportChatWidget() {
     const mediaRecorderRef = useRef(null);
     const mediaStreamRef = useRef(null);
     const recordedChunksRef = useRef([]);
+    const recognitionRef = useRef(null);
 
     // Initialize chat when opened
     useEffect(() => {
@@ -347,7 +350,7 @@ export default function SupportChatWidget() {
                     return;
                 }
 
-                const file = new File([blob], `voice-message-${Date.now()}.ogg`, { type: 'audio/ogg' });
+                const file = new File([blob], `voice - message - ${Date.now()}.ogg`, { type: 'audio/ogg' });
                 setSelectedFile(file);
                 cleanupRecording();
                 setIsRecording(false);
@@ -381,6 +384,89 @@ export default function SupportChatWidget() {
             stopRecording();
         } else {
             startRecording();
+        }
+    };
+
+    // Initialize Speech Recognition
+    useEffect(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                setNewMessage(transcript);
+                setIsListening(false);
+                setSpeechError(null);
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                setIsListening(false);
+
+                // Provide user-friendly error messages
+                if (event.error === 'not-allowed') {
+                    setSpeechError('Microphone access denied. Please allow microphone permission in your browser settings and try again.');
+                } else if (event.error === 'no-speech') {
+                    setSpeechError('No speech detected. Please try again.');
+                } else if (event.error === 'network') {
+                    setSpeechError('Network error. Please check your connection.');
+                } else {
+                    setSpeechError(`Voice input error: ${event.error}`);
+                }
+            };
+
+            recognition.onend = () => {
+                setIsListening(false);
+            };
+
+            recognitionRef.current = recognition;
+        }
+
+        return () => {
+            if (recognitionRef.current) {
+                try {
+                    recognitionRef.current.stop();
+                } catch (e) {
+                    // Ignore errors when stopping
+                }
+            }
+        };
+    }, []);
+
+    // Toggle voice input
+    const toggleVoiceInput = () => {
+        if (!recognitionRef.current) {
+            alert('Speech recognition is not supported in your browser.\n\nPlease use:\n✓ Chrome\n✓ Edge\n✓ Safari');
+            return;
+        }
+
+        if (isListening) {
+            try {
+                recognitionRef.current.stop();
+            } catch (error) {
+                console.error('Error stopping recognition:', error);
+            }
+            setIsListening(false);
+        } else {
+            try {
+                setIsListening(true);
+                setSpeechError(null);
+                recognitionRef.current.start();
+            } catch (error) {
+                console.error('Error starting speech recognition:', error);
+                setIsListening(false);
+
+                const errorMsg = 'Could not start voice input.\n\n' +
+                    'Please:\n' +
+                    '1. Allow microphone permission (click 🔒 icon in address bar)\n' +
+                    '2. Reload the page\n' +
+                    '3. Try again';
+                alert(errorMsg);
+            }
         }
     };
 
@@ -418,7 +504,7 @@ export default function SupportChatWidget() {
                             <div className="flex-1">
                                 <h3 className="font-semibold text-sm">Support Team</h3>
                                 <p className="text-xs text-white/80">
-                                    {adminOnline ? 'Online' : adminLastSeen ? `Last seen ${formatDistanceToNow(adminLastSeen, { addSuffix: true })}` : 'Offline'}
+                                    {adminOnline ? 'Online' : adminLastSeen ? `Last seen ${formatDistanceToNow(adminLastSeen, { addSuffix: true })} ` : 'Offline'}
                                 </p>
                             </div>
                         </div>
@@ -490,23 +576,23 @@ export default function SupportChatWidget() {
                                                 </div>
                                             )}
 
-                                            <div className={`flex ${msg.user_id === currentUser?.id ? 'justify-end' : 'justify-start'}`}>
+                                            <div className={`flex ${msg.user_id === currentUser?.id ? 'justify-end' : 'justify-start'} `}>
                                                 <div
-                                                    className={`relative max-w-[75%] px-3 py-2 rounded-lg shadow-sm ${msg.user_id === currentUser?.id ? 'bg-[#d9fdd3] text-gray-900' : 'bg-white text-gray-900'} ${msg.temp ? 'opacity-60' : 'opacity-100'}`}
+                                                    className={`relative max-w-[75%] px-4 py-3 rounded-lg shadow-sm ${msg.user_id === currentUser?.id ? 'bg-[#d9fdd3] text-gray-900' : 'bg-white text-gray-900'} ${msg.temp ? 'opacity-60' : 'opacity-100'}`}
                                                     style={{
                                                         borderBottomRightRadius: msg.user_id === currentUser?.id ? '2px' : undefined,
                                                         borderBottomLeftRadius: msg.user_id !== currentUser?.id ? '2px' : undefined,
                                                     }}
                                                 >
                                                     <div
-                                                        className={`absolute bottom-0 ${msg.user_id === currentUser?.id ? 'right-0 -mr-2' : 'left-0 -ml-2'}`}
+                                                        className={`absolute bottom - 0 ${msg.user_id === currentUser?.id ? 'right-0 -mr-2' : 'left-0 -ml-2'} `}
                                                         style={{
                                                             width: 0,
                                                             height: 0,
                                                             borderLeft: msg.user_id === currentUser?.id ? '8px solid transparent' : '8px solid #fff',
                                                             borderRight: msg.user_id !== currentUser?.id ? '8px solid transparent' : '8px solid #d9fdd3',
                                                             borderTop: '8px solid transparent',
-                                                            borderBottom: `8px solid ${msg.user_id === currentUser?.id ? '#d9fdd3' : '#fff'}`,
+                                                            borderBottom: `8px solid ${msg.user_id === currentUser?.id ? '#d9fdd3' : '#fff'} `,
                                                         }}
                                                     ></div>
 
@@ -514,7 +600,7 @@ export default function SupportChatWidget() {
                                                     {Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
                                                         <div className="mb-1 space-y-1">
                                                             {msg.attachments.map(att => {
-                                                                const fileUrl = att.file_url || (att.file_path ? `/storage/${att.file_path}` : '');
+                                                                const fileUrl = att.file_url || (att.file_path ? `/ storage / ${att.file_path} ` : '');
                                                                 const isImage = att.file_type === 'image' || (att.mime_type && att.mime_type.startsWith('image/'));
                                                                 const isVideo = att.file_type === 'video' || (att.mime_type && att.mime_type.startsWith('video/'));
                                                                 const isAudio = att.file_type === 'audio' || (att.mime_type && att.mime_type.startsWith('audio/'));
@@ -566,8 +652,8 @@ export default function SupportChatWidget() {
                                                         msg.attachments.length > 0 &&
                                                         msg.message === msg.attachments[0].file_name
                                                     ) && (
-                                                        <p className="text-sm break-words whitespace-pre-wrap">{msg.message}</p>
-                                                    )}
+                                                            <p className="text-sm break-words whitespace-pre-wrap">{msg.message}</p>
+                                                        )}
 
                                                     <div className="flex items-center justify-end space-x-1 mt-1">
                                                         <span className="text-[10px] text-gray-600">
@@ -612,6 +698,26 @@ export default function SupportChatWidget() {
 
                             {/* Input Form */}
                             <form onSubmit={sendMessage} className="p-3 border-t border-gray-200 bg-[#f0f2f5]">
+                                {speechError && (
+                                    <div className="mb-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+                                        <div className="flex items-start justify-between">
+                                            <span className="flex-1">{speechError}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSpeechError(null)}
+                                                className="ml-2 text-red-500 hover:text-red-700"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                                {isListening && (
+                                    <div className="mb-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700 flex items-center justify-between">
+                                        <span>🎤 Listening... Speak now</span>
+                                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                                    </div>
+                                )}
                                 {isRecording && (
                                     <div className="mb-2 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-center justify-between">
                                         <span>Recording voice message... Tap the mic again to stop.</span>
@@ -668,24 +774,11 @@ export default function SupportChatWidget() {
                                     >
                                         <Smile className="w-5 h-5 text-gray-600" />
                                     </button>
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        onChange={handleFileSelect}
-                                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-                                        className="hidden"
-                                    />
                                     <button
                                         type="button"
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                                    >
-                                        <Paperclip className="w-5 h-5 text-gray-600" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={handleMicClick}
-                                        className={`p-2 rounded-full transition-colors ${isRecording ? 'bg-red-100 text-red-600' : 'hover:bg-gray-200'}`}
+                                        onClick={toggleVoiceInput}
+                                        className={`p - 2 rounded - full transition - colors ${isListening ? 'bg-blue-100 text-blue-600 animate-pulse' : 'hover:bg-gray-200'} `}
+                                        title={isListening ? 'Stop listening' : 'Start voice input'}
                                     >
                                         <Mic className="w-5 h-5 text-gray-600" />
                                     </button>

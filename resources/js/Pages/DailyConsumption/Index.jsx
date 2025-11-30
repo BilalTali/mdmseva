@@ -1,7 +1,7 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Plus, Calendar, TrendingDown } from 'lucide-react';
+import { Plus, Calendar, TrendingDown, FileText, DollarSign, Download } from 'lucide-react';
 
 export default function Index({
     auth,
@@ -33,6 +33,13 @@ export default function Index({
                         Daily Consumption - {monthName} {currentYear}
                     </h2>
                     <div className="flex gap-2">
+                        <a
+                            href={`/daily-consumptions/export?month=${currentMonth}&year=${currentYear}&format=xlsx`}
+                            className="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 transition"
+                        >
+                            <Download className="w-4 h-4 mr-2" />
+                            Export
+                        </a>
                         <Link
                             href={route('daily-consumptions.index')}
                             className="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 transition"
@@ -46,6 +53,20 @@ export default function Index({
                         >
                             <Plus className="w-4 h-4 mr-2" />
                             Add Entry
+                        </Link>
+                        <Link
+                            href={`/rice-reports/create?month=${currentMonth}&year=${currentYear}`}
+                            className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 transition"
+                        >
+                            <FileText className="w-4 h-4 mr-2" />
+                            Rice Report
+                        </Link>
+                        <Link
+                            href={`/amount-reports/create?month=${currentMonth}&year=${currentYear}`}
+                            className="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 transition"
+                        >
+                            <DollarSign className="w-4 h-4 mr-2" />
+                            Amount Report
                         </Link>
                     </div>
                 </div>

@@ -49,7 +49,12 @@ class MonthlyRiceConfiguration extends Model
         'opening_carried_from_previous',
         'previous_month_id',
         'is_locked',
-        'locked_reason'
+        'locked_at',
+        'locked_by',
+        'lock_reason',
+        'unlocked_at',
+        'unlocked_by',
+        'unlock_reason',
     ];
 
     protected $casts = [
@@ -72,7 +77,9 @@ class MonthlyRiceConfiguration extends Model
         'is_completed' => 'boolean',
         'is_locked' => 'boolean',
         'opening_carried_from_previous' => 'boolean',
-        'completed_at' => 'datetime'
+        'completed_at' => 'datetime',
+        'locked_at' => 'datetime',
+        'unlocked_at' => 'datetime',
     ];
 
     // ===============================================
@@ -97,6 +104,16 @@ class MonthlyRiceConfiguration extends Model
     public function completedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'completed_by');
+    }
+
+    public function lockedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'locked_by');
+    }
+
+    public function unlockedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'unlocked_by');
     }
 
     public function dailyConsumptions(): HasMany
@@ -340,6 +357,18 @@ class MonthlyRiceConfiguration extends Model
                 'closing_balance' => $this->total_closing_balance
             ]);
 
+            // Auto-create next month configuration with carried opening balances if it doesn't exist yet
+            $nextMonth = $this->month == 12 ? 1 : $this->month + 1;
+            $nextYear = $this->month == 12 ? $this->year + 1 : $this->year;
+
+            $nextExists = self::forUser($this->user_id)
+                ->forPeriod($nextMonth, $nextYear)
+                ->exists();
+
+            if (!$nextExists) {
+                self::createNextMonth($this->user_id, $this);
+            }
+
             DB::commit();
             return true;
         } catch (\Exception $e) {
@@ -423,6 +452,7 @@ class MonthlyRiceConfiguration extends Model
 
     /**
      * Get or create configuration for specific period
+     * ✅ UPDATED: Always carries forward from previous month, regardless of completion status
      */
     public static function getOrCreateForPeriod(
         int $userId,
@@ -446,11 +476,25 @@ class MonthlyRiceConfiguration extends Model
             ->forPeriod($prevMonth, $prevYear)
             ->first();
 
-        if ($previousConfig && $previousConfig->is_completed) {
+        // ✅ UPDATED: Carry forward regardless of completion status
+        if ($previousConfig) {
+            // Sync consumed amounts to get current closing balance
+            $previousConfig->syncConsumedFromDaily();
+            $previousConfig->save();
+            
+            Log::info('Creating next month with carry-forward', [
+                'user_id' => $userId,
+                'new_period' => "{$month}/{$year}",
+                'previous_period' => "{$prevMonth}/{$prevYear}",
+                'previous_completed' => $previousConfig->is_completed,
+                'carried_balance_primary' => $previousConfig->closing_balance_primary,
+                'carried_balance_upper' => $previousConfig->closing_balance_upper_primary,
+            ]);
+            
             return self::createNextMonth($userId, $previousConfig, $defaults);
         }
 
-        // Create fresh configuration
+        // Create fresh configuration (no previous month exists)
         return self::create(array_merge([
             'user_id' => $userId,
             'month' => $month,

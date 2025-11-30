@@ -11,6 +11,8 @@ import {
     Package,
     AlertCircle,
     Droplets,
+    ArrowRight,
+    CheckCircle2,
 } from 'lucide-react';
 
 export default function ViewPdf({
@@ -20,6 +22,10 @@ export default function ViewPdf({
     schoolInfo,
     currentAvailableStock,
     statistics,
+    can_carryforward,
+    closing_balance,
+    next_month_info,
+    flash,
 }) {
     const [selectedTheme, setSelectedTheme] = useState('bw');
     const [selectedReportId, setSelectedReportId] = useState(report.id);
@@ -59,6 +65,20 @@ export default function ViewPdf({
                 onFinish: () => setIsLoading(false),
             });
         }
+    };
+
+    const handleCarryforward = () => {
+        if (confirm(`Transfer closing balance to ${getMonthName(next_month_info?.month)} ${next_month_info?.year} as opening balance?`)) {
+            setIsLoading(true);
+            router.post(`/rice-reports/${report.id}/carryforward`, {}, {
+                onFinish: () => setIsLoading(false),
+            });
+        }
+    };
+
+    const getMonthName = (monthNum) => {
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        return months[monthNum - 1] || '';
     };
 
     return (
@@ -138,6 +158,55 @@ export default function ViewPdf({
                     )}
 
                     {/* ============================================
+                        CARRYFORWARD PROMPT
+                    ============================================ */}
+                    {can_carryforward && closing_balance && next_month_info && (
+                        <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                    <CheckCircle2 className="h-6 w-6 text-blue-600" />
+                                </div>
+                                <div className="ml-4 flex-1">
+                                    <h3 className="text-base font-semibold text-blue-900 mb-2">
+                                        Transfer Balance to Next Month?
+                                    </h3>
+                                    <div className="text-sm text-blue-800 space-y-2">
+                                        <p>Rice report for <strong>{report.period}</strong> generated successfully!</p>
+                                        <div className="bg-white/60 rounded p-3 mt-2">
+                                            <p className="font-medium mb-1">Closing Balance:</p>
+                                            <ul className="list-disc list-inside space-y-1">
+                                                <li>Primary: <strong>{closing_balance.primary.toFixed(2)} kg</strong></li>
+                                                <li>Upper Primary: <strong>{closing_balance.upper_primary.toFixed(2)} kg</strong></li>
+                                                <li className="text-blue-900 font-semibold">Total: {closing_balance.total.toFixed(2)} kg</li>
+                                            </ul>
+                                        </div>
+                                        <p className="mt-3">
+                                            Create <strong>{getMonthName(next_month_info.month)} {next_month_info.year}</strong> rice configuration
+                                            with this balance as opening stock?
+                                        </p>
+                                    </div>
+                                    <div className="mt-4 flex gap-3">
+                                        <button
+                                            onClick={handleCarryforward}
+                                            disabled={isLoading}
+                                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 font-medium"
+                                        >
+                                            <ArrowRight className="w-4 h-4 mr-2" />
+                                            Yes, Transfer Balance
+                                        </button>
+                                        <a
+                                            href="/monthly-rice-config/create"
+                                            className="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 font-medium"
+                                        >
+                                            Create Manually Later
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ============================================
                         CONTROL PANEL
                     ============================================ */}
                     <div className="bg-white shadow-sm sm:rounded-lg p-6">
@@ -170,11 +239,10 @@ export default function ViewPdf({
                                         <button
                                             key={theme.id}
                                             onClick={() => handleThemeChange(theme.id)}
-                                            className={`p-3 rounded-lg border-2 transition-all ${
-                                                selectedTheme === theme.id
+                                            className={`p-3 rounded-lg border-2 transition-all ${selectedTheme === theme.id
                                                     ? 'border-indigo-600 shadow-md'
                                                     : 'border-gray-200 hover:border-gray-300'
-                                            }`}
+                                                }`}
                                         >
                                             <div className={`w-full h-8 rounded ${theme.color} mb-2`}></div>
                                             <p className="text-xs font-medium text-gray-700">{theme.name}</p>
@@ -248,48 +316,6 @@ export default function ViewPdf({
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-
-                    {/* ============================================
-                        SALT & CONDIMENT BREAKDOWN (TWO COLUMNS)
-                    ============================================ */}
-                    <div className="bg-white shadow-sm sm:rounded-lg p-6">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                            <Droplets className="w-5 h-5 mr-2 text-indigo-600" />
-                            Salt & Condiment Breakdown
-                        </h3>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* LEFT: Primary */}
-                            <div>
-                                <h4 className="text-md font-semibold text-gray-800 mb-3">Primary (Class 1–5)</h4>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between border-b pb-1">
-                                        <span>Salt Used:</span>
-                                        <span>{report.breakdown?.salt?.primary || '0.00 kg'}</span>
-                                    </div>
-                                    <div className="flex justify-between border-b pb-1">
-                                        <span>Condiments Used:</span>
-                                        <span>{report.breakdown?.condiment?.primary || '0.00 kg'}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* RIGHT: Middle */}
-                            <div>
-                                <h4 className="text-md font-semibold text-gray-800 mb-3">Middle (Class 6–8)</h4>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between border-b pb-1">
-                                        <span>Salt Used:</span>
-                                        <span>{report.breakdown?.salt?.middle || '0.00 kg'}</span>
-                                    </div>
-                                    <div className="flex justify-between border-b pb-1">
-                                        <span>Condiments Used:</span>
-                                        <span>{report.breakdown?.condiment?.middle || '0.00 kg'}</span>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
 

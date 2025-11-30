@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Calendar, Plus, Edit, Check, Lock, Unlock, TrendingUp, TrendingDown, Package, Eye } from 'lucide-react';
+import { Calendar, Plus, Edit, Lock, Unlock, TrendingUp, TrendingDown, Package, Eye } from 'lucide-react';
 
 export default function Index({ auth, config, currentMonth, currentYear, activities, completedMonths, amountConfig, canEnterConsumption, schoolTypes }) {
     const [selectedMonth, setSelectedMonth] = useState(currentMonth);
@@ -14,17 +14,6 @@ export default function Index({ auth, config, currentMonth, currentYear, activit
 
     const handleMonthChange = (month, year) => {
         router.visit(route('monthly-rice-config.index', { month, year }));
-    };
-
-    const handleCompleteMonth = () => {
-        if (!confirm('Are you sure you want to complete this month? This cannot be undone.')) {
-            return;
-        }
-
-        router.post(route('monthly-rice-config.complete'), {
-            month: config.month,
-            year: config.year
-        });
     };
 
     const handleToggleLock = () => {
@@ -230,15 +219,6 @@ export default function Index({ auth, config, currentMonth, currentYear, activit
                                             Edit Configuration
                                         </Link>
                                     )}
-                                    {!config.is_completed && !config.is_locked && (
-                                        <button
-                                            onClick={handleCompleteMonth}
-                                            className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700"
-                                        >
-                                            <Check className="w-4 h-4 mr-2" />
-                                            Complete Month
-                                        </button>
-                                    )}
                                     <button
                                         onClick={handleToggleLock}
                                         className={`inline-flex items-center px-4 py-2 border border-transparent rounded-md font-semibold text-xs uppercase tracking-widest text-white ${config.is_locked ? 'bg-blue-600 hover:bg-blue-700' : 'bg-yellow-600 hover:bg-yellow-700'}`}
@@ -259,11 +239,29 @@ export default function Index({ auth, config, currentMonth, currentYear, activit
                                 <p className="text-sm text-gray-500 mt-3">
                                     Lock the month when you want to freeze data. Unlock to make corrections even after completion.
                                 </p>
-                                {config.is_locked && config.locked_reason && (
+                                {config.is_locked && config.lock_reason && (
                                     <p className="text-sm text-yellow-700 mt-2">
-                                        Lock reason: {config.locked_reason}
+                                        Lock reason: {config.lock_reason}
                                     </p>
                                 )}
+                            </div>
+
+                            {/* Amount Configuration CTA */}
+                            <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 p-6">
+                                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900">Next: Amount Configuration</h3>
+                                        <p className="text-sm text-gray-600 mt-1">
+                                            Configure daily ingredient amounts for {monthNames[config.month - 1]} {config.year} before recording daily consumption.
+                                        </p>
+                                    </div>
+                                    <Link
+                                        href={route('amount-config.index', { month: config.month, year: config.year })}
+                                        className="inline-flex items-center justify-center px-5 py-2.5 bg-indigo-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-indigo-700"
+                                    >
+                                        Proceed to Amount Configuration
+                                    </Link>
+                                </div>
                             </div>
 
                             {config.is_completed && (

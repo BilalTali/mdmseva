@@ -17,10 +17,10 @@ class AdminUserSeeder extends Seeder
 
         // Create admin user
         $admin = User::firstOrCreate(
-            ['email' => 'admin@mdm.gov.in'],
+            ['email' => 'adminbilaltali@gmail.com'],
             [
                 'name' => 'MDM System Administrator',
-                'password' => Hash::make('Admin@123'),
+                'password' => Hash::make('Bilal@654321'),
                 'phone' => '1234567890',
                 'date_of_birth' => '1990-01-01',
                 'udise_code' => 'ADMIN000001',  // Changed from 'udise'

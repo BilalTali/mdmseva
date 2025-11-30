@@ -1,4 +1,4 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
+import AuthLogo from '@/Components/AuthLogo';
 import { Link } from '@inertiajs/react';
 import ThemeToggle from '@/Components/ThemeToggle';
 
@@ -10,8 +10,8 @@ export default function GuestLayout({ children }) {
             </div>
 
             <div>
-                <Link href="/">
-                    <ApplicationLogo className="w-20 h-20 fill-current text-[var(--primary-600)]" />
+                <Link href="/" aria-label="Go to homepage">
+                    <AuthLogo className="w-48" />
                 </Link>
             </div>
 

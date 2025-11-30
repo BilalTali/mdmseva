@@ -100,10 +100,17 @@ class MonthlyRiceConfigurationController extends Controller
         $prevMonth = $month == 1 ? 12 : $month - 1;
         $prevYear = $month == 1 ? $year - 1 : $year;
         
+        // ✅ UPDATED: Fetch previous month regardless of completion status
+        // We want to show the ACTUAL current closing balance
         $previousConfig = MonthlyRiceConfiguration::forUser($user->id)
             ->forPeriod($prevMonth, $prevYear)
-            ->completed()
             ->first();
+        
+        // If previous config exists, sync its consumed amounts to get current closing balance
+        if ($previousConfig) {
+            $previousConfig->syncConsumedFromDaily();
+            $previousConfig->save();
+        }
 
         return Inertia::render('MonthlyRiceConfiguration/Create', [
             'month' => $month,
@@ -118,7 +125,8 @@ class MonthlyRiceConfigurationController extends Controller
                 'middle' => 'Middle',
                 'secondary' => 'Secondary',
                 'senior_secondary' => 'Senior Secondary'
-            ]
+            ],
+            'userSchoolType' => $user->school_type
         ]);
     }
 
@@ -229,7 +237,8 @@ class MonthlyRiceConfigurationController extends Controller
                 'middle' => 'Middle',
                 'secondary' => 'Secondary',
                 'senior_secondary' => 'Senior Secondary'
-            ]
+            ],
+            'userSchoolType' => $user->school_type
         ]);
     }
 
@@ -454,7 +463,7 @@ class MonthlyRiceConfigurationController extends Controller
             ->firstOrFail();
 
         $config->is_locked = (bool) $validated['lock'];
-        $config->locked_reason = $config->is_locked ? ($validated['reason'] ?? null) : null;
+        $config->lock_reason = $config->is_locked ? ($validated['reason'] ?? null) : null;
         $config->save();
 
         return back()->with(
@@ -489,8 +498,12 @@ class MonthlyRiceConfigurationController extends Controller
         try {
             $config->completeMonth($user->id, $validated['notes'] ?? null);
 
-            return redirect()->route('monthly-rice-config.create-next')
-                ->with('success', 'Month completed successfully! Create next month configuration.');
+            session(['last_completed_month_id' => $config->id]);
+
+            return redirect()->route('daily-consumptions.list', [
+                'month' => $validated['month'],
+                'year' => $validated['year']
+            ])->with('success', 'Congratulations! Month completed successfully. You can review the summary below.');
 
         } catch (\Exception $e) {
             Log::error('Failed to complete month', [
@@ -544,7 +557,14 @@ class MonthlyRiceConfigurationController extends Controller
             'carriedBalance' => [
                 'primary' => $lastCompleted->closing_balance_primary,
                 'upper_primary' => $lastCompleted->closing_balance_upper_primary
-            ]
+            ],
+            'schoolTypes' => [
+                'primary' => 'Primary',
+                'middle' => 'Middle',
+                'secondary' => 'Secondary',
+                'senior_secondary' => 'Senior Secondary'
+            ],
+            'userSchoolType' => $user->school_type
         ]);
     }
 

@@ -115,6 +115,23 @@ class SupportChatController extends Controller
         // Broadcast message
         broadcast(new NewSupportMessage($message))->toOthers();
 
+        // Trigger AI response if enabled for this chat
+        if ($chat->shouldAIRespond()) {
+            try {
+                $aiService = app(\App\Services\AIAgentService::class);
+                $aiMessage = $aiService->generateResponse($chat, $message);
+                
+                if ($aiMessage) {
+                    // Broadcast AI response
+                    broadcast(new NewSupportMessage($aiMessage))->toOthers();
+                    \Illuminate\Support\Facades\Log::info("AI responded to chat {$chat->id}");
+                }
+            } catch (\Exception $e) {
+                // Log but don't fail the user's message
+                \Illuminate\Support\Facades\Log::error("AI response failed: " . $e->getMessage());
+            }
+        }
+
         return response()->json([
             'success' => true,
             'data' => $message->load('user')

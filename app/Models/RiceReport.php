@@ -30,6 +30,8 @@ class RiceReport extends Model
         'total_serving_days',
         'average_daily_consumption',
         'daily_records',
+        'is_stale',
+        'stale_reason',
     ];
 
     /**
@@ -50,6 +52,7 @@ class RiceReport extends Model
         'total_serving_days' => 'integer',
         'average_daily_consumption' => 'decimal:2',
         'daily_records' => 'array',
+        'is_stale' => 'boolean',
     ];
 
     /**

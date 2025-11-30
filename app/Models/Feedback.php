@@ -11,8 +11,9 @@ class Feedback extends Model
     protected $table = 'feedback';
     
     protected $fillable = [
-        'name', 'email', 'phone', 'school_name', 'message', 'rating',
-        'type', 'status', 'priority', 'admin_response', 'responded_at',
+        'user_id', 'name', 'email', 'phone', 'school_name', 'udise_code',
+        'state', 'district', 'zone', 'subject', 'message', 'rating', 'type',
+        'category', 'status', 'priority', 'admin_response', 'responded_at',
         'responded_by', 'ip_address', 'user_agent', 'metadata'
     ];
 

@@ -9,8 +9,9 @@ return new class extends Migration
     /**
      * Run the migrations.
      * 
-     * Creates all core Laravel framework tables:
-     * - users (with location fields)
+     * Creates all core Laravel framework tables and location tables:
+     * - districts & zones (location/geography)
+     * - users (with location fields and foreign keys)
      * - password_reset_tokens
      * - sessions
      * - cache & cache_locks
@@ -18,6 +19,35 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // =====================================================
+        // DISTRICTS TABLE
+        // =====================================================
+        Schema::create('districts', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique();
+            $table->string('code', 10)->unique()->nullable();
+            $table->string('state')->default('Jammu and Kashmir');
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+            
+            $table->index('is_active');
+        });
+
+        // =====================================================
+        // ZONES TABLE
+        // =====================================================
+        Schema::create('zones', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('district_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('code', 10)->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+            
+            $table->index(['district_id', 'is_active']);
+            $table->unique(['district_id', 'name']);
+        });
+
         // =====================================================
         // USERS TABLE
         // =====================================================
@@ -33,15 +63,20 @@ return new class extends Migration
             $table->string('udise_code', 20)->unique()->comment('Unique school identifier');
             $table->string('school_name');
             $table->string('phone', 15)->nullable();
+            $table->string('address', 500)->nullable();
             $table->date('date_of_birth')->nullable();
             $table->enum('school_type', ['primary', 'middle', 'secondary', 'senior_secondary'])->default('primary');
             $table->string('institute_address')->nullable();
             $table->string('school_pincode', 10)->nullable();
             
-            // Location (nullable, foreign keys added in location tables migration)
+            // Location fields
+            $table->string('state')->default('Jammu and Kashmir');
+            $table->string('district')->nullable();
+            $table->string('zone')->nullable();
+            
+            // Location foreign keys
             $table->unsignedBigInteger('district_id')->nullable();
             $table->unsignedBigInteger('zone_id')->nullable();
-            $table->string('state')->default('Jammu and Kashmir');
             
             // Status
             $table->enum('status', ['active', 'inactive', 'pending'])->default('pending');
@@ -51,6 +86,10 @@ return new class extends Migration
             // Indexes
             $table->index('status');
             $table->index(['district_id', 'zone_id']);
+            
+            // Foreign keys
+            $table->foreign('district_id')->references('id')->on('districts')->nullOnDelete();
+            $table->foreign('zone_id')->references('id')->on('zones')->nullOnDelete();
         });
 
         // =====================================================
@@ -139,5 +178,7 @@ return new class extends Migration
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('users');
+        Schema::dropIfExists('zones');
+        Schema::dropIfExists('districts');
     }
 };

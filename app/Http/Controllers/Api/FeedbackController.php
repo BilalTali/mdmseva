@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreFeedbackRequest;
 use App\Models\Feedback;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class FeedbackController extends Controller
 {
@@ -42,6 +43,10 @@ class FeedbackController extends Controller
                 'email' => strtolower(trim($data['email'])),
                 'phone' => $data['phone'] ?? null,
                 'school_name' => $data['school_name'] ?? null,
+                'udise_code' => $data['udise_code'],
+                'state' => $data['state'],
+                'district' => $data['district'],
+                'zone' => $data['zone'],
                 'message' => $data['message'],
                 'rating' => $data['rating'],
                 'type' => $data['type'] ?? 'general',
@@ -51,7 +56,12 @@ class FeedbackController extends Controller
                 'metadata' => [
                     'source' => 'welcome_page',
                     'submitted_at' => now()->toISOString(),
-                    'browser' => $this->getBrowserInfo($request->userAgent())
+                    'browser' => $this->getBrowserInfo($request->userAgent()),
+                    'location' => array_filter([
+                        'state' => $data['state'],
+                        'district' => $data['district'],
+                        'zone' => $data['zone'],
+                    ])
                 ]
             ]);
 
@@ -151,5 +161,53 @@ class FeedbackController extends Controller
         
         $responded = Feedback::whereNotNull('admin_response')->count();
         return round(($responded / $total) * 100, 1);
+    }
+
+    /**
+     * Public testimonials feed for welcome page
+     */
+    public function publicTestimonials()
+    {
+        $testimonials = Feedback::with('respondedBy:id,name')
+            ->where('rating', '>=', 4)
+            ->orderByRaw('CASE WHEN responded_at IS NULL THEN 1 ELSE 0 END')
+            ->orderByDesc('responded_at')
+            ->orderByDesc('created_at')
+            ->limit(6)
+            ->get()
+            ->map(function (Feedback $feedback) {
+                $name = $feedback->name ?? 'MDM User';
+                $first = Str::substr($name, 0, 1);
+                $second = Str::substr($name, 1, 1) ?: $first;
+                $avatar = Str::upper($first . $second);
+
+                return [
+                    'id' => $feedback->id,
+                    'name' => $name,
+                    'role' => $feedback->school_name
+                        ?: ($feedback->metadata['source'] ?? 'School Administrator'),
+                    'udise_code' => $feedback->udise_code,
+                    'phone' => $feedback->phone,
+                    'state' => $feedback->state,
+                    'district' => $feedback->district,
+                    'zone' => $feedback->zone,
+                    'message' => $feedback->message,
+                    'rating' => (int) ($feedback->rating ?? 0),
+                    'avatar' => $avatar,
+                    'type' => $feedback->type,
+                    'status' => $feedback->status,
+                    'admin_response' => $feedback->admin_response,
+                    'responded_by' => $feedback->respondedBy
+                        ? ['name' => $feedback->respondedBy->name]
+                        : null,
+                    'responded_at' => optional($feedback->responded_at)->toIso8601String(),
+                    'submitted_at' => optional($feedback->created_at)->toIso8601String(),
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $testimonials,
+        ]);
     }
 }

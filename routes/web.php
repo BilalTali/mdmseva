@@ -69,6 +69,9 @@ Route::get('/accessibility-statement', function () {
     return Inertia::render('Legal/AccessibilityStatement');
 })->name('legal.accessibility');
 
+// Public Developer Message API
+Route::get('/api/developer-message', [\App\Http\Controllers\Admin\DeveloperMessageController::class, 'getActiveMessage']);
+
 // Public user guide (non-Inertia Blade view)
 Route::get('/user-guide', function () {
     return view('userguide');
@@ -125,12 +128,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         // View school details
         Route::get('/{userId}', [AdminSchoolsController::class, 'show'])->name('show');
 
+        // Edit school profile (admin-only)
+        Route::get('/{userId}/profile', [AdminSchoolsController::class, 'profile'])->name('profile');
+
         // Update school profile (admin)
         Route::patch('/{userId}', [AdminSchoolsController::class, 'update'])->name('update');
         
         // Activate/Deactivate school
         Route::post('/{userId}/activate', [AdminSchoolsController::class, 'activate'])->name('activate');
         Route::post('/{userId}/deactivate', [AdminSchoolsController::class, 'deactivate'])->name('deactivate');
+        
+        // Delete school
+        Route::delete('/{userId}', [AdminSchoolsController::class, 'destroy'])->name('destroy');
     });
     
     // Export schools
@@ -189,9 +198,30 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/{billId}', [AdminReportsController::class, 'billShow'])->name('show');
     });
     
+    
     // Export bills
     Route::get('/export/bills', [AdminReportsController::class, 'exportBills'])->name('export.bills');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Developer Messages Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('developer-messages', \App\Http\Controllers\Admin\DeveloperMessageController::class);
+    
+    /*
+    |--------------------------------------------------------------------------
+    | AI Configuration Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('ai-config')->name('ai-config.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AIConfigurationController::class, 'index'])->name('index');
+        Route::post('/update', [\App\Http\Controllers\Admin\AIConfigurationController::class, 'updateConfig'])->name('update');
+        Route::post('/upload-pdf', [\App\Http\Controllers\Admin\AIConfigurationController::class, 'uploadPDF'])->name('upload-pdf');
+        Route::post('/toggle-pdf/{id}', [\App\Http\Controllers\Admin\AIConfigurationController::class, 'togglePDF'])->name('toggle-pdf');
+        Route::delete('/delete-pdf/{id}', [\App\Http\Controllers\Admin\AIConfigurationController::class, 'deletePDF'])->name('delete-pdf');
+        Route::post('/test-ai', [\App\Http\Controllers\Admin\AIConfigurationController::class, 'testAI'])->name('test-ai');
+    });
     
 });
 
@@ -201,7 +231,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 |--------------------------------------------------------------------------
 | These routes are for school users only (not admin)
 */
-Route::middleware(['auth', 'verified', 'active'])->group(function () {
+Route::middleware(['auth', 'active'])->group(function () {
     
     /*
     |--------------------------------------------------------------------------
@@ -345,6 +375,7 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
             Route::get('/{config}/edit', [AmountConfigurationController::class, 'form'])->name('edit');
             Route::put('/{config}', [AmountConfigurationController::class, 'update'])->name('update');
             Route::delete('/{config}', [AmountConfigurationController::class, 'destroy'])->name('destroy');
+            Route::post('/confirm', [AmountConfigurationController::class, 'confirm'])->name('confirm');
         });
     
     /*
@@ -367,6 +398,8 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
             // List - Show daily consumption entries for selected month
             Route::get('/list', [DailyConsumptionController::class, 'list'])
                 ->name('list');
+            
+
             
             // Create - Show form for new consumption
             Route::get('/create', [DailyConsumptionController::class, 'create'])
@@ -391,6 +424,10 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
             // Show - View single consumption (optional, if needed)
             Route::get('/{dailyConsumption}', [DailyConsumptionController::class, 'show'])
                 ->name('show');
+            
+            // Export daily consumptions
+            Route::get('/export', [DailyConsumptionController::class, 'export'])
+                ->name('export');
         });
 
     /*
@@ -404,10 +441,12 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::get('/create', [RiceReportController::class, 'create'])->name('create');
         Route::post('/', [RiceReportController::class, 'store'])->name('store');
         Route::get('/find-report', [RiceReportController::class, 'findReport'])->name('find-report');
+        Route::get('/export', [RiceReportController::class, 'export'])->name('export');
         Route::get('/{report}', [RiceReportController::class, 'show'])->name('show');
         Route::get('/{report}/view-pdf', [RiceReportController::class, 'viewPdf'])->name('view-pdf');
         Route::get('/{report}/generate-pdf', [RiceReportController::class, 'generatePdf'])->name('generate-pdf');
         Route::post('/{report}/regenerate', [RiceReportController::class, 'regenerate'])->name('regenerate');
+        Route::post('/{report}/carryforward', [RiceReportController::class, 'carryforwardToNextMonth'])->name('carryforward');
         Route::delete('/{report}', [RiceReportController::class, 'destroy'])->name('destroy');
     });
 
@@ -422,6 +461,7 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
         Route::get('/create', [AmountReportController::class, 'create'])->name('create');
         Route::post('/', [AmountReportController::class, 'store'])->name('store');
         Route::get('/find-report', [AmountReportController::class, 'findReport'])->name('find-report');
+        Route::get('/export', [AmountReportController::class, 'export'])->name('export');
         Route::get('/{amountReport}', [AmountReportController::class, 'show'])->name('show');
         Route::get('/{amountReport}/view-pdf', [AmountReportController::class, 'viewPdf'])->name('view-pdf');
         Route::get('/{amountReport}/generate-pdf', [AmountReportController::class, 'generatePdf'])->name('generate-pdf');
@@ -493,4 +533,5 @@ Route::middleware(['auth', 'role:admin'])->prefix('api/admin/support-chat')->gro
     Route::post('/{chatId}/status', [AdminSupportChatController::class, 'updateStatus']);
     Route::get('/unread-count', [AdminSupportChatController::class, 'unreadCount']);
     Route::post('/{chatId}/read', [AdminSupportChatController::class, 'markAsRead']);
+    Route::post('/{chatId}/disable-ai', [AdminSupportChatController::class, 'disableAI']);
 });

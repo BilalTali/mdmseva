@@ -67,6 +67,7 @@ Route::prefix('feedback')->name('api.feedback.')->group(function () {
     Route::middleware(['web', 'auth', 'role:admin'])->group(function () {
         Route::get('/stats', [\App\Http\Controllers\Api\FeedbackController::class, 'getStats'])->name('stats');
     });
+    Route::get('/testimonials', [\App\Http\Controllers\Api\FeedbackController::class, 'publicTestimonials'])->name('testimonials');
 });
 
 /*

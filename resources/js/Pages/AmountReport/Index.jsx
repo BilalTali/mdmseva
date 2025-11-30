@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { 
-    DocumentTextIcon, 
-    PlusIcon, 
-    TrashIcon, 
+import {
+    DocumentTextIcon,
+    PlusIcon,
+    TrashIcon,
     EyeIcon,
     ArrowPathIcon,
     ChartBarIcon,
@@ -13,17 +13,18 @@ import {
     DocumentArrowDownIcon,
     ShoppingBagIcon,
     BoltIcon,
-    ReceiptPercentIcon
+    ReceiptPercentIcon,
+    ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 
-export default function Index({ 
-    auth, 
-    reports, 
-    availableMonths, 
+export default function Index({
+    auth,
+    reports,
+    availableMonths,
     statistics,
     schoolType,
     hasPrimary,
-    hasMiddle 
+    hasMiddle
 }) {
     const [deletingId, setDeletingId] = useState(null);
     const [expandedReport, setExpandedReport] = useState(null);
@@ -60,7 +61,7 @@ export default function Index({
         { key: 'common_salt', label: 'Common Salt', icon: '🧂' },
         { key: 'chilli_powder', label: 'Chilli', icon: '🌶️' },
         { key: 'turmeric', label: 'Turmeric', icon: '💛' },
-        { key: 'coriander', label: 'Coriander', icon: '🌿' },
+        { key: 'coriander', label: 'Ingredients', icon: '🌿' },
         { key: 'other_condiments', label: 'Other', icon: '🧄' }
     ];
 
@@ -225,6 +226,13 @@ export default function Index({
 
                                                 {/* Actions */}
                                                 <div className="flex items-center space-x-2 ml-4">
+                                                    <a
+                                                        href={`/amount-reports/export?month=${report.month}&year=${report.year}&format=xlsx`}
+                                                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                        title="Export to Excel"
+                                                    >
+                                                        <ArrowDownTrayIcon className="h-5 w-5" />
+                                                    </a>
                                                     <button
                                                         onClick={() => handleDownloadPdf(report.id)}
                                                         className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
@@ -327,7 +335,7 @@ export default function Index({
                                                                 <span className="w-2 h-2 bg-indigo-600 rounded-full mr-2"></span>
                                                                 Primary (Class 1-5) Breakdown
                                                             </h4>
-                                                            
+
                                                             {/* Ingredient Breakdown */}
                                                             <div className="space-y-2">
                                                                 <div className="flex justify-between text-sm">
@@ -369,10 +377,10 @@ export default function Index({
                                                                     <div className="space-y-1">
                                                                         {saltCategories.map((cat) => {
                                                                             const amount = parseFloat(report.primary_breakdown.salt_breakdown[cat.key] || 0);
-                                                                            const percentage = report.primary_breakdown.salt_total > 0 
+                                                                            const percentage = report.primary_breakdown.salt_total > 0
                                                                                 ? (amount / report.primary_breakdown.salt_total * 100).toFixed(1)
                                                                                 : 0;
-                                                                            
+
                                                                             return amount > 0 ? (
                                                                                 <div key={cat.key} className="flex justify-between text-xs">
                                                                                     <span className="text-gray-700">
@@ -397,7 +405,7 @@ export default function Index({
                                                                 <span className="w-2 h-2 bg-purple-600 rounded-full mr-2"></span>
                                                                 Middle (Class 6-8) Breakdown
                                                             </h4>
-                                                            
+
                                                             {/* Ingredient Breakdown */}
                                                             <div className="space-y-2">
                                                                 <div className="flex justify-between text-sm">
@@ -439,10 +447,10 @@ export default function Index({
                                                                     <div className="space-y-1">
                                                                         {saltCategories.map((cat) => {
                                                                             const amount = parseFloat(report.middle_breakdown.salt_breakdown[cat.key] || 0);
-                                                                            const percentage = report.middle_breakdown.salt_total > 0 
+                                                                            const percentage = report.middle_breakdown.salt_total > 0
                                                                                 ? (amount / report.middle_breakdown.salt_total * 100).toFixed(1)
                                                                                 : 0;
-                                                                            
+
                                                                             return amount > 0 ? (
                                                                                 <div key={cat.key} className="flex justify-between text-xs">
                                                                                     <span className="text-gray-700">

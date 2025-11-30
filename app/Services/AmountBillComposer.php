@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\AmountConfiguration;
+use App\Models\MonthlyAmountConfiguration;
 use App\Models\User;
 
 /**
@@ -30,15 +30,29 @@ class AmountBillComposer
      * - Both primary and middle section data
      * 
      * @param User $user The user/school creating the bill
+     * @param int|null $month Optional month to target specific config
+     * @param int|null $year Optional year to target specific config
      * @return array Structured data for bill creation
      * @throws \Exception If no configuration found
      */
-    public function composeBillAmountsForCreate(User $user): array
+    public function composeBillAmountsForCreate(User $user, ?int $month = null, ?int $year = null): array
     {
-        // Get latest amount configuration
-        $config = AmountConfiguration::where('user_id', $user->id)
-            ->latest()
+        // Default to current month/year if not provided
+        $month = $month ?? now()->month;
+        $year = $year ?? now()->year;
+
+        // Get monthly amount configuration
+        $config = MonthlyAmountConfiguration::forUser($user->id)
+            ->forPeriod($month, $year)
             ->first();
+
+        // Fallback to latest if not found for specific month
+        if (!$config) {
+            $config = MonthlyAmountConfiguration::where('user_id', $user->id)
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->first();
+        }
 
         if (!$config) {
             throw new \Exception('Amount configuration not found. Please set up your configuration first.');
@@ -68,7 +82,7 @@ class AmountBillComposer
                     'oil' => (float) $config->daily_oil_primary,
                     'salt_total' => (float) $config->daily_salt_primary,
                     'fuel' => (float) $config->daily_fuel_primary,
-                    'total' => (float) $config->total_daily_primary,
+                    'total' => (float) $config->daily_amount_per_student_primary,
                 ],
                 
                 // Salt percentages (unified for both primary and middle)
@@ -99,7 +113,7 @@ class AmountBillComposer
                     'oil' => (float) $config->daily_oil_middle,
                     'salt_total' => (float) $config->daily_salt_middle,
                     'fuel' => (float) $config->daily_fuel_middle,
-                    'total' => (float) $config->total_daily_middle,
+                    'total' => (float) $config->daily_amount_per_student_upper_primary,
                 ],
                 
                 // Salt percentages (unified for both primary and middle)
@@ -139,14 +153,26 @@ class AmountBillComposer
      * @param User $user The user/school
      * @param int $primaryStudents Number of primary students
      * @param int $middleStudents Number of middle students
+     * @param int|null $month Optional month
+     * @param int|null $year Optional year
      * @return array Calculated totals with salt breakdown
      * @throws \Exception If no configuration found
      */
-    public function calculateBillTotals(User $user, int $primaryStudents, int $middleStudents): array
+    public function calculateBillTotals(User $user, int $primaryStudents, int $middleStudents, ?int $month = null, ?int $year = null): array
     {
-        $config = AmountConfiguration::where('user_id', $user->id)
-            ->latest()
+        $month = $month ?? now()->month;
+        $year = $year ?? now()->year;
+
+        $config = MonthlyAmountConfiguration::forUser($user->id)
+            ->forPeriod($month, $year)
             ->first();
+
+        if (!$config) {
+            $config = MonthlyAmountConfiguration::where('user_id', $user->id)
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->first();
+        }
 
         if (!$config) {
             throw new \Exception('Amount configuration not found.');
@@ -252,8 +278,9 @@ class AmountBillComposer
      */
     public function validateConfiguration(User $user): array
     {
-        $config = AmountConfiguration::where('user_id', $user->id)
-            ->latest()
+        $config = MonthlyAmountConfiguration::where('user_id', $user->id)
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
             ->first();
 
         if (!$config) {
@@ -266,9 +293,18 @@ class AmountBillComposer
         $errors = [];
 
         // Validate unified salt percentages (applies to both primary and middle)
-        $validation = $config->validateSaltPercentages();
-        if (!$validation['valid']) {
-            $errors[] = $validation['error'];
+        // Note: MonthlyAmountConfiguration doesn't have validateSaltPercentages method yet,
+        // but we can check if they sum to 100 manually or assume valid since it's validated on store.
+        // For now, let's just check if fields exist.
+        
+        $sum = ($config->salt_percentage_common ?? 0) +
+               ($config->salt_percentage_chilli ?? 0) +
+               ($config->salt_percentage_turmeric ?? 0) +
+               ($config->salt_percentage_coriander ?? 0) +
+               ($config->salt_percentage_other ?? 0);
+
+        if (abs($sum - 100) > 0.1) {
+             $errors[] = "Salt percentages must sum to 100%. Current sum: {$sum}%";
         }
 
         return [

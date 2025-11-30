@@ -7,8 +7,10 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
-use App\Models\AmountConfiguration;
-use App\Observers\AmountConfigurationObserver;
+use App\Models\MonthlyAmountConfiguration;
+use App\Models\DailyConsumption;
+use App\Observers\MonthlyAmountConfigurationObserver;
+use App\Observers\DailyConsumptionObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,7 +28,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Register observer for automatic recalculation
-        AmountConfiguration::observe(AmountConfigurationObserver::class);
+        MonthlyAmountConfiguration::observe(MonthlyAmountConfigurationObserver::class);
+        DailyConsumption::observe(DailyConsumptionObserver::class);
         
         // Configure strong password rules
         Password::defaults(function () {

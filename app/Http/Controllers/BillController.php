@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -35,7 +36,7 @@ class BillController extends Controller
                 return [
                     'id' => $bill->id,
                     'bill_number' => $bill->getBillNumber(),
-                    'type' => $bill->type,
+                    'type' => $bill->bill_type,
                     'type_label' => $bill->getTypeLabel(),
                     'shop_name' => $bill->shop_name,
                     'shopkeeper_name' => $bill->shopkeeper_name,
@@ -123,15 +124,22 @@ class BillController extends Controller
             $totalAmount = collect($validated['items'])
                 ->sum(fn($item) => $item['amount']);
 
+            $billDate = Carbon::create($report->year, $report->month, 1)->endOfMonth();
+
             // Create the bill
             $bill = Bill::create([
                 'amount_report_id' => $validated['amount_report_id'],
-                'created_by' => $user->id,
-                'type' => $validated['type'],
+                'user_id' => $user->id,
+                'bill_number' => 'BILL-' . strtoupper(uniqid()),
+                'bill_type' => $validated['bill_type'],
+                'month' => $report->month,
+                'year' => $report->year,
+                'bill_date' => $billDate,
                 'shop_name' => $validated['shop_name'],
                 'shopkeeper_name' => $validated['shopkeeper_name'],
                 'phone' => $validated['phone'],
                 'address' => $validated['address'] ?? null,
+                'deals_with' => $validated['deals_with'] ?? null,
                 'total_amount' => $totalAmount,
             ]);
 
@@ -153,7 +161,7 @@ class BillController extends Controller
                 'user_id' => $user->id,
                 'bill_id' => $bill->id,
                 'report_id' => $report->id,
-                'type' => $bill->type,
+                'type' => $bill->bill_type,
                 'total_amount' => $bill->total_amount,
             ]);
 
@@ -196,12 +204,15 @@ class BillController extends Controller
             'bill' => [
                 'id' => $bill->id,
                 'bill_number' => $bill->getBillNumber(),
-                'type' => $bill->type,
+                'type' => $bill->bill_type,
                 'type_label' => $bill->getTypeLabel(),
                 'shop_name' => $bill->shop_name,
                 'shopkeeper_name' => $bill->shopkeeper_name,
                 'phone' => $bill->phone,
                 'address' => $bill->address,
+                'deals_with' => $bill->deals_with,
+                'bill_date' => optional($bill->bill_date)?->toDateString(),
+                'bill_date_formatted' => optional($bill->bill_date)?->format('d M Y'),
                 'total_amount' => (float) $bill->total_amount,
                 'formatted_total' => $bill->getFormattedTotal(),
                 'created_at' => $bill->created_at->format('M d, Y h:i A'),
@@ -246,12 +257,15 @@ class BillController extends Controller
             'bill' => [
                 'id' => $bill->id,
                 'bill_number' => $bill->getBillNumber(),
-                'type' => $bill->type,
+                'type' => $bill->bill_type,
                 'type_label' => $bill->getTypeLabel(),
                 'shop_name' => $bill->shop_name,
                 'shopkeeper_name' => $bill->shopkeeper_name,
                 'phone' => $bill->phone,
                 'address' => $bill->address,
+                'deals_with' => $bill->deals_with,
+                'bill_date' => optional($bill->bill_date)?->toDateString(),
+                'bill_date_formatted' => optional($bill->bill_date)?->format('d M Y'),
                 'total_amount' => (float) $bill->total_amount,
                 'formatted_total' => $bill->getFormattedTotal(),
                 'items' => $bill->items->map(function ($item) {
@@ -320,7 +334,7 @@ class BillController extends Controller
 
             $filename = sprintf(
                 'bill-%s-%s-%s.pdf',
-                $bill->type,
+                $bill->bill_type,
                 $report->formatted_period,
                 strtolower(str_replace(' ', '-', $user->name))
             );

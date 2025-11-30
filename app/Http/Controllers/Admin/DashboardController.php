@@ -17,7 +17,7 @@ use App\Models\District;
 use App\Models\Zone;
 use App\Models\DailyConsumption;
 use App\Models\MonthlyRiceConfiguration;
-use App\Models\AmountConfiguration;
+use App\Models\MonthlyAmountConfiguration;
 use App\Models\Feedback;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -44,11 +44,35 @@ class DashboardController extends Controller
             'year' => 'nullable|integer|min:2020|max:' . (date('Y') + 1),
         ]);
 
-        // Get filter values (default to current month/year)
+        // Get filter values
         $districtId = $request->district_id;
         $zoneId = $request->zone_id;
-        $month = $request->month ?? Carbon::now()->month;
-        $year = $request->year ?? Carbon::now()->year;
+
+        // Smart default for month/year: Use latest data if no filter provided and current month is empty
+        if ($request->filled('month') && $request->filled('year')) {
+            $month = $request->month;
+            $year = $request->year;
+        } else {
+            // Check if we have data for current month
+            $hasCurrentData = DailyConsumption::whereMonth('date', Carbon::now()->month)
+                ->whereYear('date', Carbon::now()->year)
+                ->exists();
+                
+            if ($hasCurrentData) {
+                $month = Carbon::now()->month;
+                $year = Carbon::now()->year;
+            } else {
+                // Try to find latest data
+                $latest = DailyConsumption::latest('date')->first();
+                if ($latest) {
+                    $month = $latest->date->month;
+                    $year = $latest->date->year;
+                } else {
+                    $month = Carbon::now()->month;
+                    $year = Carbon::now()->year;
+                }
+            }
+        }
 
         // Build base query for schools with filters
         $schoolsQuery = User::schools()->with(['district', 'zone']);
@@ -78,11 +102,71 @@ class DashboardController extends Controller
         // Get all consumption records for the period
         $consumptions = $consumptionQuery->get();
 
-        // Calculate period statistics
-        $totalRiceConsumed = $consumptions->sum('rice_consumed') ?? 0;
-        $totalAmountSpent = $consumptions->sum('amount_consumed') ?? 0;
-        $totalPrimaryStudents = $consumptions->sum('served_primary') ?? 0;
-        $totalMiddleStudents = $consumptions->sum('served_middle') ?? 0;
+        // Fetch configurations for the period to calculate breakdowns efficiently
+        $riceConfigs = MonthlyRiceConfiguration::whereIn('user_id', $schoolIds)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->get()
+            ->keyBy('user_id');
+
+        // ✅ UPDATED: Fetch MonthlyAmountConfiguration instead of AmountConfiguration
+        $amountConfigs = MonthlyAmountConfiguration::whereIn('user_id', $schoolIds)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->get()
+            ->keyBy('user_id');
+
+        // Calculate period statistics with breakdowns
+        $totalRiceConsumed = 0;
+        $totalAmountSpent = 0;
+        $totalPrimaryStudents = 0;
+        $totalMiddleStudents = 0;
+        $totalRicePrimary = 0;
+        $totalRiceMiddle = 0;
+        $totalAmountPrimary = 0;
+        $totalAmountMiddle = 0;
+
+        $defaultPrimaryRiceRate = 0.10;
+        $defaultMiddleRiceRate = 0.15;
+
+        foreach ($consumptions as $consumption) {
+            $totalRiceConsumed += $consumption->rice_consumed;
+            $totalAmountSpent += $consumption->amount_consumed;
+            $totalPrimaryStudents += $consumption->served_primary;
+            $totalMiddleStudents += $consumption->served_middle;
+
+            // Rice Breakdown
+            $riceConfig = $riceConfigs->get($consumption->user_id);
+            $pRiceRate = $riceConfig ? ($riceConfig->daily_consumption_primary / 1000) : $defaultPrimaryRiceRate;
+            $mRiceRate = $riceConfig ? ($riceConfig->daily_consumption_upper_primary / 1000) : $defaultMiddleRiceRate;
+            
+            $totalRicePrimary += round($consumption->served_primary * $pRiceRate, 2);
+            $totalRiceMiddle += round($consumption->served_middle * $mRiceRate, 2);
+
+            // Amount Breakdown
+            $amountConfig = $amountConfigs->get($consumption->user_id);
+            
+            // ✅ UPDATED: Use fields from MonthlyAmountConfiguration
+            $pAmountRate = $amountConfig ? (
+                ($amountConfig->daily_pulses_primary ?? 0) +
+                ($amountConfig->daily_vegetables_primary ?? 0) +
+                ($amountConfig->daily_oil_primary ?? 0) +
+                ($amountConfig->daily_salt_primary ?? 0) +
+                ($amountConfig->daily_fuel_primary ?? 0)
+            ) : 0;
+            
+            $mAmountRate = $amountConfig ? (
+                ($amountConfig->daily_pulses_middle ?? 0) +
+                ($amountConfig->daily_vegetables_middle ?? 0) +
+                ($amountConfig->daily_oil_middle ?? 0) +
+                ($amountConfig->daily_salt_middle ?? 0) +
+                ($amountConfig->daily_fuel_middle ?? 0)
+            ) : 0;
+
+            $totalAmountPrimary += round($consumption->served_primary * $pAmountRate, 2);
+            $totalAmountMiddle += round($consumption->served_middle * $mAmountRate, 2);
+        }
+
         $totalStudentsServed = $totalPrimaryStudents + $totalMiddleStudents;
         $totalServingDays = $consumptions->pluck('date')->unique()->count();
 
@@ -161,7 +245,19 @@ class DashboardController extends Controller
 
                 $enrollment = $user ? $user->getEnrollmentData() : ['primary' => 0, 'middle' => 0];
 
-                $riceConfig = MonthlyRiceConfiguration::where('user_id', $consumption->user_id)->latest()->first();
+                $consumptionDate = Carbon::parse($consumption->date);
+
+                // Get Rice Configuration for the specific month
+                $riceConfig = MonthlyRiceConfiguration::where('user_id', $consumption->user_id)
+                    ->where('month', $consumptionDate->month)
+                    ->where('year', $consumptionDate->year)
+                    ->first();
+                
+                // Fallback to latest if specific month not found
+                if (!$riceConfig) {
+                    $riceConfig = MonthlyRiceConfiguration::where('user_id', $consumption->user_id)->latest()->first();
+                }
+
                 $defaultPrimaryRateKg = 0.10;
                 $defaultMiddleRateKg = 0.15;
                 $primaryRateKg = $riceConfig && $riceConfig->daily_consumption_primary
@@ -176,7 +272,21 @@ class DashboardController extends Controller
                 $ricePrimary = round($servedPrimary * $primaryRateKg, 2);
                 $riceMiddle = round($servedMiddle * $middleRateKg, 2);
 
-                $amountConfig = AmountConfiguration::where('user_id', $consumption->user_id)->latest()->first();
+                // Get Amount Configuration for the specific month
+                // ✅ UPDATED: Use MonthlyAmountConfiguration
+                $amountConfig = MonthlyAmountConfiguration::where('user_id', $consumption->user_id)
+                    ->where('month', $consumptionDate->month)
+                    ->where('year', $consumptionDate->year)
+                    ->first();
+
+                // Fallback to latest if specific month not found
+                if (!$amountConfig) {
+                    $amountConfig = MonthlyAmountConfiguration::where('user_id', $consumption->user_id)
+                        ->orderBy('year', 'desc')
+                        ->orderBy('month', 'desc')
+                        ->first();
+                }
+
                 $primaryAmountRate = $amountConfig
                     ? (($amountConfig->daily_pulses_primary ?? 0)
                         + ($amountConfig->daily_vegetables_primary ?? 0)
@@ -199,7 +309,7 @@ class DashboardController extends Controller
                     'user_id' => $consumption->user_id,
                     'date' => $consumption->date,
                     'school_name' => $user->school_name ?? 'Unknown',
-                    'udise' => $user->udise ?? '',
+                    'udise' => $user->udise_code ?? '', // Fixed column name
                     'district_name' => $user->district->name ?? 'Unknown',
                     'zone_name' => $user->zone->name ?? 'Unknown',
                     'served_primary' => $servedPrimary,
@@ -249,6 +359,10 @@ class DashboardController extends Controller
                 'serving_days' => $totalServingDays,
                 'primary_students' => $totalPrimaryStudents,
                 'middle_students' => $totalMiddleStudents,
+                'rice_primary' => round($totalRicePrimary, 2),
+                'rice_middle' => round($totalRiceMiddle, 2),
+                'amount_primary' => round($totalAmountPrimary, 2),
+                'amount_middle' => round($totalAmountMiddle, 2),
             ],
             'breakdowns' => [
                 'schools_by_district' => $schoolsByDistrict,
@@ -284,7 +398,7 @@ class DashboardController extends Controller
         $urgent = Feedback::whereIn('priority', ['urgent', 'high'])->count();
         
         // Get average rating
-        $averageRating = Feedback::avg('rating');
+        $averageRating = Feedback::avg('rating') ?? 0;
         
         // Recent feedback (last 5)
         $recentFeedback = Feedback::orderBy('created_at', 'desc')
@@ -386,7 +500,7 @@ class DashboardController extends Controller
 
                 fputcsv($handle, [
                     $school->school_name ?? '',
-                    $school->udise ?? '',
+                    $school->udise_code ?? '',
                     $school->district->name ?? '',
                     $school->zone->name ?? '',
                     $school->district->state ?? '',

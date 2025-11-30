@@ -5,10 +5,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\MonthlyRiceConfiguration;
-use App\Models\AmountConfiguration;
+use App\Models\MonthlyAmountConfiguration;
 use App\Models\DailyConsumption;
 use App\Models\RiceReport;
 use App\Models\AmountReport;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -111,6 +112,11 @@ class DashboardController extends Controller
     private function getSummaryData($userId, $year, $month, $schoolType)
     {
         try {
+            $user = User::find($userId);
+            $enrollment = $user ? $user->getEnrollmentData() : ['total' => 0, 'primary' => 0, 'middle' => 0];
+            $totalEnrolledStudents = ($enrollment['total'] ?? 0)
+                ?: (($enrollment['primary'] ?? 0) + ($enrollment['middle'] ?? 0));
+
             // Get monthly rice configuration for selected period
             $riceConfig = MonthlyRiceConfiguration::where('user_id', $userId)
                 ->where('month', $month)
@@ -121,20 +127,47 @@ class DashboardController extends Controller
                 return $this->getEmptySummary();
             }
             
-            // Get rice available from monthly config
+            // Get rice available from monthly config - show current available rice
             $schoolType = $riceConfig->school_type;
             
+            // Calculate actual current balance: opening + lifted + arranged - consumed
             if ($schoolType === 'primary') {
-                $riceAvailable = $riceConfig->closing_balance_primary;
+                $riceAvailable = ($riceConfig->opening_balance_primary ?? 0) + 
+                                ($riceConfig->rice_lifted_primary ?? 0) + 
+                                ($riceConfig->rice_arranged_primary ?? 0) - 
+                                ($riceConfig->consumed_primary ?? 0);
             } elseif ($schoolType === 'middle') {
-                $riceAvailable = $riceConfig->closing_balance_primary + $riceConfig->closing_balance_upper_primary;
+                $riceAvailable = (($riceConfig->opening_balance_primary ?? 0) + 
+                                 ($riceConfig->rice_lifted_primary ?? 0) + 
+                                 ($riceConfig->rice_arranged_primary ?? 0) - 
+                                 ($riceConfig->consumed_primary ?? 0)) +
+                                (($riceConfig->opening_balance_upper_primary ?? 0) + 
+                                 ($riceConfig->rice_lifted_upper_primary ?? 0) + 
+                                 ($riceConfig->rice_arranged_upper_primary ?? 0) - 
+                                 ($riceConfig->consumed_upper_primary ?? 0));
             } else {
-                $riceAvailable = $riceConfig->closing_balance_primary;
+                $riceAvailable = ($riceConfig->opening_balance_primary ?? 0) + 
+                                ($riceConfig->rice_lifted_primary ?? 0) + 
+                                ($riceConfig->rice_arranged_primary ?? 0) - 
+                                ($riceConfig->consumed_primary ?? 0);
             }
             
-            // Get amount configuration
-            $amountConfig = AmountConfiguration::where('user_id', $userId)
+            // Ensure rice available is not negative
+            $riceAvailable = max(0, $riceAvailable);
+            
+            // Get monthly amount configuration for the period
+            $amountConfig = MonthlyAmountConfiguration::where('user_id', $userId)
+                ->where('month', $month)
+                ->where('year', $year)
                 ->first();
+            
+            // Fallback to latest if not found for specific month (though ideally should exist)
+            if (!$amountConfig) {
+                $amountConfig = MonthlyAmountConfiguration::where('user_id', $userId)
+                    ->orderBy('year', 'desc')
+                    ->orderBy('month', 'desc')
+                    ->first();
+            }
             
             // Get daily consumptions for the month
             $dailyConsumptions = DailyConsumption::where('user_id', $userId)
@@ -149,8 +182,8 @@ class DashboardController extends Controller
             $totalAmountSpent = 0;
             if ($amountConfig && $dailyConsumptions->isNotEmpty()) {
                 foreach ($dailyConsumptions as $consumption) {
-                    $primaryAmount = ($consumption->served_primary ?? 0) * $amountConfig->total_daily_primary;
-                    $middleAmount = ($consumption->served_middle ?? 0) * $amountConfig->total_daily_middle;
+                    $primaryAmount = ($consumption->served_primary ?? 0) * $amountConfig->daily_amount_per_student_primary;
+                    $middleAmount = ($consumption->served_middle ?? 0) * $amountConfig->daily_amount_per_student_upper_primary;
                     
                     $totalAmountSpent += ($primaryAmount + $middleAmount);
                 }
@@ -160,16 +193,21 @@ class DashboardController extends Controller
             $totalStudentsServed = $dailyConsumptions->sum(function($consumption) {
                 return ($consumption->served_primary ?? 0) + ($consumption->served_middle ?? 0);
             });
-            
+
             // Get days of service
             $daysOfService = $dailyConsumptions->count();
-            
+            $studentServingTarget = $daysOfService > 0
+                ? $totalEnrolledStudents * $daysOfService
+                : 0;
+
             return [
                 'rice_available' => round($riceAvailable, 2),
                 'rice_consumed' => round($totalConsumed, 2),
                 'amount_spent' => round($totalAmountSpent, 2),
                 'students_served' => $totalStudentsServed,
-                'days_served' => $daysOfService
+                'days_served' => $daysOfService,
+                'total_students' => $totalEnrolledStudents,
+                'student_serving_target' => $studentServingTarget
             ];
         } catch (\Exception $e) {
             Log::error('Dashboard summary error: ' . $e->getMessage(), [
@@ -192,7 +230,9 @@ class DashboardController extends Controller
             'rice_consumed' => 0,
             'amount_spent' => 0,
             'students_served' => 0,
-            'days_served' => 0
+            'days_served' => 0,
+            'total_students' => 0,
+            'student_serving_target' => 0
         ];
     }
     
@@ -306,9 +346,19 @@ class DashboardController extends Controller
             $year = (int) $request->input('year', now()->year);
             $month = (int) $request->input('month', now()->month);
             
-            // Get amount configuration
-            $amountConfig = AmountConfiguration::where('user_id', $user->id)
+            // Get monthly amount configuration
+            $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)
+                ->where('month', $month)
+                ->where('year', $year)
                 ->first();
+            
+            // Fallback to latest if not found
+            if (!$amountConfig) {
+                $amountConfig = MonthlyAmountConfiguration::where('user_id', $user->id)
+                    ->orderBy('year', 'desc')
+                    ->orderBy('month', 'desc')
+                    ->first();
+            }
             
             if (!$amountConfig) {
                 return response()->json([]);
@@ -328,8 +378,8 @@ class DashboardController extends Controller
                 $servedMiddle = $consumption->served_middle ?? 0;
                 
                 // Calculate amounts
-                $primaryAmount = $servedPrimary * $amountConfig->total_daily_primary;
-                $middleAmount = $servedMiddle * $amountConfig->total_daily_middle;
+                $primaryAmount = $servedPrimary * $amountConfig->daily_amount_per_student_primary;
+                $middleAmount = $servedMiddle * $amountConfig->daily_amount_per_student_upper_primary;
                 $totalAmount = $primaryAmount + $middleAmount;
                 
                 // Component breakdown

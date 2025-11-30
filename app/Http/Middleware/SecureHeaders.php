@@ -43,11 +43,11 @@ class SecureHeaders
         $isDev = config('app.env') === 'local' || config('app.debug');
         
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline'; " .
-               "style-src 'self' 'unsafe-inline'; " .
-               "img-src 'self' data: https:; " .
-               "font-src 'self' data:; " .
-               "connect-src 'self'; " .
+               "script-src 'self' 'unsafe-inline' http://localhost:5173 http://127.0.0.1:5173; " .
+               "style-src 'self' 'unsafe-inline' http://localhost:5173 http://127.0.0.1:5173; " .
+               "img-src 'self' data: https: http://localhost:5173 http://127.0.0.1:5173; " .
+               "font-src 'self' data: http://localhost:5173 http://127.0.0.1:5173; " .
+               "connect-src 'self' ws: wss: http://localhost:5173 http://127.0.0.1:5173; " .
                "frame-ancestors 'self';";
         
         if ($isDev) {

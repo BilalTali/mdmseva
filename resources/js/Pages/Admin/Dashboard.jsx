@@ -15,10 +15,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import FilterPanel from '@/Components/Admin/FilterPanel';
 import StatCard from '@/Components/Admin/StatCard';
 import { MessageCircle, AlertCircle, CheckCircle, Clock, Star, TrendingUp } from 'lucide-react';
-import AdminSupportChatWidget from '@/Components/AdminSupportChatWidget.jsx';
 
-export default function AdminDashboard({ 
-    auth, 
+export default function AdminDashboard({
+    auth,
     statistics = {},
     filters = {},
     feedbackStats = {} // ADD THIS PROP
@@ -103,59 +102,65 @@ export default function AdminDashboard({
                         const totalStudentsServed = Number(periodStats.students_served || 0);
                         const primaryStudents = Number(periodStats.primary_students || 0);
                         const middleStudents = Number(periodStats.middle_students || 0);
+
+                        const ricePrimary = Number(periodStats.rice_primary || 0);
+                        const riceMiddle = Number(periodStats.rice_middle || 0);
+                        const amountPrimary = Number(periodStats.amount_primary || 0);
+                        const amountMiddle = Number(periodStats.amount_middle || 0);
+
                         return (
                             <>
-                    <StatCard
-                        title="Total Schools"
-                        value={totalSchools}
-                        subtitle={`Active: ${activeSchools} | Inactive: ${inactiveSchools}`}
-                        icon={
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                        }
-                        color="blue"
-                        onClick={() => router.visit(route('admin.schools.index'))}
-                    />
+                                <StatCard
+                                    title="Total Schools"
+                                    value={totalSchools}
+                                    subtitle={`Active: ${activeSchools} | Inactive: ${inactiveSchools}`}
+                                    icon={
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        </svg>
+                                    }
+                                    color="blue"
+                                    onClick={() => router.visit(route('admin.schools.index'))}
+                                />
 
-                    <StatCard
-                        title="Rice Consumed"
-                        value={riceConsumed.toFixed(2)}
-                        unit="kg"
-                        subtitle="Current period"
-                        icon={
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
-                        }
-                        color="green"
-                        trend={statistics.rice_trend}
-                    />
+                                <StatCard
+                                    title="Rice Consumed"
+                                    value={riceConsumed.toFixed(2)}
+                                    unit="kg"
+                                    subtitle={`Primary: ${ricePrimary.toFixed(2)} | Middle: ${riceMiddle.toFixed(2)}`}
+                                    icon={
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                        </svg>
+                                    }
+                                    color="green"
+                                    trend={statistics.rice_trend}
+                                />
 
-                    <StatCard
-                        title="Amount Spent"
-                        value={`₹${amountSpent.toLocaleString('en-IN')}`}
-                        subtitle="Current period"
-                        icon={
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        }
-                        color="orange"
-                        trend={statistics.amount_trend}
-                    />
+                                <StatCard
+                                    title="Amount Spent"
+                                    value={`₹${amountSpent.toLocaleString('en-IN')}`}
+                                    subtitle={`Primary: ₹${amountPrimary.toLocaleString('en-IN')} | Middle: ₹${amountMiddle.toLocaleString('en-IN')}`}
+                                    icon={
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    }
+                                    color="orange"
+                                    trend={statistics.amount_trend}
+                                />
 
-                    <StatCard
-                        title="Students Served"
-                        value={totalStudentsServed.toLocaleString('en-IN')}
-                        subtitle={`Primary: ${primaryStudents.toLocaleString('en-IN')} | Middle: ${middleStudents.toLocaleString('en-IN')}`}
-                        icon={
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                        }
-                        color="purple"
-                    />
+                                <StatCard
+                                    title="Students Served"
+                                    value={totalStudentsServed.toLocaleString('en-IN')}
+                                    subtitle={`Primary: ${primaryStudents.toLocaleString('en-IN')} | Middle: ${middleStudents.toLocaleString('en-IN')}`}
+                                    icon={
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                        </svg>
+                                    }
+                                    color="purple"
+                                />
                             </>
                         );
                     })()}
@@ -169,7 +174,7 @@ export default function AdminDashboard({
                         {/* Background decoration */}
                         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-40 h-40 bg-white opacity-10 rounded-full"></div>
                         <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-white opacity-10 rounded-full"></div>
-                        
+
                         <div className="relative z-10">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center space-x-3">
@@ -200,7 +205,7 @@ export default function AdminDashboard({
                                     </div>
                                     <p className="text-2xl font-bold">{feedbackStats.total || 0}</p>
                                 </div>
-                                
+
                                 <div className="bg-blue-500 bg-opacity-40 rounded-lg p-3 backdrop-blur-sm hover:bg-opacity-50 transition-all">
                                     <div className="flex items-center space-x-2 mb-1">
                                         <Clock className="w-4 h-4" />
@@ -208,7 +213,7 @@ export default function AdminDashboard({
                                     </div>
                                     <p className="text-2xl font-bold">{feedbackStats.new || 0}</p>
                                 </div>
-                                
+
                                 <div className="bg-yellow-500 bg-opacity-40 rounded-lg p-3 backdrop-blur-sm hover:bg-opacity-50 transition-all">
                                     <div className="flex items-center space-x-2 mb-1">
                                         <TrendingUp className="w-4 h-4" />
@@ -216,7 +221,7 @@ export default function AdminDashboard({
                                     </div>
                                     <p className="text-2xl font-bold">{feedbackStats.in_progress || 0}</p>
                                 </div>
-                                
+
                                 <div className="bg-green-500 bg-opacity-40 rounded-lg p-3 backdrop-blur-sm hover:bg-opacity-50 transition-all">
                                     <div className="flex items-center space-x-2 mb-1">
                                         <CheckCircle className="w-4 h-4" />
@@ -224,7 +229,7 @@ export default function AdminDashboard({
                                     </div>
                                     <p className="text-2xl font-bold">{feedbackStats.resolved || 0}</p>
                                 </div>
-                                
+
                                 <div className="bg-red-500 bg-opacity-40 rounded-lg p-3 backdrop-blur-sm hover:bg-opacity-50 transition-all">
                                     <div className="flex items-center space-x-2 mb-1">
                                         <AlertCircle className="w-4 h-4" />
@@ -232,7 +237,7 @@ export default function AdminDashboard({
                                     </div>
                                     <p className="text-2xl font-bold">{feedbackStats.urgent || 0}</p>
                                 </div>
-                                
+
                                 <div className="bg-amber-500 bg-opacity-40 rounded-lg p-3 backdrop-blur-sm hover:bg-opacity-50 transition-all">
                                     <div className="flex items-center space-x-2 mb-1">
                                         <Star className="w-4 h-4" />
@@ -253,22 +258,20 @@ export default function AdminDashboard({
                                         {feedbackStats.recent.slice(0, 3).map((feedback) => (
                                             <div key={feedback.id} className="flex items-center justify-between text-sm bg-white bg-opacity-10 rounded p-2 hover:bg-opacity-20 transition-all">
                                                 <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                                        feedback.status === 'new' ? 'bg-blue-500 bg-opacity-50' :
+                                                    <span className={`px-2 py-1 rounded text-xs font-medium ${feedback.status === 'new' ? 'bg-blue-500 bg-opacity-50' :
                                                         feedback.status === 'in_progress' ? 'bg-yellow-500 bg-opacity-50' :
-                                                        'bg-green-500 bg-opacity-50'
-                                                    }`}>
+                                                            'bg-green-500 bg-opacity-50'
+                                                        }`}>
                                                         {feedback.status.replace('_', ' ')}
                                                     </span>
                                                     <span className="truncate">{feedback.name}</span>
                                                     <span className="text-xs opacity-75">{feedback.created_at}</span>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
-                                                    <span className={`text-xs px-2 py-1 rounded ${
-                                                        feedback.priority === 'urgent' ? 'bg-red-500' :
+                                                    <span className={`text-xs px-2 py-1 rounded ${feedback.priority === 'urgent' ? 'bg-red-500' :
                                                         feedback.priority === 'high' ? 'bg-orange-500' :
-                                                        'bg-gray-500'
-                                                    } bg-opacity-50`}>
+                                                            'bg-gray-500'
+                                                        } bg-opacity-50`}>
                                                         {feedback.priority}
                                                     </span>
                                                     <div className="flex items-center">
@@ -301,7 +304,7 @@ export default function AdminDashboard({
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">
                             {filters.district_id ? 'Schools by Zone' : 'Schools by District'}
                         </h3>
-                        
+
                         {(() => {
                             const breakdowns = statistics.breakdowns || {};
                             const isZone = Boolean(filters.district_id);
@@ -311,32 +314,32 @@ export default function AdminDashboard({
                                 count: item.count || 0,
                             }));
                             return display && display.length > 0 ? (
-                            <div className="space-y-3">
-                                {display.map((item, index) => (
-                                    <div key={index}>
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="text-sm font-medium text-gray-700">
-                                                {item.name}
-                                            </span>
-                                            <span className="text-sm font-semibold text-gray-900">
-                                                {item.count} schools
-                                            </span>
+                                <div className="space-y-3">
+                                    {display.map((item, index) => (
+                                        <div key={index}>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="text-sm font-medium text-gray-700">
+                                                    {item.name}
+                                                </span>
+                                                <span className="text-sm font-semibold text-gray-900">
+                                                    {item.count} schools
+                                                </span>
+                                            </div>
+                                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                                <div
+                                                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+                                                    style={{
+                                                        width: `${(item.count / Math.max(...display.map(d => d.count))) * 100}%`
+                                                    }}
+                                                ></div>
+                                            </div>
                                         </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                            <div
-                                                className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
-                                                style={{
-                                                    width: `${(item.count / Math.max(...display.map(d => d.count))) * 100}%`
-                                                }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
                             ) : (
-                            <div className="text-center py-8 text-gray-500">
-                                No data available for selected filters
-                            </div>
+                                <div className="text-center py-8 text-gray-500">
+                                    No data available for selected filters
+                                </div>
                             );
                         })()}
                     </div>
@@ -346,7 +349,7 @@ export default function AdminDashboard({
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">
                             Top 5 Schools by Rice Consumption
                         </h3>
-                        
+
                         {(() => {
                             const list = (statistics.top_schools || []).map((s) => ({
                                 id: s.user_id,
@@ -357,42 +360,42 @@ export default function AdminDashboard({
                                 serving_days: s.serving_days || 0,
                             }));
                             return list && list.length > 0 ? (
-                            <div className="space-y-3">
-                                {list.map((school, index) => (
-                                    <div key={school.id} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                                        <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold text-sm">
-                                            {index + 1}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <Link
-                                                href={route('admin.schools.show', school.id)}
-                                                className="text-sm font-medium text-gray-900 hover:text-indigo-600 truncate block"
-                                            >
-                                                {school.school_name}
-                                            </Link>
-                                            {((school.district && school.district !== 'Unknown') || (school.zone && school.zone !== 'Unknown')) && (
+                                <div className="space-y-3">
+                                    {list.map((school, index) => (
+                                        <div key={school.id} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                                            <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold text-sm">
+                                                {index + 1}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <Link
+                                                    href={route('admin.schools.show', school.id)}
+                                                    className="text-sm font-medium text-gray-900 hover:text-indigo-600 truncate block"
+                                                >
+                                                    {school.school_name}
+                                                </Link>
+                                                {((school.district && school.district !== 'Unknown') || (school.zone && school.zone !== 'Unknown')) && (
+                                                    <p className="text-xs text-gray-500">
+                                                        {[school.district, school.zone].filter(v => v && v !== 'Unknown').join(' · ')}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="flex-shrink-0 text-right">
+                                                {Number(school.total_rice || 0) > 0 && (
+                                                    <p className="text-sm font-semibold text-gray-900">
+                                                        {Number(school.total_rice).toFixed(2)} kg
+                                                    </p>
+                                                )}
                                                 <p className="text-xs text-gray-500">
-                                                    {[school.district, school.zone].filter(v => v && v !== 'Unknown').join(' · ')}
+                                                    {school.serving_days} days
                                                 </p>
-                                            )}
+                                            </div>
                                         </div>
-                                        <div className="flex-shrink-0 text-right">
-                                            {Number(school.total_rice || 0) > 0 && (
-                                                <p className="text-sm font-semibold text-gray-900">
-                                                    {Number(school.total_rice).toFixed(2)} kg
-                                                </p>
-                                            )}
-                                            <p className="text-xs text-gray-500">
-                                                {school.serving_days} days
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
                             ) : (
-                            <div className="text-center py-8 text-gray-500">
-                                No consumption data for selected period
-                            </div>
+                                <div className="text-center py-8 text-gray-500">
+                                    No consumption data for selected period
+                                </div>
                             );
                         })()}
                     </div>
@@ -431,50 +434,50 @@ export default function AdminDashboard({
                             amount_middle: a.amount_middle,
                         }));
                         return activityList && activityList.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">sno</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">date</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">udise</th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">students enrolled M|P</th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">students served M|P</th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">rice consumed M|P</th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">amount M|P</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {activityList.map((activity, index) => (
-                                        <tr key={activity.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {new Date(activity.date).toLocaleDateString('en-IN', {
-                                                    day: '2-digit', month: 'short', year: 'numeric'
-                                                })}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{activity.udise || '—'}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                {`${Number(activity.enrollment_middle || 0).toLocaleString('en-IN')} | ${Number(activity.enrollment_primary || 0).toLocaleString('en-IN')}`}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                {`${Number(activity.served_middle || 0).toLocaleString('en-IN')} | ${Number(activity.served_primary || 0).toLocaleString('en-IN')}`}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                {`${Number(activity.rice_middle || 0).toFixed(2)} | ${Number(activity.rice_primary || 0).toFixed(2)} kg`}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                                {`₹${Number(activity.amount_middle || 0).toLocaleString('en-IN')} | ₹${Number(activity.amount_primary || 0).toLocaleString('en-IN')}`}
-                                            </td>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">sno</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">date</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">udise</th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">students enrolled M|P</th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">students served M|P</th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">rice consumed M|P</th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">amount M|P</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {activityList.map((activity, index) => (
+                                            <tr key={activity.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {new Date(activity.date).toLocaleDateString('en-IN', {
+                                                        day: '2-digit', month: 'short', year: 'numeric'
+                                                    })}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{activity.udise || '—'}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                    {`${Number(activity.enrollment_middle || 0).toLocaleString('en-IN')} | ${Number(activity.enrollment_primary || 0).toLocaleString('en-IN')}`}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                    {`${Number(activity.served_middle || 0).toLocaleString('en-IN')} | ${Number(activity.served_primary || 0).toLocaleString('en-IN')}`}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                    {`${Number(activity.rice_middle || 0).toFixed(2)} | ${Number(activity.rice_primary || 0).toFixed(2)} kg`}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                                    {`₹${Number(activity.amount_middle || 0).toLocaleString('en-IN')} | ₹${Number(activity.amount_primary || 0).toLocaleString('en-IN')}`}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            No recent activity to display
-                        </div>
+                            <div className="text-center py-8 text-gray-500">
+                                No recent activity to display
+                            </div>
                         );
                     })()}
                 </div>
@@ -518,7 +521,6 @@ export default function AdminDashboard({
                     </button>
                 </div>
             </div>
-            <AdminSupportChatWidget />
         </AuthenticatedLayout>
     );
 }

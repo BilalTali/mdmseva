@@ -28,7 +28,7 @@ export default function SaltSubcategoryInputs({
         { key: 'common_salt', label: 'Common Salt', color: 'blue' },
         { key: 'chilli_powder', label: 'Chilli Powder', color: 'red' },
         { key: 'turmeric', label: 'Turmeric', color: 'yellow' },
-        { key: 'coriander', label: 'Coriander', color: 'green' },
+        { key: 'coriander', label: 'Ingredients', color: 'green' },
         { key: 'other_condiments', label: 'Other Condiments', color: 'purple' },
     ];
 

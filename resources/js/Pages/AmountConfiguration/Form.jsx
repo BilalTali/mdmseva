@@ -7,30 +7,46 @@ import { Head } from '@inertiajs/react';
 export default function Form({ auth, config, schoolType, hasPrimary, hasMiddle }) {
     const isEdit = !!config;
 
+    const defaultPrimaryRates = {
+        daily_pulses_primary: 1.86,
+        daily_vegetables_primary: 1.86,
+        daily_oil_primary: 0.99,
+        daily_salt_primary: 0.93,
+        daily_fuel_primary: 1.14,
+    };
+
+    const defaultMiddleRates = {
+        daily_pulses_middle: 2.41,
+        daily_vegetables_middle: 2.41,
+        daily_oil_middle: 2.20,
+        daily_salt_middle: 1.09,
+        daily_fuel_middle: 2.06,
+    };
+
     const { data, setData, post, put, processing, errors } = useForm({
         year: config?.year || new Date().getFullYear(),
         month: config?.month || new Date().getMonth() + 1,
 
         // Primary (Class 1-5)
-        daily_pulses_primary: config?.daily_pulses_primary || '',
-        daily_vegetables_primary: config?.daily_vegetables_primary || '',
-        daily_oil_primary: config?.daily_oil_primary || '',
-        daily_salt_primary: config?.daily_salt_primary || '',
-        daily_fuel_primary: config?.daily_fuel_primary || '',
+        daily_pulses_primary: config?.daily_pulses_primary ?? defaultPrimaryRates.daily_pulses_primary,
+        daily_vegetables_primary: config?.daily_vegetables_primary ?? defaultPrimaryRates.daily_vegetables_primary,
+        daily_oil_primary: config?.daily_oil_primary ?? defaultPrimaryRates.daily_oil_primary,
+        daily_salt_primary: config?.daily_salt_primary ?? defaultPrimaryRates.daily_salt_primary,
+        daily_fuel_primary: config?.daily_fuel_primary ?? defaultPrimaryRates.daily_fuel_primary,
 
         // Middle (Class 6-8)
-        daily_pulses_middle: config?.daily_pulses_middle || '',
-        daily_vegetables_middle: config?.daily_vegetables_middle || '',
-        daily_oil_middle: config?.daily_oil_middle || '',
-        daily_salt_middle: config?.daily_salt_middle || '',
-        daily_fuel_middle: config?.daily_fuel_middle || '',
+        daily_pulses_middle: config?.daily_pulses_middle ?? defaultMiddleRates.daily_pulses_middle,
+        daily_vegetables_middle: config?.daily_vegetables_middle ?? defaultMiddleRates.daily_vegetables_middle,
+        daily_oil_middle: config?.daily_oil_middle ?? defaultMiddleRates.daily_oil_middle,
+        daily_salt_middle: config?.daily_salt_middle ?? defaultMiddleRates.daily_salt_middle,
+        daily_fuel_middle: config?.daily_fuel_middle ?? defaultMiddleRates.daily_fuel_middle,
 
-        // ✅ UNIFIED Salt Percentages (apply to both Primary and Middle)
-        salt_percentage_common: config?.salt_percentage_common || 30,
-        salt_percentage_chilli: config?.salt_percentage_chilli || 20,
-        salt_percentage_turmeric: config?.salt_percentage_turmeric || 20,
-        salt_percentage_coriander: config?.salt_percentage_coriander || 15,
-        salt_percentage_other: config?.salt_percentage_other || 15,
+        // UNIFIED Salt Percentages (apply to both Primary and Middle)
+        salt_percentage_common: config?.salt_percentage_common ?? 5,
+        salt_percentage_chilli: config?.salt_percentage_chilli ?? 35,
+        salt_percentage_turmeric: config?.salt_percentage_turmeric ?? 25,
+        salt_percentage_coriander: config?.salt_percentage_coriander ?? 15,
+        salt_percentage_other: config?.salt_percentage_other ?? 20,
     });
 
     const [saltTotal, setSaltTotal] = useState(100);
@@ -387,7 +403,7 @@ export default function Form({ auth, config, schoolType, hasPrimary, hasMiddle }
                                             helpText="Default: 20%"
                                         />
                                         <InputField
-                                            label="Coriander %"
+                                            label="Ingredients %"
                                             name="salt_percentage_coriander"
                                             value={data.salt_percentage_coriander}
                                             onChange={setData}
@@ -406,8 +422,8 @@ export default function Form({ auth, config, schoolType, hasPrimary, hasMiddle }
                                         />
                                     </div>
                                     <div className={`mt-4 p-4 rounded-lg border-2 ${Math.abs(saltTotal - 100) < 0.01
-                                            ? 'bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-600'
-                                            : 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-600'
+                                        ? 'bg-green-100 dark:bg-green-900/30 border-green-400 dark:border-green-600'
+                                        : 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-600'
                                         }`}>
                                         <div className="flex items-center justify-between">
                                             <p className={`text-sm font-semibold ${Math.abs(saltTotal - 100) < 0.01 ? 'text-green-800 dark:text-green-200' : 'text-yellow-800 dark:text-yellow-200'

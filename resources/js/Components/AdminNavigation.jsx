@@ -68,21 +68,41 @@ export default function AdminNavigation({ user }) {
                                     </Dropdown.Trigger>
 
                                     <Dropdown.Content>
-                                        <Dropdown.Link href={route('admin.rice-reports.index')}>
+                                        <Dropdown.Link href="/admin/rice-reports">
                                             Rice Reports
                                         </Dropdown.Link>
-                                        <Dropdown.Link href={route('admin.amount-reports.index')}>
+                                        <Dropdown.Link href="/admin/amount-reports">
                                             Amount Reports
                                         </Dropdown.Link>
-                                        <Dropdown.Link href={route('admin.daily-consumptions.index')}>
+                                        <Dropdown.Link href="/admin/daily-consumptions">
                                             Daily Consumptions
                                         </Dropdown.Link>
-                                        <Dropdown.Link href={route('admin.bills.index')}>
+                                        <Dropdown.Link href="/admin/bills">
                                             Bills
                                         </Dropdown.Link>
                                     </Dropdown.Content>
                                 </Dropdown>
                             </div>
+
+                            <Link
+                                href={route('admin.ai-config.index')}
+                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out ${isActive('/admin/ai-config')
+                                    ? 'border-white text-white'
+                                    : 'border-transparent text-primary-200 hover:text-white hover:border-primary-300'
+                                    }`}
+                            >
+                                AI Config
+                            </Link>
+
+                            <Link
+                                href={route('admin.developer-messages.index')}
+                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out ${isActive('/admin/developer-messages')
+                                    ? 'border-white text-white'
+                                    : 'border-transparent text-primary-200 hover:text-white hover:border-primary-300'
+                                    }`}
+                            >
+                                Messages
+                            </Link>
                         </div>
                     </div>
 
@@ -176,28 +196,40 @@ export default function AdminNavigation({ user }) {
                         Reports
                     </div>
                     <Link
-                        href={route('admin.rice-reports.index')}
+                        href="/admin/rice-reports"
                         className="block w-full pl-6 pr-4 py-2 border-l-4 text-left text-base font-medium text-primary-200 hover:text-white hover:bg-primary-700 hover:border-white focus:outline-none focus:text-white focus:bg-primary-700 focus:border-white transition duration-150 ease-in-out"
                     >
                         Rice Reports
                     </Link>
                     <Link
-                        href={route('admin.amount-reports.index')}
+                        href="/admin/amount-reports"
                         className="block w-full pl-6 pr-4 py-2 border-l-4 text-left text-base font-medium text-primary-200 hover:text-white hover:bg-primary-700 hover:border-white focus:outline-none focus:text-white focus:bg-blue-700 focus:border-white transition duration-150 ease-in-out"
                     >
                         Amount Reports
                     </Link>
                     <Link
-                        href={route('admin.daily-consumptions.index')}
+                        href="/admin/daily-consumptions"
                         className="block w-full pl-6 pr-4 py-2 border-l-4 text-left text-base font-medium text-primary-200 hover:text-white hover:bg-primary-700 hover:border-white focus:outline-none focus:text-white focus:bg-blue-700 focus:border-white transition duration-150 ease-in-out"
                     >
                         Daily Consumptions
                     </Link>
                     <Link
-                        href={route('admin.bills.index')}
+                        href="/admin/bills"
                         className="block w-full pl-6 pr-4 py-2 border-l-4 text-left text-base font-medium text-primary-200 hover:text-white hover:bg-primary-700 hover:border-white focus:outline-none focus:text-white focus:bg-blue-700 focus:border-white transition duration-150 ease-in-out"
                     >
                         Bills
+                    </Link>
+                    <Link
+                        href={route('admin.ai-config.index')}
+                        className="block w-full pl-3 pr-4 py-2 border-l-4 text-left text-base font-medium text-primary-200 hover:text-white hover:bg-primary-700 hover:border-white focus:outline-none focus:text-white focus:bg-blue-700 focus:border-white transition duration-150 ease-in-out"
+                    >
+                        AI Configuration
+                    </Link>
+                    <Link
+                        href={route('admin.developer-messages.index')}
+                        className="block w-full pl-3 pr-4 py-2 border-l-4 text-left text-base font-medium text-primary-200 hover:text-white hover:bg-primary-700 hover:border-white focus:outline-none focus:text-white focus:bg-blue-700 focus:border-white transition duration-150 ease-in-out"
+                    >
+                        Developer Messages
                     </Link>
                 </div>
 

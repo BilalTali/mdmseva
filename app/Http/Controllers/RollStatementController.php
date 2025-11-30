@@ -21,8 +21,11 @@ class RollStatementController extends Controller
         if (!$user) {
             return redirect()->route('login');
         }
+        $userUdise = $user->udise_code ?? $user->udise;
         
-        $query = RollStatement::where('udise', $user->udise);
+        $user->loadMissing(['district', 'zone']);
+        $userUdise = $user->udise_code ?? $user->udise;
+        $query = RollStatement::where('udise', $userUdise);
 
         // Apply filters
         if ($request->has('search')) {
@@ -68,6 +71,13 @@ class RollStatementController extends Controller
                 'academic_year' => $request->academic_year,
                 'month' => $request->month,
             ],
+            'schoolInfo' => [
+                'state' => $user->state ?? $user->district?->state,
+                'district' => $user->district?->name ?? $user->district,
+                'zone' => $user->zone?->name ?? $user->zone,
+                'school_name' => $user->school_name,
+                'udise_code' => $userUdise,
+            ],
         ]);
     }
 
@@ -80,9 +90,9 @@ class RollStatementController extends Controller
         if (!$user) {
             return redirect()->route('login');
         }
-        
+        $userUdise = $user->udise_code ?? $user->udise;
         // Get the most recent date and academic year combination for this UDISE
-        $latestStatement = RollStatement::where('udise', $user->udise)
+        $latestStatement = RollStatement::where('udise', $userUdise)
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
             ->first();
@@ -92,7 +102,7 @@ class RollStatementController extends Controller
         // If there's a latest statement, check if we can get all entries for that date/academic year
         if ($latestStatement) {
             // Get all entries for the same date and academic year
-            $allEntries = RollStatement::where('udise', $user->udise)
+            $allEntries = RollStatement::where('udise', $userUdise)
                 ->where('date', $latestStatement->date)
                 ->where('academic_year', $latestStatement->academic_year)
                 ->orderBy('class')
@@ -118,7 +128,7 @@ class RollStatementController extends Controller
         return Inertia::render('RollStatements/Create', [
             'academic_years' => $this->getAcademicYears(),
             'classes' => $this->getClasses(),
-            'user_udise' => $user->udise,
+            'user_udise' => $userUdise,
             'school_name' => $user->school_name,
             'school_type' => $user->school_type ?? 'primary',
             'existing_statement' => $existingStatement,
@@ -419,7 +429,8 @@ class RollStatementController extends Controller
         if (!$user) {
             return redirect()->route('login');
         }
-        
+        $userUdise = $user->udise_code ?? $user->udise;
+
         // Get date and academic_year from query parameters
         $date = $request->query('date');
         $academicYear = $request->query('academic_year');
@@ -429,7 +440,7 @@ class RollStatementController extends Controller
         }
         
         // Get all roll statements for this date and academic year
-        $rollStatements = RollStatement::where('udise', $user->udise)
+        $rollStatements = RollStatement::where('udise', $userUdise)
             ->where('date', $date)
             ->where('academic_year', $academicYear)
             ->get();

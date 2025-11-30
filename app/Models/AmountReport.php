@@ -98,7 +98,12 @@ class AmountReport extends Model
         'grand_total_amount',
         'average_daily_amount',
         'daily_records',
-        'salt_percentages_used', // NEW: Store unified percentages
+        'salt_percentages_used',
+        'is_stale',
+        'stale_reason',
+        'stale_since',
+        'depends_on_rice_report_id',
+        'source_daily_hash',
     ];
 
     /**
@@ -111,7 +116,9 @@ class AmountReport extends Model
         'total_middle_students' => 'integer',
         'total_serving_days' => 'integer',
         'daily_records' => 'array',
-        'salt_percentages_used' => 'array', // NEW: Cast unified percentages to array
+        'salt_percentages_used' => 'array',
+        'is_stale' => 'boolean',
+        'stale_since' => 'datetime',
     ];
 
     // =========================================================================
@@ -124,6 +131,14 @@ class AmountReport extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Relationship: depends on a Rice Report.
+     */
+    public function dependsOnRiceReport(): BelongsTo
+    {
+        return $this->belongsTo(RiceReport::class, 'depends_on_rice_report_id');
     }
 
     /**
@@ -140,7 +155,7 @@ class AmountReport extends Model
     public function kiryanaBills(): HasMany
     {
         return $this->hasMany(Bill::class, 'amount_report_id')
-                    ->where('type', 'kiryana');
+                    ->where('bill_type', 'kiryana');
     }
 
     /**
@@ -149,7 +164,7 @@ class AmountReport extends Model
     public function fuelBills(): HasMany
     {
         return $this->hasMany(Bill::class, 'amount_report_id')
-                    ->where('type', 'fuel');
+                    ->where('bill_type', 'fuel');
     }
 
     // =========================================================================
@@ -378,7 +393,7 @@ class AmountReport extends Model
      */
     public function hasKiryanaBill(): bool
     {
-        return $this->bills()->where('type', 'kiryana')->exists();
+        return $this->bills()->where('bill_type', 'kiryana')->exists();
     }
 
     /**
@@ -386,7 +401,7 @@ class AmountReport extends Model
      */
     public function hasFuelBill(): bool
     {
-        return $this->bills()->where('type', 'fuel')->exists();
+        return $this->bills()->where('bill_type', 'fuel')->exists();
     }
 
     /**

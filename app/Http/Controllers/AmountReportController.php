@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\AmountReport;
 use App\Models\RiceReport;
 use App\Models\MonthlyRiceConfiguration;
-use App\Models\AmountConfiguration;
+use App\Models\MonthlyAmountConfiguration;
 use App\Services\AmountReportService;
+use App\Services\ReportStaleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -21,11 +22,17 @@ class AmountReportController extends Controller
     protected AmountReportService $reportService;
 
     /**
-     * Constructor - inject AmountReportService
+     * ReportStaleService instance
      */
-    public function __construct(AmountReportService $reportService)
+    protected ReportStaleService $staleService;
+
+    /**
+     * Constructor - inject services
+     */
+    public function __construct(AmountReportService $reportService, ReportStaleService $staleService)
     {
         $this->reportService = $reportService;
+        $this->staleService = $staleService;
     }
 
     /**
@@ -56,6 +63,8 @@ class AmountReportController extends Controller
                 'created_at' => $report->created_at->format('M d, Y'),
                 'created_at_human' => $report->created_at->diffForHumans(),
                 'bills_count' => $report->getBillsCount(),
+                'is_stale' => $report->is_stale,
+                'stale_reason' => $report->stale_reason,
             ];
 
             // Add primary breakdown if user has primary students
@@ -96,6 +105,7 @@ class AmountReportController extends Controller
                 'total' => $reports->total(),
                 'from' => $reports->firstItem(),
                 'to' => $reports->lastItem(),
+                'path' => $reports->path(), // Ensure pagination path is available
             ],
             'availableMonths' => $availableMonths,
             'statistics' => $statistics,
@@ -113,13 +123,16 @@ class AmountReportController extends Controller
         $user = Auth::user();
         $userId = $user->id;
 
-        // Check if user has amount configuration
-        $amountConfig = AmountConfiguration::where('user_id', $userId)->first();
+        // Check if user has ANY amount configuration (monthly)
+        // We check if there's at least one completed configuration
+        $hasConfig = MonthlyAmountConfiguration::where('user_id', $userId)
+            ->where('is_completed', true)
+            ->exists();
 
-        if (!$amountConfig) {
+        if (!$hasConfig) {
             return redirect()
                 ->route('amount-config.index')
-                ->with('error', 'Please create an Amount Configuration first before generating reports.');
+                ->with('error', 'Please create and confirm an Amount Configuration first before generating reports.');
         }
 
         $availableMonths = $this->reportService->getAvailableMonthsForReports($userId);
@@ -141,7 +154,7 @@ class AmountReportController extends Controller
 
     /**
      * Store a newly created report.
-     * ✅ UPDATED: Uses unified salt percentages from AmountConfiguration
+     * ✅ UPDATED: Uses unified salt percentages from MonthlyAmountConfiguration
      */
     public function store(Request $request)
     {
@@ -154,12 +167,14 @@ class AmountReportController extends Controller
         ]);
 
         try {
-            // Get user's amount configuration
-            $amountConfig = AmountConfiguration::where('user_id', $user->id)->first();
+            // Get user's monthly amount configuration for the specific month
+            $amountConfig = MonthlyAmountConfiguration::forUser($user->id)
+                ->forPeriod($validated['month'], $validated['year'])
+                ->first();
 
-            if (!$amountConfig) {
+            if (!$amountConfig || !$amountConfig->is_completed) {
                 return back()->withErrors([
-                    'generation' => 'Please create an Amount Configuration first.',
+                    'generation' => 'Please create and confirm the Amount Configuration for this month first.',
                 ])->withInput();
             }
 
@@ -176,22 +191,22 @@ class AmountReportController extends Controller
                 ])->withInput();
             }
 
-            // ✅ Extract UNIFIED salt percentages from AmountConfiguration
+            // ✅ Extract UNIFIED salt percentages from MonthlyAmountConfiguration
             // Same percentages apply to both Primary and Middle
             $saltPercentages = [
                 'primary' => $user->hasPrimaryStudents() ? [
-                    'common' => $amountConfig->salt_percentage_common ?? 30,
-                    'chilli' => $amountConfig->salt_percentage_chilli ?? 20,
-                    'turmeric' => $amountConfig->salt_percentage_turmeric ?? 20,
+                    'common' => $amountConfig->salt_percentage_common ?? 5,
+                    'chilli' => $amountConfig->salt_percentage_chilli ?? 35,
+                    'turmeric' => $amountConfig->salt_percentage_turmeric ?? 25,
                     'coriander' => $amountConfig->salt_percentage_coriander ?? 15,
-                    'other' => $amountConfig->salt_percentage_other ?? 15,
+                    'other' => $amountConfig->salt_percentage_other ?? 20,
                 ] : null,
                 'middle' => $user->hasMiddleStudents() ? [
-                    'common' => $amountConfig->salt_percentage_common ?? 30,
-                    'chilli' => $amountConfig->salt_percentage_chilli ?? 20,
-                    'turmeric' => $amountConfig->salt_percentage_turmeric ?? 20,
+                    'common' => $amountConfig->salt_percentage_common ?? 5,
+                    'chilli' => $amountConfig->salt_percentage_chilli ?? 35,
+                    'turmeric' => $amountConfig->salt_percentage_turmeric ?? 25,
                     'coriander' => $amountConfig->salt_percentage_coriander ?? 15,
-                    'other' => $amountConfig->salt_percentage_other ?? 15,
+                    'other' => $amountConfig->salt_percentage_other ?? 20,
                 ] : null,
             ];
 
@@ -202,6 +217,18 @@ class AmountReportController extends Controller
                 $validated['year'],
                 $saltPercentages
             );
+
+            // Calculate source hash and link dependencies
+            $hash = $this->staleService->generateSourceHashForPeriod($user->id, $validated['month'], $validated['year']);
+            $riceReport = RiceReport::where('user_id', $user->id)
+                ->where('month', $validated['month'])
+                ->where('year', $validated['year'])
+                ->first();
+
+            $report->update([
+                'source_daily_hash' => $hash,
+                'depends_on_rice_report_id' => $riceReport?->id,
+            ]);
 
             Log::info('Amount report created (using unified salt percentages)', [
                 'user_id' => $user->id,
@@ -237,6 +264,12 @@ class AmountReportController extends Controller
 
         if ($amountReport->user_id !== $user->id) {
             abort(403, 'Unauthorized access to report.');
+        }
+
+        // Check if report is stale
+        if ($amountReport->is_stale) {
+            return redirect()->route('amount-reports.index')
+                ->with('error', 'This report is stale and must be regenerated before viewing.');
         }
 
         $reportData = [
@@ -297,6 +330,13 @@ class AmountReportController extends Controller
             abort(403, 'Unauthorized access to report.');
         }
 
+        // Check if report is stale
+        if ($amountReport->is_stale) {
+            return response()->json([
+                'error' => 'This report is stale and must be regenerated.'
+            ], 403);
+        }
+
         try {
             $theme = $request->query('theme', 'bw');
             $preview = $request->query('preview', false);
@@ -304,13 +344,23 @@ class AmountReportController extends Controller
 
             $themeCss = $this->getThemeCss($theme);
 
-            $amountConfig = AmountConfiguration::where('user_id', $user->id)->latest()->first();
+            // ✅ UPDATED: Fetch MonthlyAmountConfiguration for the report's month
+            $amountConfig = MonthlyAmountConfiguration::forUser($user->id)
+                ->forPeriod($amountReport->month, $amountReport->year)
+                ->first();
             
             if (!$amountConfig) {
-                Log::warning('No AmountConfiguration found for user', ['user_id' => $user->id]);
+                Log::warning('No MonthlyAmountConfiguration found for user/period', [
+                    'user_id' => $user->id,
+                    'month' => $amountReport->month,
+                    'year' => $amountReport->year
+                ]);
             }
 
-            $riceConfig = MonthlyRiceConfiguration::where('user_id', $user->id)->latest()->first();
+            $riceConfig = MonthlyRiceConfiguration::forUser($user->id)
+                ->forPeriod($amountReport->month, $amountReport->year)
+                ->first();
+
             $riceReport = RiceReport::where('user_id', $user->id)
                 ->where('month', $amountReport->month)
                 ->where('year', $amountReport->year)
@@ -562,6 +612,22 @@ class AmountReportController extends Controller
                 $amountReport->year
             );
 
+            // Calculate source hash and link dependencies
+            $hash = $this->staleService->generateSourceHashForPeriod($user->id, $amountReport->month, $amountReport->year);
+            $riceReport = RiceReport::where('user_id', $user->id)
+                ->where('month', $amountReport->month)
+                ->where('year', $amountReport->year)
+                ->first();
+
+            $newReport->update([
+                'source_daily_hash' => $hash,
+                'depends_on_rice_report_id' => $riceReport?->id,
+            ]);
+
+            // Clear stale status (it's a new report instance, so it starts fresh, but we ensure logic is clean)
+            // Actually regenerateReport deletes old and creates new, so new one is fresh by default.
+            // But if we were updating, we'd need to clear.
+            
             Log::info('Amount report regenerated', [
                 'user_id' => $user->id,
                 'old_report_id' => $amountReport->id,
@@ -620,4 +686,3 @@ class AmountReportController extends Controller
         }
     }
 }
-

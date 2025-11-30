@@ -15,8 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * 
  * @property int $id
  * @property int $amount_report_id
- * @property int $created_by
- * @property string $type (kiryana|fuel)
+ * @property int $user_id
+ * @property string $bill_type (kiryana|fuel)
  * @property string $shop_name
  * @property string $shopkeeper_name
  * @property string $phone
@@ -40,13 +40,18 @@ class Bill extends Model
      */
     protected $fillable = [
         'amount_report_id',
-        'created_by',
-        'type',
+        'user_id',
+        'bill_number',
+        'bill_type',
+        'month',
+        'year',
         'shop_name',
         'shopkeeper_name',
         'phone',
         'address',
+        'deals_with',
         'total_amount',
+        'bill_date',
     ];
 
     /**
@@ -54,8 +59,9 @@ class Bill extends Model
      */
     protected $casts = [
         'amount_report_id' => 'integer',
-        'created_by' => 'integer',
+        'user_id' => 'integer',
         'total_amount' => 'decimal:2',
+        'bill_date' => 'date',
     ];
 
     // =========================================================================
@@ -75,7 +81,7 @@ class Bill extends Model
      */
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
@@ -95,7 +101,7 @@ class Bill extends Model
      */
     public function scopeOfType($query, string $type)
     {
-        return $query->where('type', $type);
+        return $query->where('bill_type', $type);
     }
 
     /**
@@ -103,7 +109,7 @@ class Bill extends Model
      */
     public function scopeKiryana($query)
     {
-        return $query->where('type', self::TYPE_KIRYANA);
+        return $query->where('bill_type', self::TYPE_KIRYANA);
     }
 
     /**
@@ -111,7 +117,7 @@ class Bill extends Model
      */
     public function scopeFuel($query)
     {
-        return $query->where('type', self::TYPE_FUEL);
+        return $query->where('bill_type', self::TYPE_FUEL);
     }
 
     /**
@@ -139,10 +145,10 @@ class Bill extends Model
      */
     public function getTypeLabel(): string
     {
-        return match($this->type) {
+        return match($this->bill_type) {
             self::TYPE_KIRYANA => 'Kiryana (Groceries)',
             self::TYPE_FUEL => 'Fuel',
-            default => ucfirst($this->type),
+            default => ucfirst($this->bill_type),
         };
     }
 
@@ -171,7 +177,7 @@ class Bill extends Model
      */
     public function isKiryana(): bool
     {
-        return $this->type === self::TYPE_KIRYANA;
+        return $this->bill_type === self::TYPE_KIRYANA;
     }
 
     /**
@@ -179,7 +185,7 @@ class Bill extends Model
      */
     public function isFuel(): bool
     {
-        return $this->type === self::TYPE_FUEL;
+        return $this->bill_type === self::TYPE_FUEL;
     }
 
     /**
@@ -206,7 +212,7 @@ class Bill extends Model
         return [
             'id' => $this->id,
             'bill_number' => $this->getBillNumber(),
-            'type' => $this->type,
+            'type' => $this->bill_type,
             'type_label' => $this->getTypeLabel(),
             'shop_name' => $this->shop_name,
             'shopkeeper_name' => $this->shopkeeper_name,
@@ -231,11 +237,12 @@ class Bill extends Model
     {
         return [
             'amount_report_id' => ['required', 'exists:amount_reports,id'],
-            'type' => ['required', 'in:kiryana,fuel'],
+            'bill_type' => ['required', 'in:kiryana,fuel'],
             'shop_name' => ['required', 'string', 'max:255'],
             'shopkeeper_name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'digits:10'],
             'address' => ['nullable', 'string', 'max:500'],
+            'deals_with' => ['nullable', 'string', 'max:255'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_name' => ['required', 'string', 'max:255'],
             'items.*.amount' => ['required', 'numeric', 'min:0'],

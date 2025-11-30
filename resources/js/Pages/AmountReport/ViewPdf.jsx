@@ -69,7 +69,7 @@ export default function ViewPdf({ auth, report, user, schoolType, hasPrimary, ha
         { key: 'common_salt', label: 'Common Salt', color: 'bg-blue-500', icon: '🧂' },
         { key: 'chilli_powder', label: 'Chilli Powder', color: 'bg-red-500', icon: '🌶️' },
         { key: 'turmeric', label: 'Turmeric', color: 'bg-yellow-500', icon: '💛' },
-        { key: 'coriander', label: 'Coriander', color: 'bg-green-500', icon: '🌿' },
+        { key: 'coriander', label: 'Ingredients', color: 'bg-green-500', icon: '🌿' },
         { key: 'other_condiments', label: 'Other Condiments', color: 'bg-purple-500', icon: '🧄' }
     ];
 

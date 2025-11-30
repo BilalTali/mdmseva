@@ -2,7 +2,8 @@
 // Chart component for visualizing rice stock trends
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { Button } from '@/Components/ui/button';
+import Button from '@/Components/ui/button';
+
 import {
     LineChart,
     Line,

@@ -27,12 +27,18 @@ export default function AdminAmountReportShow({ report }) {
                                 <p className="text-lg font-semibold text-gray-900">{report?.user?.district?.name || '-'}</p>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Total Amount</p>
-                                <p className="text-lg font-semibold text-gray-900">₹{Number(report?.total_amount || 0).toFixed(2)}</p>
+                                <p className="text-sm text-gray-500">Grand Total Amount</p>
+                                <p className="text-lg font-semibold text-gray-900">₹{Number(report?.grand_total_amount || 0).toFixed(2)}</p>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Breakdown</p>
-                                <p className="text-sm text-gray-700">Pulses: ₹{Number(report?.pulses_amount || 0).toFixed(2)}, Vegetables: ₹{Number(report?.vegetables_amount || 0).toFixed(2)}, Oil: ₹{Number(report?.oil_amount || 0).toFixed(2)}, Salt: ₹{Number(report?.salt_amount || 0).toFixed(2)}, Fuel: ₹{Number(report?.fuel_amount || 0).toFixed(2)}</p>
+                                <p className="text-sm text-gray-500">Breakdown (Primary + Middle)</p>
+                                <p className="text-sm text-gray-700">
+                                    Pulses: ₹{Number((report?.total_primary_pulses || 0) + (report?.total_middle_pulses || 0)).toFixed(2)},
+                                    Vegetables: ₹{Number((report?.total_primary_vegetables || 0) + (report?.total_middle_vegetables || 0)).toFixed(2)},
+                                    Oil: ₹{Number((report?.total_primary_oil || 0) + (report?.total_middle_oil || 0)).toFixed(2)},
+                                    Salt: ₹{Number((report?.total_primary_salt || 0) + (report?.total_middle_salt || 0)).toFixed(2)},
+                                    Fuel: ₹{Number((report?.total_primary_fuel || 0) + (report?.total_middle_fuel || 0)).toFixed(2)}
+                                </p>
                             </div>
                         </div>
                     </div>

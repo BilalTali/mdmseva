@@ -117,7 +117,7 @@ class ReportsController extends Controller
                 COUNT(*) as total_reports,
                 SUM(total_rice_consumed) as total_rice,
                 AVG(total_rice_consumed) as avg_per_school,
-                SUM(total_students) as total_students
+                SUM(total_primary_students + total_middle_students) as total_students
             ')
             ->first();
 
@@ -352,13 +352,13 @@ class ReportsController extends Controller
 
         // Apply filters
         if ($request->filled('district_id')) {
-            $query->whereHas('user', function($q) use ($request) {
+            $query->whereHas('report.user', function($q) use ($request) {
                 $q->where('district_id', $request->district_id);
             });
         }
 
         if ($request->filled('zone_id')) {
-            $query->whereHas('user', function($q) use ($request) {
+            $query->whereHas('report.user', function($q) use ($request) {
                 $q->where('zone_id', $request->zone_id);
             });
         }
@@ -483,17 +483,17 @@ class ReportsController extends Controller
         ]);
 
         // Build query
-        $query = Bill::with(['user.district', 'user.zone']);
+        $query = Bill::with(['report.user.district', 'report.user.zone', 'creator']);
 
         // Apply filters
         if ($request->filled('district_id')) {
-            $query->whereHas('user', function($q) use ($request) {
+            $query->whereHas('report.user', function($q) use ($request) {
                 $q->where('district_id', $request->district_id);
             });
         }
 
         if ($request->filled('zone_id')) {
-            $query->whereHas('user', function($q) use ($request) {
+            $query->whereHas('report.user', function($q) use ($request) {
                 $q->where('zone_id', $request->zone_id);
             });
         }
@@ -528,12 +528,12 @@ class ReportsController extends Controller
 
         // Calculate aggregations
         $aggregations = Bill::when($request->filled('district_id'), function($q) use ($request) {
-                $q->whereHas('user', function($subQ) use ($request) {
+                $q->whereHas('report.user', function($subQ) use ($request) {
                     $subQ->where('district_id', $request->district_id);
                 });
             })
             ->when($request->filled('zone_id'), function($q) use ($request) {
-                $q->whereHas('user', function($subQ) use ($request) {
+                $q->whereHas('report.user', function($subQ) use ($request) {
                     $subQ->where('zone_id', $request->zone_id);
                 });
             })
@@ -557,7 +557,7 @@ class ReportsController extends Controller
 
         // Vendor breakdown (top 10)
         $vendorBreakdown = Bill::when($request->filled('district_id'), function($q) use ($request) {
-                $q->whereHas('user', function($subQ) use ($request) {
+                $q->whereHas('report.user', function($subQ) use ($request) {
                     $subQ->where('district_id', $request->district_id);
                 });
             })
@@ -601,7 +601,7 @@ class ReportsController extends Controller
      */
     public function billShow(int $billId): Response
     {
-        $bill = Bill::with(['user.district', 'user.zone'])->findOrFail($billId);
+        $bill = Bill::with(['report.user.district', 'report.user.zone', 'creator', 'items'])->findOrFail($billId);
 
         return Inertia::render('Admin/Reports/Bills/Show', [
             'bill' => $bill,

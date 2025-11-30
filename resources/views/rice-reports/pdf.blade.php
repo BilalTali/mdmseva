@@ -90,6 +90,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--primary-color);
+            margin-top: 15px;
             margin-bottom: 3px;
         }
 
@@ -217,6 +218,7 @@
         
         td {
             font-size: 6.5pt;
+            font-weight: bold;
         }
         
         tfoot td {
@@ -242,13 +244,13 @@
         
         .daily-table th {
             font-size: 6pt;
-            padding: 2px 1px;
+            padding: 2.4px 1.2px;
             border: 1px solid #000;
         }
         
         .daily-table td {
-            font-size: 5.5pt;
-            padding: 2px 1px;
+            font-size: 6pt;
+            padding: 2.4px 1.2px;
             border: 1px solid #000;
         }
 
@@ -346,6 +348,7 @@
         .roll-table td {
             font-size: 5.5pt;
             padding: 2px 1px;
+            border: 1px solid #000;
         }
 
         .roll-header {
@@ -356,6 +359,27 @@
 
         body.theme-bw .roll-header {
             background-color: #555 !important;
+        }
+
+        .class-cell {
+            text-align: center;
+            background-color: #fffefc;
+            padding-left: 0 !important;
+        }
+
+        .class-pill {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 999px;
+            font-weight: 800;
+            font-size: 6pt;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border: 1px solid #c084fc;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #78350f;
+            min-width: 34px;
+            text-align: center;
         }
 
         /* Roll Statement Subtotal Rows */
@@ -451,13 +475,48 @@
 <body class="theme-{{ $theme ?? 'bw' }}">
 <div class="content-wrapper">
 
+    @php
+        $showPrimary = $user->hasPrimaryStudents();
+        $showMiddle = $user->hasMiddleStudents();
+        $studentLevelCount = ($showPrimary ? 1 : 0) + ($showMiddle ? 1 : 0);
+
+        $primaryClassNames = ['KG', '1st', '2nd', '3rd', '4th', '5th'];
+        $upperClassNames = ['6th', '7th', '8th'];
+
+        $classOrder = [];
+        if ($showPrimary) {
+            $classOrder = array_merge($classOrder, $primaryClassNames);
+        }
+        if ($showMiddle) {
+            $classOrder = array_merge($classOrder, $upperClassNames);
+        }
+
+        if (empty($classOrder)) {
+            $classOrder = array_merge($primaryClassNames, $upperClassNames);
+        }
+
+        $lastConsumptionDate = null;
+        $lastRecordDate = collect($report->daily_records ?? [])
+            ->pluck('date')
+            ->filter()
+            ->map(fn($date) => \Carbon\Carbon::parse($date))
+            ->sort()
+            ->last();
+
+        if ($lastRecordDate) {
+            $lastConsumptionDate = $lastRecordDate;
+        } elseif(isset($report->year, $report->month)) {
+            $lastConsumptionDate = \Carbon\Carbon::create($report->year, $report->month)->endOfMonth();
+        }
+    @endphp
+
     {{-- Header --}}
     <div class="report-header">
         <div class="state-name"> Government of {{ $user->state ?? 'State' }}</div>
         <div class="district-zone-row">
-            District: {{ $user->district ?? 'N/A' }} <span class="heading-separator">|</span>
-            Zone: {{ $user->zone ?? 'N/A' }} <span class="heading-separator">|</span>
-            UDISE: {{ $user->udise ?? 'N/A' }}
+            District: {{ optional($user->district)->name ?? $user->district ?? 'N/A' }} <span class="heading-separator">|</span>
+            Zone: {{ optional($user->zone)->name ?? $user->zone ?? 'N/A' }} <span class="heading-separator">|</span>
+            UDISE: {{ $user->udise_code ?? 'N/A' }}
         </div>
         <div class="school-name-wrapper">
             <div class="school-name-header">
@@ -466,7 +525,7 @@
             
         </div>
         <div class="single-line-info">
-            Report Month: {{ $report->month_name }} {{ $report->year }} <span class="heading-separator"></span>
+            MDM Format I | Report Month: {{ $report->month_name }} {{ $report->year }} <span class="heading-separator"></span> 
                   </div>
        
     </div>
@@ -484,14 +543,22 @@
                         <tr>
                             <th rowspan="2">S.No</th>
                             <th rowspan="2">Date</th>
-                            <th colspan="2">Students Served</th>
-                            <th colspan="2">Rice Consumed (kg)</th>
+                            <th colspan="{{ $studentLevelCount }}">Students Served</th>
+                            <th colspan="{{ $studentLevelCount }}">Rice Consumed (kg)</th>
                         </tr>
                         <tr>
-                            <th>Primary</th>
-                            <th>Middle</th>
-                            <th>Primary</th>
-                            <th>Middle</th>
+                            @if($showPrimary)
+                                <th>Primary</th>
+                            @endif
+                            @if($showMiddle)
+                                <th>Middle</th>
+                            @endif
+                            @if($showPrimary)
+                                <th>Primary</th>
+                            @endif
+                            @if($showMiddle)
+                                <th>Middle</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -511,39 +578,38 @@
                         @endphp
                         <tr>
                             <td>{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
-                            <td>{{ \Carbon\Carbon::parse($day['date'])->format('d/m') }}</td>
-                            <td>{{ $day['served_primary'] ?? 0 }}</td>
-                            <td>{{ $day['served_middle'] ?? 0 }}</td>
-                            <td>{{ number_format($day['primary_rice'] ?? 0, 2) }}</td>
-                            <td>{{ number_format($day['middle_rice'] ?? 0, 2) }}</td>
+                            <td>{{ \Carbon\Carbon::parse($day['date'])->format('d/m/Y') }}</td>
+                            @if($showPrimary)
+                                <td>{{ $day['served_primary'] ?? 0 }}</td>
+                            @endif
+                            @if($showMiddle)
+                                <td>{{ $day['served_middle'] ?? 0 }}</td>
+                            @endif
+                            @if($showPrimary)
+                                <td>{{ number_format($day['primary_rice'] ?? 0, 2) }}</td>
+                            @endif
+                            @if($showMiddle)
+                                <td>{{ number_format($day['middle_rice'] ?? 0, 2) }}</td>
+                            @endif
                         </tr>
                         @endforeach
 
-                        {{-- Primary Subtotal Row --}}
-                        <tr class="primary-subtotal-row">
-                            <td colspan="2"><strong>PRIMARY TOTAL (KG-5th)</strong></td>
-                            <td><strong>{{ $totalPrimaryStudents }}</strong></td>
-                            <td>-</td>
-                            <td><strong>{{ number_format($totalPrimaryRice, 2) }}</strong></td>
-                            <td>-</td>
-                        </tr>
-
-                        {{-- Upper Primary Subtotal Row --}}
-                        <tr class="upper-subtotal-row">
-                            <td colspan="2"><strong>UPPER PRIMARY TOTAL (6th-8th)</strong></td>
-                            <td>-</td>
-                            <td><strong>{{ $totalMiddleStudents }}</strong></td>
-                            <td>-</td>
-                            <td><strong>{{ number_format($totalMiddleRice, 2) }}</strong></td>
-                        </tr>
 
                         {{-- Grand Total Row --}}
                         <tr class="grand-total-row">
                             <td colspan="2"><strong>GRAND TOTAL</strong></td>
-                            <td><strong>{{ $totalPrimaryStudents }}</strong></td>
-                            <td><strong>{{ $totalMiddleStudents }}</strong></td>
-                            <td><strong>{{ number_format($totalPrimaryRice, 2) }}</strong></td>
-                            <td><strong>{{ number_format($totalMiddleRice, 2) }}</strong></td>
+                            @if($showPrimary)
+                                <td><strong>{{ $totalPrimaryStudents }}</strong></td>
+                            @endif
+                            @if($showMiddle)
+                                <td><strong>{{ $totalMiddleStudents }}</strong></td>
+                            @endif
+                            @if($showPrimary)
+                                <td><strong>{{ number_format($totalPrimaryRice, 2) }}</strong></td>
+                            @endif
+                            @if($showMiddle)
+                                <td><strong>{{ number_format($totalMiddleRice, 2) }}</strong></td>
+                            @endif
                         </tr>
                     </tbody>
                 </table>
@@ -553,8 +619,9 @@
             <td width="42%" valign="top" class="no-border">
                 
                 {{-- ✅ RICE SUMMARY SECTION -  DATA FROM RICE CONFIGURATION --}}
-                <h3>Rice Stock Summary ( Data)</h3>
+                <h3>Rice Stock Summary</h3>
                 
+                @if($showPrimary)
                 {{-- Primary Summary --}}
                 <table class="summary-table">
                     <tr><th colspan="2" class="summary-header-primary">Primary (KG-5th)</th></tr>
@@ -581,7 +648,9 @@
                         <td class="cell-right"><strong>{{ number_format($computedBalances['closing_balance_primary'] ?? 0, 2) }} kg</strong></td>
                     </tr>
                 </table>
+                @endif
 
+                @if($showMiddle)
                 {{-- Middle Summary --}}
                 <table class="summary-table">
                     <tr><th colspan="2" class="summary-header-middle">Upper Primary (6th-8th)</th></tr>
@@ -608,6 +677,7 @@
                         <td class="cell-right"><strong>{{ number_format($computedBalances['closing_balance_upper_primary'] ?? 0, 2) }} kg</strong></td>
                     </tr>
                 </table>
+                @endif
 
                 {{-- Grand Total Summary - LIVE DATA --}}
                 <table class="summary-table">
@@ -663,9 +733,6 @@
                             $upperBoys = 0;
                             $upperGirls = 0;
                             $upperTotal = 0;
-                            
-                            // Define class order
-                            $classOrder = ['KG', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
                         @endphp
                         
                         @if($rollStatements->count() > 0)
@@ -684,25 +751,27 @@
                                         $totalStudents += $total;
                                         
                                         // Categorize by level
-                                        if(in_array($className, ['KG', '1st', '2nd', '3rd', '4th', '5th'])) {
+                                        if($showPrimary && in_array($className, $primaryClassNames)) {
                                             $primaryBoys += $boys;
                                             $primaryGirls += $girls;
                                             $primaryTotal += $total;
-                                        } else {
+                                        } elseif($showMiddle && in_array($className, $upperClassNames)) {
                                             $upperBoys += $boys;
                                             $upperGirls += $girls;
                                             $upperTotal += $total;
                                         }
                                     @endphp
                                     <tr>
-                                        <td class="cell-left">{{ $className }}</td>
+                                        <td class="class-cell">
+                                            <span class="class-pill">{{ $className }}</span>
+                                        </td>
                                         <td>{{ $boys }}</td>
                                         <td>{{ $girls }}</td>
                                         <td><strong>{{ $total }}</strong></td>
                                     </tr>
                                     
                                     {{-- Primary Subtotal after 5th class --}}
-                                    @if($className === '5th')
+                                    @if($showPrimary && $className === '5th')
                                     <tr class="roll-primary-total">
                                         <td class="cell-left"><strong>PRIMARY TOTAL</strong></td>
                                         <td><strong>{{ $primaryBoys }}</strong></td>
@@ -721,7 +790,7 @@
                             @endforeach
                             
                             {{-- Upper Primary Subtotal --}}
-                            @if($upperTotal > 0)
+                            @if($showMiddle && $upperTotal > 0)
                             <tr class="roll-upper-total">
                                 <td class="cell-left"><strong>UPPER PRIMARY TOTAL</strong></td>
                                 <td><strong>{{ $upperBoys }}</strong></td>
@@ -758,16 +827,19 @@
     </table>
 
     {{-- Footer Signatures --}}
-    <div class="footer">
-        <div>
-            _______________________<br>
+    <div class="footer" style="background: linear-gradient(120deg, var(--accent-light), #fff); border: 1px solid var(--border-color); border-radius: 6px; margin-top: 24px;">
+        <div style="text-align:center; border-right: 1px dashed var(--border-color);">
+            <div style="height: 60px;"></div>
             <strong>MDM Incharge</strong>
         </div>
-        <div style="text-align:right;">
-            _______________________<br>
+        <div style="text-align:center;">
+            <div style="height: 60px;"></div>
             <strong>Headmaster</strong>
         </div>
-    
+    </div>
+    <div class="footer-note">
+        Generated via MDMSeva | Last Daily Entry: {{ optional($lastConsumptionDate)->format('d/m/Y') ?? 'N/A' }}
+    </div>
 
 </div>
 </body>

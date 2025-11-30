@@ -29,7 +29,7 @@ class PublicStatsController extends Controller
                 // even manually created schools are counted.
                 $totalSchools = User::whereNotNull('school_name')->count();
                 $activeSchools = User::whereNotNull('school_name')
-                    ->where('is_active', true)
+                    ->where('status', 'active')
                     ->count();
 
                 // Get rice reports count
@@ -38,9 +38,9 @@ class PublicStatsController extends Controller
                 // Get amount reports count
                 $amountReportsGenerated = AmountReport::count();
 
-                // Get bills count by type
-                $kiryanaaBills = Bill::where('type', 'kiryana')->count();
-                $fuelBills = Bill::where('type', 'fuel')->count();
+                // Get bills count by type (column is bill_type in schema)
+                $kiryanaaBills = Bill::where('bill_type', 'kiryana')->count();
+                $fuelBills = Bill::where('bill_type', 'fuel')->count();
 
                 // Get total students served (sum of all daily consumptions)
                 $totalStudentsServed = DailyConsumption::sum(DB::raw('served_primary + served_middle'));

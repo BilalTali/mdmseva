@@ -213,11 +213,11 @@
 
         <!-- Second Row: District and Zone -->
         <div class="district-zone-row">
-            District: {{ $user->district ?? 'N/A' }}
+            District: {{ optional($user->district)->name ?? $user->district ?? 'N/A' }}
             <span class="heading-separator">|</span>
-            Zone: {{ $user->zone ?? 'N/A' }}
+            Zone: {{ optional($user->zone)->name ?? $user->zone ?? 'N/A' }}
             <span class="heading-separator">|</span>
-            UDISE: {{ $user->udise ?? 'N/A' }}
+            UDISE: {{ $user->udise_code ?? 'N/A' }}
         </div>
 
         <!-- Third Row: School Name -->
@@ -227,11 +227,13 @@
 
         <!-- Single Line: UDISE + Report Month + Title -->
         <div class="single-line-info">
+            
+            MDM Format II
+             <span class="heading-separator">|</span>
             Report Month: {{ $report->month_name }} {{ $report->year }}
-            <span class="heading-separator">|</span>
-            Amount Statement of Mid-Day-Meals
+           
         </div>
-    </div>
+    
 
     {{-- Upper Primary (Classes 6-8) Section --}}
     @if($totalStudentsMiddle > 0)
@@ -428,7 +430,7 @@
     {{-- Certification Section --}}
     <div class="certification">
         <p><strong>It is certified that:</strong></p>
-        <p><strong>1.</strong> Rice lifted <strong>{{ number_format(($liftedPrimary + $arrangedPrimary) + ($liftedMiddle + $arrangedMiddle), 3) }} kg</strong> quantity of rice (including arranged <strong>{{ number_format($arrangedTotal, 3) }} kg</strong>) has been made available under the Mid Day Meals Programme out of which <strong>{{ number_format($riceConsumedPrimary + $riceConsumedMiddle, 3) }} kg</strong> consumed.</p>
+        <p><strong>1.</strong> Rice lifted/Arranged <strong>{{ number_format(($liftedPrimary + $arrangedPrimary) + ($liftedMiddle + $arrangedMiddle), 3) }} kg</strong> quantity of rice has been made available under the Mid Day Meals Programme out of which <strong>{{ number_format($riceConsumedPrimary + $riceConsumedMiddle, 3) }} kg</strong> consumed.</p>
         <p><strong>2.</strong> Quantity has been consumed in Presence of VEC / Mid Day meals students committee leaving a balance of <strong>{{ number_format($riceClosingPrimary + $riceClosingMiddle, 3) }} Kgs.</strong></p>
         <p><strong>3.</strong> Total <strong>{{ number_format($totalStudentsPrimary, 0) }}</strong> primary + <strong>{{ number_format($totalStudentsMiddle, 0) }}</strong> middle students have been served. Total expenditure of <strong>Rs{{ number_format($totalExpenditurePrimary + $totalExpenditureMiddle, 2) }}</strong> has been utilized on account of cooking cost.</p>
     </div>

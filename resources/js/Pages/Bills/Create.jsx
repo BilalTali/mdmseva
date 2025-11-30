@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { 
+import {
     ArrowLeftIcon,
     ShoppingBagIcon,
     FireIcon,
@@ -11,8 +11,8 @@ import {
     TrashIcon
 } from '@heroicons/react/24/outline';
 
-export default function Create({ 
-    auth, 
+export default function Create({
+    auth,
     report,
     billType,
     billTypeLabel,
@@ -24,7 +24,7 @@ export default function Create({
 }) {
     const { data, setData, post, processing, errors } = useForm({
         amount_report_id: report.id,
-        type: billType,
+        bill_type: billType,
         shop_name: '',
         address: '',
         shop_gstin: '',
@@ -33,6 +33,7 @@ export default function Create({
         shop_license_no: '',
         payment_mode: '',
         fuel_type: billType === 'fuel' ? '' : null,
+        deals_with: '',
         items: prefillItems.map(item => ({
             ...item,
             rate_per_unit: '',
@@ -42,6 +43,15 @@ export default function Create({
 
     const [totalAmount, setTotalAmount] = useState(0);
 
+    const reportMonth = Number(report.month ?? 1);
+    const reportYear = Number(report.year ?? new Date().getFullYear());
+    const billDate = new Date(reportYear, reportMonth, 0);
+    const billDateDisplay = billDate.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+    });
+
     // Calculate total amount whenever items change
     useEffect(() => {
         const total = data.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
@@ -50,23 +60,60 @@ export default function Create({
 
     const handleRateChange = (index, rate) => {
         const updated = [...data.items];
-        const amount = parseFloat(updated[index].amount) || 0;
-        const rateNum = parseFloat(rate) || 0;
-        
-        updated[index].rate_per_unit = rate;
-        updated[index].quantity = rateNum > 0 ? (amount / rateNum).toFixed(2) : 0;
-        
+        const item = updated[index];
+
+        // For OTHER ITEMS: Quantity = Amount ÷ Rate (existing behavior)
+        if (item.item_name !== 'Other Condiments') {
+            const amount = parseFloat(item.amount) || 0;
+            const rateNum = parseFloat(rate) || 0;
+
+            item.rate_per_unit = rate;
+            item.quantity = rateNum > 0 ? (amount / rateNum).toFixed(2) : 0;
+        } else {
+            // For Other Condiments, rate is derived from Amount ÷ Quantity, so we do not
+            // auto-recalculate here. Allow manual override if user really edits it.
+            item.rate_per_unit = rate;
+        }
+
+        updated[index] = item;
         setData('items', updated);
     };
 
     const handleAmountChange = (index, amount) => {
         const updated = [...data.items];
+        const item = updated[index];
         const amountNum = parseFloat(amount) || 0;
-        const rate = parseFloat(updated[index].rate_per_unit) || 0;
-        
-        updated[index].amount = amount;
-        updated[index].quantity = rate > 0 ? (amountNum / rate).toFixed(2) : 0;
-        
+
+        item.amount = amount;
+
+        // For OTHER ITEMS: Quantity = Amount ÷ Rate (existing behavior)
+        if (item.item_name !== 'Other Condiments') {
+            const rate = parseFloat(item.rate_per_unit) || 0;
+            item.quantity = rate > 0 ? (amountNum / rate).toFixed(2) : 0;
+        } else {
+            // For Other Condiments: Rate = Amount ÷ Quantity
+            const qtyNum = parseFloat(item.quantity) || 0;
+            item.rate_per_unit = qtyNum > 0 ? (amountNum / qtyNum).toFixed(2) : 0;
+        }
+
+        updated[index] = item;
+        setData('items', updated);
+    };
+
+    const handleQuantityChange = (index, quantity) => {
+        const updated = [...data.items];
+        const item = updated[index];
+        const qtyNum = parseFloat(quantity) || 0;
+        const amountNum = parseFloat(item.amount) || 0;
+
+        item.quantity = quantity;
+
+        // Only special-case Other Condiments: Rate = Amount ÷ Quantity
+        if (item.item_name === 'Other Condiments') {
+            item.rate_per_unit = qtyNum > 0 ? (amountNum / qtyNum).toFixed(2) : 0;
+        }
+
+        updated[index] = item;
         setData('items', updated);
     };
 
@@ -96,14 +143,14 @@ export default function Create({
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
+
         // Validate that all items have rate > 0
         const invalidItems = data.items.filter(item => parseFloat(item.rate_per_unit) <= 0);
         if (invalidItems.length > 0) {
             alert('Please enter valid rates for all items (rate must be greater than 0)');
             return;
         }
-        
+
         post(route('bills.store'));
     };
 
@@ -122,7 +169,7 @@ export default function Create({
                             <ArrowLeftIcon className="h-4 w-4 mr-2" />
                             Back to Bills
                         </Link>
-                        
+
                         <div className="flex items-center space-x-3">
                             {billType === 'kiryana' ? (
                                 <ShoppingBagIcon className="h-8 w-8 text-green-600" />
@@ -141,8 +188,13 @@ export default function Create({
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Vendor Details Section */}
                         <div className="bg-white shadow-sm rounded-lg p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-6">🏪 VENDOR INFORMATION</h3>
-                            
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900">🏪 VENDOR INFORMATION</h3>
+                                <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                    Bill Date auto-set to <span className="font-semibold">{billDateDisplay}</span>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Shop Name */}
                                 <div>
@@ -153,9 +205,8 @@ export default function Create({
                                         type="text"
                                         value={data.shop_name}
                                         onChange={(e) => setData('shop_name', e.target.value.toUpperCase())}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 uppercase ${
-                                            errors.shop_name ? 'border-red-500' : 'border-gray-300'
-                                        }`}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 uppercase ${errors.shop_name ? 'border-red-500' : 'border-gray-300'
+                                            }`}
                                         required
                                         placeholder="E.G., ABC TRADERS"
                                     />
@@ -173,9 +224,8 @@ export default function Create({
                                         type="text"
                                         value={data.address}
                                         onChange={(e) => setData('address', e.target.value.toUpperCase())}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 uppercase ${
-                                            errors.address ? 'border-red-500' : 'border-gray-300'
-                                        }`}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 uppercase ${errors.address ? 'border-red-500' : 'border-gray-300'
+                                            }`}
                                         required
                                         placeholder="E.G., MARKET STREET, SRINAGAR"
                                     />
@@ -212,9 +262,8 @@ export default function Create({
                                         type="text"
                                         value={data.shopkeeper_name}
                                         onChange={(e) => setData('shopkeeper_name', e.target.value.toUpperCase())}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 uppercase ${
-                                            errors.shopkeeper_name ? 'border-red-500' : 'border-gray-300'
-                                        }`}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 uppercase ${errors.shopkeeper_name ? 'border-red-500' : 'border-gray-300'
+                                            }`}
                                         required
                                         placeholder="E.G., MR. VENDOR NAME"
                                     />
@@ -238,9 +287,8 @@ export default function Create({
                                         inputMode="numeric"
                                         pattern="[0-9]{10}"
                                         maxLength={10}
-                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${
-                                            errors.phone ? 'border-red-500' : 'border-gray-300'
-                                        }`}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.phone ? 'border-red-500' : 'border-gray-300'
+                                            }`}
                                         required
                                         placeholder="e.g., 9876543210"
                                     />
@@ -343,6 +391,24 @@ export default function Create({
                                         )}
                                     </div>
                                 )}
+
+                                {/* Deals With */}
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Deals With
+                                    </label>
+                                    <textarea
+                                        value={data.deals_with}
+                                        onChange={(e) => setData('deals_with', e.target.value)}
+                                        rows={3}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                        placeholder="E.g., Pulses, Vegetables, Oil, Condiments"
+                                    />
+                                    <p className="mt-1 text-xs text-gray-500">Specify the categories/items this vendor deals with. This appears on the bill.</p>
+                                    {errors.deals_with && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.deals_with}</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -432,9 +498,14 @@ export default function Create({
                                                         }}
                                                         className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                                                         required
-                                                        disabled={prefillItems.some(p => p.item_name === item.item_name)}
+                                                        // Lock default prefilled items EXCEPT for 'Coriander' and 'Other Condiments'
+                                                        disabled={prefillItems.some(p => (
+                                                            p.item_name === item.item_name &&
+                                                            !['Coriander', 'Other Condiments'].includes(p.item_name)
+                                                        ))}
                                                     />
                                                 </td>
+
                                                 <td className="px-4 py-3">
                                                     <input
                                                         type="number"
@@ -453,15 +524,29 @@ export default function Create({
                                                         onChange={(e) => handleRateChange(index, e.target.value)}
                                                         step="0.01"
                                                         min="0.01"
-                                                        className="w-24 px-2 py-1 border border-gray-300 rounded text-sm bg-yellow-50"
+                                                        className={`w-24 px-2 py-1 border border-gray-300 rounded text-sm ${item.item_name === 'Other Condiments' ? 'bg-gray-100' : 'bg-yellow-50'}`}
                                                         required
-                                                        placeholder="Enter rate"
+                                                        placeholder={item.item_name === 'Other Condiments' ? 'Auto (Amt ÷ Qty)' : 'Enter rate'}
+                                                        readOnly={item.item_name === 'Other Condiments'}
                                                     />
                                                 </td>
                                                 <td className="px-4 py-3">
-                                                    <span className="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 rounded text-sm font-medium">
-                                                        {item.quantity}
-                                                    </span>
+                                                    {item.item_name === 'Other Condiments' ? (
+                                                        <input
+                                                            type="number"
+                                                            value={item.quantity}
+                                                            onChange={(e) => handleQuantityChange(index, e.target.value)}
+                                                            step="0.01"
+                                                            min="0"
+                                                            className="w-24 px-2 py-1 border border-green-300 rounded text-sm bg-green-50"
+                                                            required
+                                                            placeholder="Qty"
+                                                        />
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 rounded text-sm font-medium">
+                                                            {item.quantity || 0}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <select
@@ -469,11 +554,15 @@ export default function Create({
                                                         onChange={(e) => handleUnitChange(index, e.target.value)}
                                                         className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
                                                     >
-                                                        <option value="kg">kg</option>
-                                                        <option value="litre">litre</option>
-                                                        <option value="quintal">quintal</option>
-                                                        <option value="gram">gram</option>
-                                                        <option value="piece">piece</option>
+                                                        <option value="kg">KG</option>
+                                                        <option value="litre">LITRE</option>
+                                                        <option value="quintal">QUINTAL</option>
+                                                        <option value="gram">GRAM</option>
+                                                        <option value="piece">PIECE</option>
+                                                        <option value="cylinder">CYLINDER</option>
+                                                        <option value="box">BOX</option>
+                                                        <option value="item">ITEM</option>
+                                                        <option value="auto_fare">AUTO FARE</option>
                                                     </select>
                                                 </td>
                                                 <td className="px-4 py-3">

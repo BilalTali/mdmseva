@@ -1,25 +1,9 @@
-
 // File: resources/js/Components/DailyConsumption/Tables/RiceStockTable.jsx
 // Main table component for displaying rice stock entries
 import React, { useState, useMemo } from 'react';
-import { router } from '@inertiajs/react';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/Components/ui/table';
-import { Button } from '@/Components/ui/button';
-import { Badge } from '@/Components/ui/badge';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/Components/ui/dropdown-menu';
+
+import Button from '@/Components/ui/button';
+
 import {
     ArrowUpDown,
     ArrowUp,
@@ -133,17 +117,17 @@ export default function RiceStockTable({
         }) || '0.00';
     };
 
-    // Get status badge variant
-    const getStatusVariant = (status) => {
+    // Get status badge classes
+    const getStatusClasses = (status) => {
         switch (status?.toLowerCase()) {
             case 'approved':
-                return 'default'; // Green
+                return 'bg-green-100 text-green-800';
             case 'pending':
-                return 'secondary'; // Yellow
+                return 'bg-yellow-100 text-yellow-800';
             case 'rejected':
-                return 'destructive'; // Red
+                return 'bg-red-100 text-red-800';
             default:
-                return 'outline';
+                return 'bg-gray-100 text-gray-800';
         }
     };
 
@@ -160,10 +144,10 @@ export default function RiceStockTable({
 
     return (
         <div className={`rounded-md border ${className}`}>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>
+            <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                    <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -173,8 +157,8 @@ export default function RiceStockTable({
                                 Date
                                 {renderSortIcon('date')}
                             </Button>
-                        </TableHead>
-                        <TableHead>
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -184,8 +168,8 @@ export default function RiceStockTable({
                                 Opening Balance
                                 {renderSortIcon('opening_balance')}
                             </Button>
-                        </TableHead>
-                        <TableHead>
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -195,8 +179,8 @@ export default function RiceStockTable({
                                 Received
                                 {renderSortIcon('rice_received')}
                             </Button>
-                        </TableHead>
-                        <TableHead>
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -206,8 +190,8 @@ export default function RiceStockTable({
                                 Consumed
                                 {renderSortIcon('rice_consumed')}
                             </Button>
-                        </TableHead>
-                        <TableHead>
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -217,98 +201,89 @@ export default function RiceStockTable({
                                 Closing Balance
                                 {renderSortIcon('closing_balance')}
                             </Button>
-                        </TableHead>
-                        <TableHead>
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <span className="font-semibold">Status</span>
-                        </TableHead>
-                        <TableHead className="text-right">
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <span className="font-semibold">Actions</span>
-                        </TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
                     {sortedData.map((entry) => (
-                        <TableRow key={entry.id}>
-                            <TableCell className="font-medium">
+                        <tr key={entry.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {formatDate(entry.date)}
-                            </TableCell>
-                            <TableCell>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm">
                                 <span className="font-semibold text-green-600">
                                     {formatNumber(entry.opening_balance)} kg
                                 </span>
-                            </TableCell>
-                            <TableCell>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm">
                                 <span className="font-semibold text-blue-600">
                                     {formatNumber(entry.rice_received)} kg
                                 </span>
-                            </TableCell>
-                            <TableCell>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm">
                                 <span className="font-semibold text-orange-600">
                                     {formatNumber(entry.rice_consumed)} kg
                                 </span>
-                            </TableCell>
-                            <TableCell>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm">
                                 <span className="font-semibold text-red-600">
                                     {formatNumber(entry.closing_balance)} kg
                                 </span>
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant={getStatusVariant(entry.status)}>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm">
+                                <span
+                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${getStatusClasses(
+                                        entry.status
+                                    )}`}
+                                >
                                     {entry.status || 'Pending'}
-                                </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
+                                </span>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-right">
+                                <div className="flex items-center justify-end space-x-2">
+                                    {onView && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => onView(entry)}
+                                        >
+                                            <Eye className="h-4 w-4 mr-1" />
+                                            View
+                                        </Button>
+                                    )}
+                                    {canEdit && onEdit && (
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-8 w-8 p-0"
+                                            onClick={() => onEdit(entry)}
                                         >
-                                            <MoreVertical className="h-4 w-4" />
-                                            <span className="sr-only">Open menu</span>
+                                            <Edit className="h-4 w-4 mr-1" />
+                                            Edit
                                         </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        {onView && (
-                                            <DropdownMenuItem
-                                                onClick={() => onView(entry)}
-                                            >
-                                                <Eye className="mr-2 h-4 w-4" />
-                                                View Details
-                                            </DropdownMenuItem>
-                                        )}
-                                        {canEdit && onEdit && (
-                                            <DropdownMenuItem
-                                                onClick={() => onEdit(entry)}
-                                            >
-                                                <Edit className="mr-2 h-4 w-4" />
-                                                Edit
-                                            </DropdownMenuItem>
-                                        )}
-                                        <DropdownMenuItem>
-                                            <Download className="mr-2 h-4 w-4" />
-                                            Download
-                                        </DropdownMenuItem>
-                                        {canDelete && onDelete && (
-                                            <>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem
-                                                    onClick={() => onDelete(entry)}
-                                                    className="text-red-600 focus:text-red-600"
-                                                >
-                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                    Delete
-                                                </DropdownMenuItem>
-                                            </>
-                                        )}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </TableCell>
-                        </TableRow>
+                                    )}
+                                    {canDelete && onDelete && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => onDelete(entry)}
+                                            className="text-red-600"
+                                        >
+                                            <Trash2 className="h-4 w-4 mr-1" />
+                                            Delete
+                                        </Button>
+                                    )}
+                                </div>
+                            </td>
+                        </tr>
                     ))}
-                </TableBody>
-            </Table>
+                </tbody>
+            </table>
         </div>
     );
 }

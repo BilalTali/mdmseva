@@ -28,7 +28,8 @@ class RiceReportService
     }
 
     /**
-     * ✅ UPDATED: Generate report - Allow negative closing balance
+     * ✅ UPDATED: Generate report using month-specific configuration
+     * Uses MonthlyRiceConfiguration for the specific month (like Amount Report workflow)
      */
     public function generateReport(User $user, int $month, int $year): RiceReport
     {
@@ -40,9 +41,15 @@ class RiceReportService
             return $existing;
         }
         
-        if (!$this->hasRiceConfiguration($user)) {
+        // ✅ Get month-specific rice configuration
+        $riceConfig = MonthlyRiceConfiguration::forUser($user->id)
+            ->forPeriod($month, $year)
+            ->first();
+            
+        if (!$riceConfig) {
+            $monthName = date('F', mktime(0, 0, 0, $month, 1));
             throw new RiceConfigurationMissingException(
-                "Rice configuration is required to generate reports. Please set up your rice stock first."
+                "Rice configuration not found for {$monthName} {$year}. Please create configuration first."
             );
         }
         
@@ -56,14 +63,22 @@ class RiceReportService
             );
         }
         
-        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-        $openingBalance = $this->calculationService
-            ->getOpeningBalanceForDate($user, $startDate);
+        // ✅ Opening balance comes from THIS month's configuration
+        // Formula: Opening + Lifted + Arranged
+        $openingBalance = round(
+            ($riceConfig->opening_balance_primary ?? 0) +
+            ($riceConfig->opening_balance_upper_primary ?? 0) +
+            ($riceConfig->rice_lifted_primary ?? 0) +
+            ($riceConfig->rice_lifted_upper_primary ?? 0) +
+            ($riceConfig->rice_arranged_primary ?? 0) +
+            ($riceConfig->rice_arranged_upper_primary ?? 0),
+            2
+        );
         
         $totals = $this->calculationService
             ->calculateMonthlyTotals($consumptions, $user);
         
-        // ✅ UPDATED: Allow negative closing balance
+        // ✅ Closing balance calculated from opening and consumed
         $closingBalance = $openingBalance - $totals['total_rice_consumed'];
         
         $dailyRecords = $this->calculationService
@@ -75,7 +90,7 @@ class RiceReportService
             'year' => $year,
             'school_type' => $user->school_type,
             'opening_balance' => round($openingBalance, 2),
-            'closing_balance' => round($closingBalance, 2), // Can be negative
+            'closing_balance' => round($closingBalance, 2),
             'total_primary_students' => $totals['total_primary_students'],
             'total_primary_rice' => $totals['total_primary_rice'],
             'total_middle_students' => $totals['total_middle_students'],
@@ -103,7 +118,9 @@ class RiceReportService
 
     public function getAllReports(User $user, int $perPage = 12): LengthAwarePaginator
     {
-        return RiceReport::forUser($user->id)
+        // ✅ OPTIMIZED: Added eager loading to prevent N+1 queries
+        return RiceReport::with('user')  // Load user relationship upfront
+            ->forUser($user->id)
             ->latest()
             ->paginate($perPage);
     }

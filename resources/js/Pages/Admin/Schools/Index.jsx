@@ -14,8 +14,8 @@ const decodeLabel = (label) => {
     return textarea.value.replace(/<[^>]*>/g, '');
 };
 
-export default function SchoolsIndex({ 
-    auth, 
+export default function SchoolsIndex({
+    auth,
     schools,
     filters = {},
     stats = {}
@@ -72,12 +72,16 @@ export default function SchoolsIndex({
     const handleActivate = () => {
         setProcessing(true);
         router.post(route('admin.schools.activate', confirmDialog.school.id), {}, {
+            preserveScroll: true,
             onSuccess: () => {
+                // Force a full page reload to ensure fresh data
+                router.reload({ only: ['schools'] });
                 closeConfirmDialog();
                 setProcessing(false);
             },
-            onError: () => {
+            onError: (errors) => {
                 setProcessing(false);
+                console.error('Activation failed:', errors);
             }
         });
     };
@@ -85,12 +89,16 @@ export default function SchoolsIndex({
     const handleDeactivate = () => {
         setProcessing(true);
         router.post(route('admin.schools.deactivate', confirmDialog.school.id), {}, {
+            preserveScroll: true,
             onSuccess: () => {
+                // Force a full page reload to ensure fresh data
+                router.reload({ only: ['schools'] });
                 closeConfirmDialog();
                 setProcessing(false);
             },
-            onError: () => {
+            onError: (errors) => {
                 setProcessing(false);
+                console.error('Deactivation failed:', errors);
             }
         });
     };
@@ -98,6 +106,18 @@ export default function SchoolsIndex({
     const handleExport = () => {
         window.location.href = route('admin.schools.export', filters);
     };
+
+    // DELETE USER HANDLER
+    const handleDelete = () => {
+        setProcessing(true);
+        router.delete(route('admin.schools.destroy', confirmDialog.school.id), {
+            onFinish: () => {
+                setProcessing(false);
+                closeConfirmDialog();
+            }
+        });
+    };
+
 
     const getSortIcon = (field) => {
         if (filters.sort !== field) {
@@ -107,7 +127,7 @@ export default function SchoolsIndex({
                 </svg>
             );
         }
-        
+
         if (filters.direction === 'asc') {
             return (
                 <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +135,7 @@ export default function SchoolsIndex({
                 </svg>
             );
         }
-        
+
         return (
             <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -169,8 +189,8 @@ export default function SchoolsIndex({
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         #
                                     </th>
-                                    <th 
-                                        scope="col" 
+                                    <th
+                                        scope="col"
                                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                         onClick={() => handleSort('school_name')}
                                     >
@@ -185,8 +205,8 @@ export default function SchoolsIndex({
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         UDISE
                                     </th>
-                                    <th 
-                                        scope="col" 
+                                    <th
+                                        scope="col"
                                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                         onClick={() => handleSort('district')}
                                     >
@@ -201,8 +221,8 @@ export default function SchoolsIndex({
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Status
                                     </th>
-                                    <th 
-                                        scope="col" 
+                                    <th
+                                        scope="col"
                                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                         onClick={() => handleSort('created_at')}
                                     >
@@ -267,7 +287,7 @@ export default function SchoolsIndex({
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <Link
-                                                    href={route('admin.schools.show', school.id) + '#profile'}
+                                                    href={route('admin.schools.profile', school.id)}
                                                     className="text-indigo-600 hover:text-indigo-900"
                                                 >
                                                     Profile
@@ -296,6 +316,12 @@ export default function SchoolsIndex({
                                                             Activate
                                                         </button>
                                                     )}
+                                                    <button
+                                                        onClick={() => openConfirmDialog(school, 'delete')}
+                                                        className="text-red-700 hover:text-red-900 font-semibold"
+                                                    >
+                                                        Delete
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -347,11 +373,10 @@ export default function SchoolsIndex({
                                                 <Link
                                                     key={index}
                                                     href={link.url}
-                                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                                        link.active
-                                                            ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                                    }`}
+                                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${link.active
+                                                        ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
+                                                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                        }`}
                                                 >
                                                     {decodeLabel(link.label)}
                                                 </Link>
@@ -395,6 +420,19 @@ export default function SchoolsIndex({
                     message={`Are you sure you want to deactivate ${confirmDialog.school?.school_name}? This will prevent the school from accessing the system. The school's data will be preserved and can be accessed when reactivated.`}
                     variant="danger"
                     confirmText="Deactivate"
+                    processing={processing}
+                />
+            )}
+
+            {confirmDialog.action === 'delete' && (
+                <ConfirmDialog
+                    isOpen={confirmDialog.isOpen}
+                    onClose={closeConfirmDialog}
+                    onConfirm={handleDelete}
+                    title="⚠️ Permanently Delete School"
+                    message={`Are you ABSOLUTELY sure you want to delete "${confirmDialog.school?.school_name}"?\n\nThis will PERMANENTLY DELETE:\n• All daily consumption records\n• All rice reports and amount reports\n• All configurations and settings\n• All bill records\n• All historical data\n\n⚠️ THIS ACTION CANNOT BE UNDONE!`}
+                    variant="danger"
+                    confirmText="Yes, Delete Permanently"
                     processing={processing}
                 />
             )}

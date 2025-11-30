@@ -15,19 +15,32 @@ return new class extends Migration
     {
         Schema::create('feedback', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
+            
+            // User details (for anonymous or specific feedback)
+            $table->string('name');
+            $table->string('email');
+            $table->string('phone')->nullable();
+            $table->string('school_name')->nullable();
             
             // Feedback content
-            $table->string('subject');
+            $table->string('subject')->nullable();
             $table->text('message');
+            $table->string('type')->nullable(); // e.g., 'bug', 'feature' (alternative to category)
             $table->enum('category', ['bug', 'feature', 'improvement', 'other'])->default('other');
-            $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
+            $table->enum('priority', ['low', 'normal', 'medium', 'high', 'urgent'])->default('normal');
+            $table->unsignedTinyInteger('rating')->nullable();
             
             // Status tracking
-            $table->enum('status', ['pending', 'reviewed', 'resolved'])->default('pending');
+            $table->enum('status', ['new', 'pending', 'in_progress', 'reviewed', 'resolved'])->default('new');
             $table->text('admin_response')->nullable();
-            $table->timestamp('reviewed_at')->nullable();
-            $table->foreignId('reviewed_by')->nullable()->constrained('users');
+            $table->timestamp('responded_at')->nullable();
+            $table->foreignId('responded_by')->nullable()->constrained('users')->nullOnDelete();
+            
+            // Metadata
+            $table->string('ip_address')->nullable();
+            $table->string('user_agent')->nullable();
+            $table->json('metadata')->nullable();
             
             $table->timestamps();
             

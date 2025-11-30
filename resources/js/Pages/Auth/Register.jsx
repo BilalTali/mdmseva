@@ -16,11 +16,10 @@ export default function Register() {
         password_confirmation: '',
         phone: '',
         date_of_birth: '',
-        address: '',
         state: 'Jammu and Kashmir',
         district_id: '',
         zone_id: '',
-        udise: '',
+        udise_code: '',
         school_name: '',
         school_type: 'primary',
         institute_address: '',
@@ -94,7 +93,6 @@ export default function Register() {
             'password_confirmation',
             'phone',
             'date_of_birth',
-            'address',
         ];
 
         const step2Fields = [
@@ -104,7 +102,7 @@ export default function Register() {
         ];
 
         const step3Fields = [
-            'udise',
+            'udise_code',
             'school_name',
             'school_type',
             'institute_address',
@@ -304,20 +302,6 @@ export default function Register() {
                                     <InputError message={errors.date_of_birth} className="mt-2" />
                                 </div>
                             </div>
-
-                            {/* Address */}
-                            <div>
-                                <InputLabel htmlFor="address" value="Address" />
-                                <textarea
-                                    id="address"
-                                    name="address"
-                                    value={data.address}
-                                    className="mt-1 block w-full border-[var(--border-light)] dark:bg-secondary-900 dark:text-secondary-100 focus:border-[var(--primary-500)] focus:ring-[var(--primary-500)] rounded-md shadow-sm"
-                                    rows="3"
-                                    onChange={(e) => setData('address', e.target.value)}
-                                />
-                                <InputError message={errors.address} className="mt-2" />
-                            </div>
                         </div>
                     </div>
                 )}
@@ -410,28 +394,22 @@ export default function Register() {
                         <h3 className="text-lg font-medium text-[var(--text-primary)] mb-4">School Information</h3>
 
                         <div className="space-y-4">
-                            {/* UDISE Code */}
                             <div>
-                                <InputLabel htmlFor="udise" value="UDISE Code *" />
+                                <InputLabel htmlFor="udise_code" value="UDISE Code *" />
                                 <TextInput
-                                    id="udise"
+                                    id="udise_code"
                                     type="text"
-                                    name="udise"
-                                    value={data.udise}
-                                    inputMode="numeric"
-                                    pattern="[0-9]{11}"
-                                    maxLength={11}
+                                    name="udise_code"
+                                    value={data.udise_code}
                                     className="mt-1 block w-full"
-                                    onChange={(e) => {
-                                        const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
-                                        setData('udise', digits);
-                                    }}
+                                    maxLength={20}
+                                    onChange={(e) => setData('udise_code', e.target.value)}
                                     required
                                 />
                                 <p className="mt-1 text-sm text-[var(--text-tertiary)]">
                                     Unified District Information System for Education code
                                 </p>
-                                <InputError message={errors.udise} className="mt-2" />
+                                <InputError message={errors.udise_code} className="mt-2" />
                             </div>
 
                             {/* School Name */}

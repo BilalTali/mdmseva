@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { Calendar, ArrowLeft, Save } from 'lucide-react';
 
-export default function Edit({ auth, config, schoolTypes }) {
+export default function Edit({ auth, config, schoolTypes, userSchoolType }) {
     const monthNames = [
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
@@ -21,6 +21,11 @@ export default function Edit({ auth, config, schoolTypes }) {
         rice_arranged_primary: config.rice_arranged_primary,
         rice_arranged_upper_primary: config.rice_arranged_upper_primary,
     });
+
+    // Helper function to determine if upper primary fields should be shown
+    const showUpperPrimary = () => {
+        return data.school_type !== 'primary';
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -73,7 +78,7 @@ export default function Edit({ auth, config, schoolTypes }) {
                         {/* Daily Consumption Rates */}
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Daily Consumption Rates (grams per student)</h3>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className={`grid ${showUpperPrimary() ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Primary (Grades 1-5)</label>
                                     <input
@@ -86,25 +91,27 @@ export default function Edit({ auth, config, schoolTypes }) {
                                     />
                                     {errors.daily_consumption_primary && <p className="mt-1 text-sm text-red-600">{errors.daily_consumption_primary}</p>}
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Middle (Grades 6-8)</label>
-                                    <input
-                                        type="number"
-                                        value={data.daily_consumption_upper_primary}
-                                        onChange={(e) => setData('daily_consumption_upper_primary', parseInt(e.target.value))}
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        min="0"
-                                        max="500"
-                                    />
-                                    {errors.daily_consumption_upper_primary && <p className="mt-1 text-sm text-red-600">{errors.daily_consumption_upper_primary}</p>}
-                                </div>
+                                {showUpperPrimary() && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Middle (Grades 6-8)</label>
+                                        <input
+                                            type="number"
+                                            value={data.daily_consumption_upper_primary}
+                                            onChange={(e) => setData('daily_consumption_upper_primary', parseInt(e.target.value))}
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            min="0"
+                                            max="500"
+                                        />
+                                        {errors.daily_consumption_upper_primary && <p className="mt-1 text-sm text-red-600">{errors.daily_consumption_upper_primary}</p>}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Opening Balance */}
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Opening Balance (kg)</h3>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className={`grid ${showUpperPrimary() ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Primary (kg)</label>
                                     <input
@@ -116,24 +123,26 @@ export default function Edit({ auth, config, schoolTypes }) {
                                     />
                                     {errors.opening_balance_primary && <p className="mt-1 text-sm text-red-600">{errors.opening_balance_primary}</p>}
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Middle (kg)</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={data.opening_balance_upper_primary}
-                                        onChange={(e) => setData('opening_balance_upper_primary', parseFloat(e.target.value))}
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    />
-                                    {errors.opening_balance_upper_primary && <p className="mt-1 text-sm text-red-600">{errors.opening_balance_upper_primary}</p>}
-                                </div>
+                                {showUpperPrimary() && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Middle (kg)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={data.opening_balance_upper_primary}
+                                            onChange={(e) => setData('opening_balance_upper_primary', parseFloat(e.target.value))}
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        />
+                                        {errors.opening_balance_upper_primary && <p className="mt-1 text-sm text-red-600">{errors.opening_balance_upper_primary}</p>}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Rice Lifted (Optional) */}
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Rice Lifted (kg)</h3>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className={`grid ${showUpperPrimary() ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Primary (kg)</label>
                                     <input
@@ -146,25 +155,27 @@ export default function Edit({ auth, config, schoolTypes }) {
                                     />
                                     {errors.rice_lifted_primary && <p className="mt-1 text-sm text-red-600">{errors.rice_lifted_primary}</p>}
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Middle (kg)</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={data.rice_lifted_upper_primary}
-                                        onChange={(e) => setData('rice_lifted_upper_primary', parseFloat(e.target.value) || 0)}
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        min="0"
-                                    />
-                                    {errors.rice_lifted_upper_primary && <p className="mt-1 text-sm text-red-600">{errors.rice_lifted_upper_primary}</p>}
-                                </div>
+                                {showUpperPrimary() && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Middle (kg)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={data.rice_lifted_upper_primary}
+                                            onChange={(e) => setData('rice_lifted_upper_primary', parseFloat(e.target.value) || 0)}
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            min="0"
+                                        />
+                                        {errors.rice_lifted_upper_primary && <p className="mt-1 text-sm text-red-600">{errors.rice_lifted_upper_primary}</p>}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Rice Arranged (Optional) */}
                         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Rice Arranged (kg)</h3>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className={`grid ${showUpperPrimary() ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Primary (kg)</label>
                                     <input
@@ -177,18 +188,20 @@ export default function Edit({ auth, config, schoolTypes }) {
                                     />
                                     {errors.rice_arranged_primary && <p className="mt-1 text-sm text-red-600">{errors.rice_arranged_primary}</p>}
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Middle (kg)</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={data.rice_arranged_upper_primary}
-                                        onChange={(e) => setData('rice_arranged_upper_primary', parseFloat(e.target.value) || 0)}
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        min="0"
-                                    />
-                                    {errors.rice_arranged_upper_primary && <p className="mt-1 text-sm text-red-600">{errors.rice_arranged_upper_primary}</p>}
-                                </div>
+                                {showUpperPrimary() && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Middle (kg)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={data.rice_arranged_upper_primary}
+                                            onChange={(e) => setData('rice_arranged_upper_primary', parseFloat(e.target.value) || 0)}
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            min="0"
+                                        />
+                                        {errors.rice_arranged_upper_primary && <p className="mt-1 text-sm text-red-600">{errors.rice_arranged_upper_primary}</p>}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
