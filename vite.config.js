@@ -9,5 +9,10 @@ export default defineConfig({
             refresh: true,
         }),
         react(),
+        // Gzip compression for production builds
+        import('vite-plugin-compression').then(m => m.default({
+            algorithm: 'gzip',
+            ext: '.gz',
+        })),
     ],
 });

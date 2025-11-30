@@ -51,6 +51,23 @@
             }
         </style>
 
+        <!-- JSON-LD for AI & SEO -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "MDM SEVA Portal",
+            "url": "{{ url('/') }}",
+            "logo": "{{ asset('images/logo.png') }}",
+            "description": "Comprehensive Mid Day Meal Management System for efficient tracking and reporting of school meal programs.",
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": "+91-1234567890",
+                "contactType": "customer service"
+            }
+        }
+        </script>
+
         <!-- Scripts -->
         @routes
         @viteReactRefresh
