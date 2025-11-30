@@ -6,22 +6,17 @@ import { colors, spacing, borderRadius, shadows, typography } from '@/lib/design
  * Formula: Opening Balance = Rice Lifted + Opening Stock
  * Balance After Each Day = Previous Balance - Rice Consumed
  */
-export default function RiceConsumptionTable({ 
-    consumptions, 
-    schoolType, 
+export default function RiceConsumptionTable({
+    consumptions,
+    schoolType,
     sections,
     openingBalance = 0,
     onEdit,
     onDelete,
     showActions = true
 }) {
-    console.log('🔍 RiceConsumptionTable Props:', {
-        consumptionsCount: consumptions?.length,
-        openingBalance,
-        sections,
-        firstConsumption: consumptions?.[0]
-    });
-    
+
+
     // ✅ SAFETY CHECK: Ensure consumptions is an array
     if (!Array.isArray(consumptions) || consumptions.length === 0) {
         return (
@@ -30,40 +25,28 @@ export default function RiceConsumptionTable({
             </div>
         );
     }
-    
+
     // ✅ CORRECT LOGIC: Running balance starts with opening balance
     // Opening Balance = Rice Lifted + Opening Stock (from RiceConfiguration)
     let runningBalance = openingBalance;
-    
-    console.log('🔍 Starting Balance:', runningBalance);
-    
+
+
+
     // Add balance calculations to each row
     const rowsWithBalance = consumptions.map((consumption, index) => {
         const opening = runningBalance;
-        
+
         // ✅ Use the CALCULATED total_rice field from ConsumptionCalculationService
         const consumed = consumption.total_rice || 0;
-        
+
         // ✅ Calculate closing balance: Opening - Consumed
         const closing = Math.max(0, opening - consumed);
-        
-        // ✅ DEBUG: Log calculations for verification
-        if (index === 0 || index === consumptions.length - 1) {
-            console.log(`🔍 ${index === 0 ? 'First' : 'Last'} Row Calculation:`, {
-                date: consumption.date,
-                opening_balance: opening,
-                consumed: consumed,
-                closing_balance: closing,
-                primary_rice: consumption.primary_rice,
-                middle_rice: consumption.middle_rice,
-                served_primary: consumption.served_primary,
-                served_middle: consumption.served_middle
-            });
-        }
-        
+
+
+
         // ✅ Update running balance for next row
         runningBalance = closing;
-        
+
         return {
             ...consumption,
             opening_balance: opening,
@@ -76,13 +59,7 @@ export default function RiceConsumptionTable({
     const finalBalance = rowsWithBalance[rowsWithBalance.length - 1]?.closing_balance || 0;
     const avgDaily = consumptions.length > 0 ? totalConsumed / consumptions.length : 0;
 
-    console.log('🔍 Summary Calculations:', {
-        openingBalance,
-        totalConsumed,
-        finalBalance,
-        avgDaily,
-        calculationCheck: `${openingBalance} - ${totalConsumed} = ${finalBalance}`
-    });
+
 
     return (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -107,7 +84,7 @@ export default function RiceConsumptionTable({
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 Date/Day
                             </th>
-                            
+
                             {/* Students Columns */}
                             {sections.includes('primary') && (
                                 <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -140,7 +117,7 @@ export default function RiceConsumptionTable({
                                 <div>Total</div>
                                 <div className="text-blue-600 font-normal">(Consumed KG)</div>
                             </th>
-                            
+
                             <th className="px-6 py-3 text-right text-xs font-semibold text-green-700 uppercase tracking-wider bg-green-50">
                                 <div>Balance After</div>
                                 <div className="text-green-600 font-normal">(Stock KG)</div>
@@ -159,13 +136,12 @@ export default function RiceConsumptionTable({
                             const primaryRice = consumption.primary_rice || 0;
                             const middleRice = consumption.middle_rice || 0;
                             const totalRice = consumption.total_rice || 0;
-                            
+
                             return (
-                                <tr 
-                                    key={consumption.id} 
-                                    className={`hover:bg-gray-50 transition-colors ${
-                                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                                    }`}
+                                <tr
+                                    key={consumption.id}
+                                    className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                                        }`}
                                 >
                                     {/* Date/Day */}
                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -224,13 +200,12 @@ export default function RiceConsumptionTable({
 
                                     {/* Balance After Consumption - ✅ CORRECT CALCULATION */}
                                     <td className="px-6 py-4 text-right bg-green-50">
-                                        <span className={`text-sm font-bold ${
-                                            consumption.closing_balance < 10 
-                                                ? 'text-red-600' 
-                                                : consumption.closing_balance < 50 
-                                                ? 'text-orange-600' 
-                                                : 'text-green-700'
-                                        }`}>
+                                        <span className={`text-sm font-bold ${consumption.closing_balance < 10
+                                                ? 'text-red-600'
+                                                : consumption.closing_balance < 50
+                                                    ? 'text-orange-600'
+                                                    : 'text-green-700'
+                                            }`}>
                                             {consumption.closing_balance.toFixed(2)} kg
                                         </span>
                                     </td>

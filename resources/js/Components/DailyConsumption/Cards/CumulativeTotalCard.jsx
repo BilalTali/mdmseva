@@ -11,33 +11,28 @@ import { formatCurrency } from '../Utils/calculationHelpers';
  * 
  * Shows the cumulative total amount from the last consumption entry
  */
-export default function CumulativeTotalCard({ 
+export default function CumulativeTotalCard({
     consumptions = [],
     className = ''
 }) {
     // Calculate cumulative total using the same logic as AmountSummaryCards Period Total
     const cumulativeTotal = useMemo(() => {
         if (consumptions.length === 0) return 0;
-        
-        console.log('🔍 CumulativeTotalCard - Processing consumptions:', consumptions.length, 'entries');
-        
+
         // Use the same calculation as AmountSummaryCards Period Total
         const periodTotal = consumptions.reduce((total, entry) => {
             const primaryTotal = parseFloat(entry.primary_total || entry.primary_subtotal) || 0;
             const middleTotal = parseFloat(entry.middle_total || entry.middle_subtotal) || 0;
             const entryTotal = primaryTotal + middleTotal;
-            
-            console.log(`Entry ID ${entry.id}: Primary=${primaryTotal}, Middle=${middleTotal}, Entry Total=${entryTotal}`);
-            
+
             return total + entryTotal;
         }, 0);
-        
-        console.log('📊 CumulativeTotalCard - Period Total (should match AmountSummaryCards):', periodTotal);
+
         return periodTotal;
     }, [consumptions]);
 
     return (
-        <Card 
+        <Card
             className={`${className} shadow-lg hover:shadow-xl transition-all duration-300 border-0`}
             style={{
                 background: `linear-gradient(135deg, ${colors.success[50]} 0%, ${colors.success[100]} 100%)`,

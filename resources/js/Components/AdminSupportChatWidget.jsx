@@ -50,7 +50,6 @@ export default function AdminSupportChatWidget() {
             const channel = window.Echo.private(channelName);
 
             channel.listen('.support.message', (e) => {
-                console.log('Event received:', e);
                 setMessages(prev => [...prev, e]);
                 if (!isOpen) {
                     setUnreadCount(prev => prev + 1);

@@ -14,7 +14,7 @@ import { formatCurrency } from '../Utils/calculationHelpers';
  * Amount Consumption Table Component
  * FIXED: Cumulative calculation uses backend data correctly
  */
-export default function AmountConsumptionTable({ 
+export default function AmountConsumptionTable({
     entries = [],
     consumptions = [], // Alternative prop name
     schoolType,
@@ -25,10 +25,10 @@ export default function AmountConsumptionTable({
     // Use provided config or generate from schoolType
     const config = schoolConfig || getSchoolTypeConfig(schoolType);
     const { hasPrimary, hasMiddle, amountColumns, sections: configSections } = config;
-    
+
     // Support both prop names for entries
     const records = entries.length > 0 ? entries : consumptions;
-    
+
     // Use sections from config if not provided
     const activeSections = sections.length > 0 ? sections : configSections;
 
@@ -38,23 +38,23 @@ export default function AmountConsumptionTable({
         // Check if backend already provided cumulative_amount
         if (records.length > 0 && records[0].cumulative_amount !== undefined) {
             // Backend already calculated it, use as-is
-            console.log('✅ Using backend cumulative data:', records[0].cumulative_amount);
+
             return records;
         }
-        
+
         // Fallback: Calculate on frontend if backend didn't send it
-        console.log('⚠️ Backend missing cumulative_amount, calculating on frontend');
+
         let cumulativeSum = 0;
-        
+
         return records.map(entry => {
             // Calculate current row total
             const primaryTotal = parseFloat(entry.primary_total || entry.primary_subtotal) || 0;
             const middleTotal = parseFloat(entry.middle_total || entry.middle_subtotal) || 0;
             const rowTotal = primaryTotal + middleTotal;
-            
+
             // Add to cumulative
             cumulativeSum += rowTotal;
-            
+
             return {
                 ...entry,
                 cumulative_amount: cumulativeSum
@@ -101,11 +101,11 @@ export default function AmountConsumptionTable({
                 acc.middle_fuel += parseFloat(entry.middle_fuel) || 0;
                 acc.middle_subtotal += parseFloat(entry.middle_subtotal || entry.middle_total) || 0;
             }
-            
+
             const primaryTotal = parseFloat(entry.primary_total || entry.primary_subtotal) || 0;
             const middleTotal = parseFloat(entry.middle_total || entry.middle_subtotal) || 0;
             acc.total_amount += primaryTotal + middleTotal;
-            
+
             return acc;
         }, initialTotals);
     }, [recordsWithCumulative, hasPrimary, hasMiddle]);
@@ -171,12 +171,12 @@ export default function AmountConsumptionTable({
                 {/* Scrollable table container */}
                 <div className={`overflow-x-auto max-h-[500px] overflow-y-auto`}>
                     <table className="min-w-full divide-y" style={{ borderColor: colors.border.light }}>
-                        <TableHeader 
+                        <TableHeader
                             columns={amountColumns}
                             tableType="amount"
                             sections={activeSections}
                         />
-                        
+
                         <tbody className={`divide-y`} style={{ backgroundColor: colors.background.primary, borderColor: colors.border.light }}>
                             {recordsWithCumulative.map((entry) => (
                                 <TableRow
@@ -189,7 +189,7 @@ export default function AmountConsumptionTable({
                                 />
                             ))}
                         </tbody>
-                        
+
                         <TableFooter
                             columns={amountColumns}
                             tableType="amount"

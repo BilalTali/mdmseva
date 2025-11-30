@@ -13,7 +13,7 @@
 /.zed
 /auth.json
 /node_modules
-/public/build
+!/public/build
 /public/hot
 /public/storage
 /storage/*.key
@@ -22,3 +22,35 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+*.old
+*~
+
+# IDE files (additional)
+*.swp
+*.swo
+.project
+.settings/
+.classpath
+
+# OS files (additional)
+desktop.ini
+ehthumbs.db
+
+# Sensitive files
+*.pem
+*.p12
+*.pfx
+
+# Application logs
+storage/logs/*.log
+!storage/logs/.gitignore
+
+# Cache files
+bootstrap/cache/*.php
+!bootstrap/cache/.gitignore
+

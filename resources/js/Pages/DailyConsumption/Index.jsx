@@ -1,7 +1,8 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Plus, Calendar, TrendingDown, FileText, DollarSign, Download } from 'lucide-react';
+import { Plus, Calendar, TrendingDown, FileText, DollarSign, Download, Edit, Trash2 } from 'lucide-react';
+import { router } from '@inertiajs/react';
 
 export default function Index({
     auth,
@@ -136,12 +137,13 @@ export default function Index({
                                         <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase">Middle Rice (kg)</th>
                                         <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase">Total Rice (kg)</th>
                                         <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase">Balance (kg)</th>
+                                        <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {consumptions.length === 0 ? (
                                         <tr>
-                                            <td colSpan="10" className="px-4 py-8 text-center text-gray-500">
+                                            <td colSpan="11" className="px-4 py-8 text-center text-gray-500">
                                                 No consumption records for {monthName} {currentYear}. Click "Add Entry" to start.
                                             </td>
                                         </tr>
@@ -160,6 +162,28 @@ export default function Index({
                                                 <td className={`px-4 py-3 text-sm text-right font-semibold ${Number(item.rice_balance || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
                                                     {Number(item.rice_balance || 0).toFixed(2)}
                                                 </td>
+                                                <td className="px-4 py-3 text-sm text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Link
+                                                            href={route('daily-consumptions.edit', item.id)}
+                                                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition"
+                                                            title="Edit Entry"
+                                                        >
+                                                            <Edit className="w-4 h-4" />
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => {
+                                                                if (confirm('Are you sure you want to delete this entry? This will recalculate balances.')) {
+                                                                    router.delete(route('daily-consumptions.destroy', item.id));
+                                                                }
+                                                            }}
+                                                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition"
+                                                            title="Delete Entry"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ))
                                     )}
@@ -177,6 +201,7 @@ export default function Index({
                                             <td className={`px-4 py-3 text-sm font-bold text-right ${closingBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
                                                 {closingBalance.toFixed(2)}
                                             </td>
+                                            <td className="px-4 py-3 bg-blue-50"></td>
                                         </tr>
                                     </tfoot>
                                 )}

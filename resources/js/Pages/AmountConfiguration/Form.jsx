@@ -133,19 +133,13 @@ export default function Form({ auth, config, schoolType, hasPrimary, hasMiddle }
             salt_percentage_other: round2(data.salt_percentage_other),
         };
 
-        console.log('Submitting payload:', payload);
-
         if (isEdit) {
             put(route('amount-config.update', config.id), {
                 data: payload,
-                onSuccess: () => console.log('Update successful'),
-                onError: (errors) => console.error('Update failed:', errors),
             });
         } else {
             post(route('amount-config.store'), {
                 data: payload,
-                onSuccess: () => console.log('Create successful'),
-                onError: (errors) => console.error('Create failed:', errors),
             });
         }
     };

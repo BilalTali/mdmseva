@@ -32,12 +32,12 @@ const TeamCarousel = ({ teamMembers, loadingTeam }) => {
 
   return (
     <section className="py-16 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 overflow-hidden">
-      <div className="container mx-auto px-6">
+      <div className="w-full px-4 md:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-amber-800 to-orange-800">
-            Meet Our Team
+            Message from Developer
           </h2>
-          <p className="text-gray-600 text-lg">The dedicated people behind MDM SEVA</p>
+          <p className="text-gray-600 text-lg">The vision and dedication behind MDM SEVA</p>
         </div>
 
         {/* Horizontal Scrolling Container */}
@@ -65,7 +65,7 @@ const TeamCarousel = ({ teamMembers, loadingTeam }) => {
               <div
                 key={member.id}
                 data-team-card
-                className="snap-center shrink-0 w-[85vw] max-w-sm md:max-w-none md:w-auto"
+                className="snap-center shrink-0 w-full flex justify-center px-4"
               >
                 <DeveloperMessageCard
                   name={member.name}
