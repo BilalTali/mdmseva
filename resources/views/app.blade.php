@@ -5,7 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <!-- SEO Meta Tags -->
         <title inertia>{{ config('app.name', 'MDM SEVA Portal') }}</title>
         <meta name="description" content="MDM SEVA Portal - Comprehensive Mid Day Meal Management System for efficient tracking and reporting of school meal programs.">
         <meta name="keywords" content="MDM, Mid Day Meal, School Meal Management, SEVA Portal, Education">
@@ -32,41 +31,17 @@
         <!-- Favicon -->
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
-        <!-- Fonts - Temporarily disabled to test CSS transition parsing error -->
-        <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" /> -->
-        
-        <!-- CSS Fix for external font transition parsing errors -->
-        <style>
-            /* Fix for Google Fonts CSS transition parsing errors */
-            @supports (transition: all) {
-                .transition {
-                    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-                    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-                    transition-duration: 150ms;
-                }
-            }
-        </style>
-
-        <!-- JSON-LD for AI & SEO -->
+        <!-- JSON-LD for AI and SEO -->
         <script type="application/ld+json">
         {
-            "@context": "https://schema.org",
-            "@type": "Organization",
+            "@@context": "https://schema.org",
+            "@@type": "Organization",
             "name": "MDM SEVA Portal",
-            "url": "{{ url('/') }}",
-            "logo": "{{ asset('images/logo.png') }}",
-            "description": "Comprehensive Mid Day Meal Management System for efficient tracking and reporting of school meal programs.",
-            "contactPoint": {
-                "@type": "ContactPoint",
-                "telephone": "+91-1234567890",
-                "contactType": "customer service"
-            }
+            "description": "Comprehensive Mid Day Meal Management System for efficient tracking and reporting of school meal programs."
         }
         </script>
+
+
 
         <!-- Scripts -->
         @routes
