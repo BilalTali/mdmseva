@@ -1,3 +1,4 @@
+
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
@@ -28,18 +29,18 @@ export default function Index({
         });
     };
 
-    const currentValue = currentMonth && currentYear ? `${currentMonth}-${currentYear}` : '';
+    const currentValue = currentMonth && currentYear ? `${currentMonth} -${currentYear} ` : '';
 
     const handleDelete = (reportId, period) => {
-        if (confirm(`Delete rice report for ${period}? This action cannot be undone.`)) {
-            router.delete(`/rice-reports/${reportId}`, {
+        if (confirm(`Delete rice report for ${period} ? This action cannot be undone.`)) {
+            router.delete(`/ rice - reports / ${reportId} `, {
                 preserveScroll: true
             });
         }
     };
 
     const handleDownload = (reportId) => {
-        window.location.href = `/rice-reports/${reportId}/download-pdf`;
+        window.location.href = `/ rice - reports / ${reportId}/download-pdf`;
     };
 
     const decodeLabel = (label) => {
