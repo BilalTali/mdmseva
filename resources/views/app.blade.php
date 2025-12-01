@@ -32,16 +32,16 @@
         <!-- Favicon -->
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <!-- Fonts - Temporarily disabled to test CSS transition parsing error -->
+        <!-- <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" /> -->
         
-        <!-- CSS Fix for Transition Parsing -->
+        <!-- CSS Fix for external font transition parsing errors -->
         <style>
-            /* Fix for external font CSS transition parsing errors */
+            /* Fix for Google Fonts CSS transition parsing errors */
             @supports (transition: all) {
                 .transition {
                     transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
@@ -51,17 +51,17 @@
             }
         </style>
 
-        <!-- JSON-LD Structured Data -->
+        <!-- JSON-LD for AI & SEO -->
         <script type="application/ld+json">
         {
-            "@@context": "https://schema.org",
-            "@@type": "Organization",
+            "@context": "https://schema.org",
+            "@type": "Organization",
             "name": "MDM SEVA Portal",
             "url": "{{ url('/') }}",
             "logo": "{{ asset('images/logo.png') }}",
             "description": "Comprehensive Mid Day Meal Management System for efficient tracking and reporting of school meal programs.",
             "contactPoint": {
-                "@@type": "ContactPoint",
+                "@type": "ContactPoint",
                 "telephone": "+91-1234567890",
                 "contactType": "customer service"
             }
