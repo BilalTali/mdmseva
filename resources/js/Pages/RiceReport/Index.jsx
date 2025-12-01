@@ -1,8 +1,7 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { BarChart3, TrendingDown, Users, Plus, Eye, FileDown, Trash2, FileText, Download } from 'lucide-react';
-import { router, Link } from '@inertiajs/react';
 
 export default function Index({
     auth,

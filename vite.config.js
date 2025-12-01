@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
+import viteCompression from 'vite-plugin-compression';
 
 export default defineConfig({
     plugins: [
@@ -10,9 +11,9 @@ export default defineConfig({
         }),
         react(),
         // Gzip compression for production builds
-        import('vite-plugin-compression').then(m => m.default({
-            algorithm: 'gzip',
-            ext: '.gz',
-        })),
+        // viteCompression({
+        //     algorithm: 'gzip',
+        //     ext: '.gz',
+        // }),
     ],
 });
