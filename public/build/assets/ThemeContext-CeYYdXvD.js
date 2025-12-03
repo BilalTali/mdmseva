@@ -1,1 +1,0 @@
-import{r as t}from"./app-CMKKpqEa.js";const o=t.createContext({theme:"light",toggleTheme:()=>{},setTheme:()=>{}});function n(){const e=t.useContext(o);if(e===void 0)throw new Error("useTheme must be used within a ThemeProvider");return e}export{n as u};
