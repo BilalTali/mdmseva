@@ -149,7 +149,7 @@ export default function Create({
                                     )}
                                     {isEditMode && (
                                         <span className="inline-flex mt-1 items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                                            Edit Mode - Date & Year Locked
+                                            Edit Mode - This Month Locked
                                         </span>
                                     )}
                                 </div>
