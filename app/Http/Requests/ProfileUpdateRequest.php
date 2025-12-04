@@ -32,7 +32,7 @@ class ProfileUpdateRequest extends FormRequest
                 'max:15',
                 Rule::unique(User::class, 'phone')->ignore($this->user()->id),
             ],
-            'date_of_birth' => ['nullable', 'date', 'before:today'],
+
             'address' => ['nullable', 'string', 'max:500'],
             
             // Location Information

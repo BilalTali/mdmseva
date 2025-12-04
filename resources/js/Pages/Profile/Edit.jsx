@@ -14,7 +14,6 @@ export default function Edit({ mustVerifyEmail, status, user, states, districts,
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
-        date_of_birth: user.date_of_birth || '',
         address: user.address || '',
 
         // Institutional Information
@@ -179,18 +178,7 @@ export default function Edit({ mustVerifyEmail, status, user, states, districts,
                                                 <InputError className="mt-2" message={errors.phone} />
                                             </div>
 
-                                            {/* Date of Birth */}
-                                            <div>
-                                                <InputLabel htmlFor="date_of_birth" value="Date of Birth" />
-                                                <TextInput
-                                                    id="date_of_birth"
-                                                    type="date"
-                                                    className="mt-1 block w-full"
-                                                    value={data.date_of_birth}
-                                                    onChange={(e) => setData('date_of_birth', e.target.value)}
-                                                />
-                                                <InputError className="mt-2" message={errors.date_of_birth} />
-                                            </div>
+
                                         </div>
 
                                         {/* Address */}
@@ -396,8 +384,8 @@ export default function Edit({ mustVerifyEmail, status, user, states, districts,
                                     onClick={prevStep}
                                     disabled={step === 1}
                                     className={`inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${step === 1
-                                            ? 'cursor-not-allowed border-[var(--border-light)] bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
-                                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-[var(--text-secondary)] hover:bg-gray-50 dark:hover:bg-gray-700'
+                                        ? 'cursor-not-allowed border-[var(--border-light)] bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
+                                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-[var(--text-secondary)] hover:bg-gray-50 dark:hover:bg-gray-700'
                                         }`}
                                 >
                                     Previous

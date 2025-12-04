@@ -42,22 +42,28 @@ class SecureHeaders
         // Production: Enforced mode (strict security)
         $isDev = config('app.env') === 'local' || config('app.debug');
         
-        $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' http://localhost:5173 http://127.0.0.1:5173; " .
-               "style-src 'self' 'unsafe-inline' http://localhost:5173 http://127.0.0.1:5173; " .
-               "img-src 'self' data: https: http://localhost:5173 http://127.0.0.1:5173; " .
-               "font-src 'self' data: http://localhost:5173 http://127.0.0.1:5173; " .
-               "connect-src 'self' ws: wss: http://localhost:5173 http://127.0.0.1:5173; " .
-               "frame-ancestors 'self';";
+        // FORCE PERMISSIVE CSP FOR DEBUGGING
+        // This ensures Vite works regardless of APP_ENV settings
+        $csp = "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;";
+        $response->headers->set('Content-Security-Policy', $csp);
         
+        /* 
+        Original Logic (commented out for debugging):
         if ($isDev) {
-            // Development: Report-Only mode - logs violations but doesn't block
-            // This allows Vite dev server to work while still monitoring CSP
-            $response->headers->set('Content-Security-Policy-Report-Only', $csp);
+            $csp = "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;";
+            $response->headers->set('Content-Security-Policy', $csp);
         } else {
-            // Production: Enforced mode - blocks violations
+            // Production: Strict security
+            $csp = "default-src 'self'; " .
+                   "script-src 'self' 'unsafe-inline'; " .
+                   "style-src 'self' 'unsafe-inline'; " .
+                   "img-src 'self' data: https:; " .
+                   "font-src 'self' data:; " .
+                   "connect-src 'self' ws: wss:; " .
+                   "frame-ancestors 'self';";
             $response->headers->set('Content-Security-Policy', $csp);
         }
+        */
         
         return $response;
     }

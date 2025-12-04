@@ -40,7 +40,6 @@ class RegisteredUserController extends Controller
             'email' => 'required|string|lowercase|email:rfc,dns|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', new StrongPassword()],
             'phone' => ['required', 'digits:10', 'unique:users,phone'],
-            'date_of_birth' => 'required|date|before:today',
             'udise_code' => ['required', 'string', 'max:20', 'unique:users,udise_code'],
             
             // Location master data validation (J&K/Ladakh only)
@@ -67,7 +66,6 @@ class RegisteredUserController extends Controller
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'phone' => $validated['phone'],
-                'date_of_birth' => $validated['date_of_birth'],
                 'udise_code' => $validated['udise_code'],
                 
                 // Foreign keys (master data)

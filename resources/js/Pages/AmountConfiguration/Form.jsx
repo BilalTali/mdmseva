@@ -159,27 +159,6 @@ export default function Form({ auth, config, schoolType, hasPrimary, hasMiddle }
         { value: 12, label: 'December' },
     ];
 
-    const InputField = ({ label, name, value, onChange, error, type = "number", step = "0.01", required = true, helpText, onBlur }) => (
-        <div className="w-full">
-            <label htmlFor={name} className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
-                {label} {required && <span className="text-red-500">*</span>}
-            </label>
-            <input
-                id={name}
-                type={type}
-                value={value}
-                onChange={(e) => onChange(name, e.target.value)}
-                onBlur={onBlur}
-                step={step}
-                required={required}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-100 ${error ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    }`}
-            />
-            {helpText && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{helpText}</p>}
-            {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
-        </div>
-    );
-
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -471,3 +450,24 @@ export default function Form({ auth, config, schoolType, hasPrimary, hasMiddle }
         </AuthenticatedLayout>
     );
 }
+
+const InputField = ({ label, name, value, onChange, error, type = "number", step = "0.01", required = true, helpText, onBlur }) => (
+    <div className="w-full">
+        <label htmlFor={name} className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+            {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        <input
+            id={name}
+            type={type}
+            value={value}
+            onChange={(e) => onChange(name, e.target.value)}
+            onBlur={onBlur}
+            step={step}
+            required={required}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-100 ${error ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                }`}
+        />
+        {helpText && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{helpText}</p>}
+        {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
+    </div>
+);

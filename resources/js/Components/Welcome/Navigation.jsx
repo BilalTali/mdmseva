@@ -1,7 +1,7 @@
 // Location: resources/js/Components/Welcome/Navigation.jsx
 
 import React from 'react';
-import { Package } from 'lucide-react';
+
 
 const Navigation = ({ mobileNavOpen, setMobileNavOpen }) => {
   const gradients = {
@@ -12,11 +12,11 @@ const Navigation = ({ mobileNavOpen, setMobileNavOpen }) => {
     <>
       <nav className="relative z-10">
         <div className="container mx-auto flex items-center justify-between py-6 px-6">
-          {/* Logo Icon Only - No Text */}
+          {/* Logo - Multicolor Gradient Text */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-amber-700 to-orange-800 rounded-xl flex items-center justify-center shadow-lg">
-              <Package className="w-7 h-7 text-white" />
-            </div>
+            <span className="text-3xl font-black tracking-tighter bg-gradient-to-r from-amber-700 via-orange-600 to-emerald-700 bg-clip-text text-transparent filter drop-shadow-sm">
+              MDMSEVA
+            </span>
           </div>
 
           <div className="hidden md:flex items-center space-x-6">

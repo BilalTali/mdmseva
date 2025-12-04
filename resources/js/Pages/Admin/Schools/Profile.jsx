@@ -9,7 +9,6 @@ export default function AdminSchoolProfile(props) {
         name: school.name || '',
         email: school.email || '',
         phone: school.phone || '',
-        date_of_birth: school.date_of_birth || '',
         state: school.state || 'Jammu and Kashmir',
         district_id: school.district_id || '',
         zone_id: school.zone_id || '',
@@ -92,16 +91,7 @@ export default function AdminSchoolProfile(props) {
                                     />
                                     {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                                    <input
-                                        type="date"
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                        value={data.date_of_birth || ''}
-                                        onChange={(e) => setData('date_of_birth', e.target.value)}
-                                    />
-                                    {errors.date_of_birth && <p className="mt-1 text-sm text-red-600">{errors.date_of_birth}</p>}
-                                </div>
+
                             </div>
 
                             {/* Password reset (optional) */}

@@ -28,6 +28,8 @@ class RollStatement extends Model
         'boys',
         'girls',
         'total',
+        'last_updated_at',
+        'updated_by',
     ];
 
     /**
@@ -39,6 +41,8 @@ class RollStatement extends Model
         'boys' => 'integer',
         'girls' => 'integer',
         'total' => 'integer',
+        'last_updated_at' => 'datetime',
+        'updated_by' => 'integer',
     ];
 
     /**
@@ -50,6 +54,12 @@ class RollStatement extends Model
 
         static::saving(function ($rollStatement) {
             $rollStatement->total = $rollStatement->boys + $rollStatement->girls;
+            
+            // Auto-set last_updated_at and updated_by when updating
+            if ($rollStatement->exists) {
+                $rollStatement->last_updated_at = now();
+                $rollStatement->updated_by = auth()->id();
+            }
         });
     }
 
@@ -59,6 +69,14 @@ class RollStatement extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Relationship: Get the user who last updated this roll statement.
+     */
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     /**
@@ -108,27 +126,25 @@ class RollStatement extends Model
     }
 
     /**
-     * Check if the roll statement can be edited.
-     * Only statements from the current month can be edited.
+     * Get formatted last updated timestamp.
      */
-    public function getCanBeEditedAttribute()
+    public function getFormattedLastUpdatedAttribute()
     {
-        $currentMonth = Carbon::now()->format('Y-m');
-        $statementMonth = Carbon::parse($this->date)->format('Y-m');
-        
-        return $currentMonth === $statementMonth;
+        if (!$this->last_updated_at) {
+            return null;
+        }
+        return $this->last_updated_at->format('d-m-Y H:i');
     }
 
     /**
-     * Check if the roll statement can be deleted.
-     * Only statements from the current month can be deleted.
+     * Get the name of the user who last updated this entry.
      */
-    public function getCanBeDeletedAttribute()
+    public function getUpdatedByNameAttribute()
     {
-        $currentMonth = Carbon::now()->format('Y-m');
-        $statementMonth = Carbon::parse($this->date)->format('Y-m');
-        
-        return $currentMonth === $statementMonth;
+        if (!$this->updatedBy) {
+            return null;
+        }
+        return $this->updatedBy->name ?? $this->updatedBy->school_name ?? 'Unknown';
     }
 
     /**

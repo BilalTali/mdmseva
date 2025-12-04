@@ -26,53 +26,63 @@ class AmountConfigurationController extends Controller
         $month = (int) ($request->month ?? now()->month);
         $year = (int) ($request->year ?? now()->year);
 
-        // Get or create configuration for this specific period
-        // This will auto-create from previous month if it exists
-        $configuration = MonthlyAmountConfiguration::getOrCreateForPeriod($userId, $month, $year);
+        // Check if configuration exists for this specific period
+        // We do NOT use getOrCreateForPeriod here because we want to show the "Create" state
+        // if it doesn't exist, rather than showing a zero-filled record.
+        $configuration = MonthlyAmountConfiguration::forUser($userId)
+            ->forPeriod($month, $year)
+            ->first();
 
-        $configData = [
-            'id' => $configuration->id,
-            'year' => $configuration->year,
-            'month' => $configuration->month,
-            'month_name' => $configuration->month_name,
-            'formatted_period' => $configuration->period,
-            'created_at' => $configuration->created_at->format('M d, Y'),
-            'updated_at' => $configuration->updated_at->format('M d, Y h:i A'),
-        ];
+        $configData = null;
+        $isCompleted = false;
 
-        // Include primary section data if user has primary students
-        if ($user->hasPrimaryStudents()) {
-            $configData['total_daily_primary'] = (float)$configuration->daily_amount_per_student_primary;
-            $configData['daily_pulses_primary'] = (float)$configuration->daily_pulses_primary;
-            $configData['daily_vegetables_primary'] = (float)$configuration->daily_vegetables_primary;
-            $configData['daily_oil_primary'] = (float)$configuration->daily_oil_primary;
-            $configData['daily_salt_primary'] = (float)$configuration->daily_salt_primary;
-            $configData['daily_fuel_primary'] = (float)$configuration->daily_fuel_primary;
+        if ($configuration) {
+            $configData = [
+                'id' => $configuration->id,
+                'year' => $configuration->year,
+                'month' => $configuration->month,
+                'month_name' => $configuration->month_name,
+                'formatted_period' => $configuration->period,
+                'created_at' => $configuration->created_at->format('M d, Y'),
+                'updated_at' => $configuration->updated_at->format('M d, Y h:i A'),
+            ];
+
+            // Include primary section data if user has primary students
+            if ($user->hasPrimaryStudents()) {
+                $configData['total_daily_primary'] = (float)$configuration->daily_amount_per_student_primary;
+                $configData['daily_pulses_primary'] = (float)$configuration->daily_pulses_primary;
+                $configData['daily_vegetables_primary'] = (float)$configuration->daily_vegetables_primary;
+                $configData['daily_oil_primary'] = (float)$configuration->daily_oil_primary;
+                $configData['daily_salt_primary'] = (float)$configuration->daily_salt_primary;
+                $configData['daily_fuel_primary'] = (float)$configuration->daily_fuel_primary;
+            }
+
+            // Include middle section data if user has middle students
+            if ($user->hasMiddleStudents()) {
+                $configData['total_daily_middle'] = (float)$configuration->daily_amount_per_student_upper_primary;
+                $configData['daily_pulses_middle'] = (float)$configuration->daily_pulses_middle;
+                $configData['daily_vegetables_middle'] = (float)$configuration->daily_vegetables_middle;
+                $configData['daily_oil_middle'] = (float)$configuration->daily_oil_middle;
+                $configData['daily_salt_middle'] = (float)$configuration->daily_salt_middle;
+                $configData['daily_fuel_middle'] = (float)$configuration->daily_fuel_middle;
+            }
+
+            // Include unified salt percentages
+            // If not set, use defaults
+            $configData['salt_percentage_common'] = (float)($configuration->salt_percentage_common ?? 30);
+            $configData['salt_percentage_chilli'] = (float)($configuration->salt_percentage_chilli ?? 20);
+            $configData['salt_percentage_turmeric'] = (float)($configuration->salt_percentage_turmeric ?? 20);
+            $configData['salt_percentage_coriander'] = (float)($configuration->salt_percentage_coriander ?? 15);
+            $configData['salt_percentage_other'] = (float)($configuration->salt_percentage_other ?? 15);
+            
+            $isCompleted = $configuration->is_completed;
         }
-
-        // Include middle section data if user has middle students
-        if ($user->hasMiddleStudents()) {
-            $configData['total_daily_middle'] = (float)$configuration->daily_amount_per_student_upper_primary;
-            $configData['daily_pulses_middle'] = (float)$configuration->daily_pulses_middle;
-            $configData['daily_vegetables_middle'] = (float)$configuration->daily_vegetables_middle;
-            $configData['daily_oil_middle'] = (float)$configuration->daily_oil_middle;
-            $configData['daily_salt_middle'] = (float)$configuration->daily_salt_middle;
-            $configData['daily_fuel_middle'] = (float)$configuration->daily_fuel_middle;
-        }
-
-        // Include unified salt percentages
-        // If not set, use defaults
-        $configData['salt_percentage_common'] = (float)($configuration->salt_percentage_common ?? 30);
-        $configData['salt_percentage_chilli'] = (float)($configuration->salt_percentage_chilli ?? 20);
-        $configData['salt_percentage_turmeric'] = (float)($configuration->salt_percentage_turmeric ?? 20);
-        $configData['salt_percentage_coriander'] = (float)($configuration->salt_percentage_coriander ?? 15);
-        $configData['salt_percentage_other'] = (float)($configuration->salt_percentage_other ?? 15);
 
         return Inertia::render('AmountConfiguration/Index', [
             'configuration' => $configData,
             'currentMonth' => $month,
             'currentYear' => $year,
-            'isCompleted' => $configuration->is_completed,
+            'isCompleted' => $isCompleted,
             'schoolType' => $user->school_type,
             'hasPrimary' => $user->hasPrimaryStudents(),
             'hasMiddle' => $user->hasMiddleStudents(),
@@ -112,19 +122,19 @@ class AmountConfigurationController extends Controller
         ];
 
         if ($user->hasPrimaryStudents()) {
-            $configData['daily_pulses_primary'] = (float)$config->daily_pulses_primary;
-            $configData['daily_vegetables_primary'] = (float)$config->daily_vegetables_primary;
-            $configData['daily_oil_primary'] = (float)$config->daily_oil_primary;
-            $configData['daily_salt_primary'] = (float)$config->daily_salt_primary;
-            $configData['daily_fuel_primary'] = (float)$config->daily_fuel_primary;
+            $configData['daily_pulses_primary'] = $config->daily_pulses_primary;
+            $configData['daily_vegetables_primary'] = $config->daily_vegetables_primary;
+            $configData['daily_oil_primary'] = $config->daily_oil_primary;
+            $configData['daily_salt_primary'] = $config->daily_salt_primary;
+            $configData['daily_fuel_primary'] = $config->daily_fuel_primary;
         }
 
         if ($user->hasMiddleStudents()) {
-            $configData['daily_pulses_middle'] = (float)$config->daily_pulses_middle;
-            $configData['daily_vegetables_middle'] = (float)$config->daily_vegetables_middle;
-            $configData['daily_oil_middle'] = (float)$config->daily_oil_middle;
-            $configData['daily_salt_middle'] = (float)$config->daily_salt_middle;
-            $configData['daily_fuel_middle'] = (float)$config->daily_fuel_middle;
+            $configData['daily_pulses_middle'] = $config->daily_pulses_middle;
+            $configData['daily_vegetables_middle'] = $config->daily_vegetables_middle;
+            $configData['daily_oil_middle'] = $config->daily_oil_middle;
+            $configData['daily_salt_middle'] = $config->daily_salt_middle;
+            $configData['daily_fuel_middle'] = $config->daily_fuel_middle;
         }
 
         $configData['salt_percentage_common'] = (float)($config->salt_percentage_common ?? 30);

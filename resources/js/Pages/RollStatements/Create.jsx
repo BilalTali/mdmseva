@@ -2,17 +2,19 @@ import React, { useEffect } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Create({ 
-    auth, 
-    academic_years = [], 
-    classes = [], 
-    user_udise = '', 
+export default function Create({
+    auth,
+    academic_years = [],
+    classes = [],
+    user_udise = '',
     school_name = '',
     school_type = '',
-    existing_statement = null
+    existing_statements = [],
+    previous_month_data = null
 }) {
-    const isEditMode = !!existing_statement;
-    
+    const isEditMode = existing_statements.length > 0;
+    const existing_statement = isEditMode ? existing_statements[0] : null;
+
     // Filter classes based on school type
     const getFilteredClasses = () => {
         const classRanges = {
@@ -21,32 +23,45 @@ export default function Create({
             'secondary': ['6', '7', '8', '9', '10'],
             'senior_secondary': ['6', '7', '8', '9', '10', '11', '12']
         };
-        
+
         const allowedClasses = classRanges[school_type] || [];
         return classes.filter(cls => allowedClasses.includes(cls.value));
     };
-    
+
     const filteredClasses = getFilteredClasses();
-    
-    // Initialize form data
+
+
+
     const getInitialEntries = () => {
-        if (existing_statement && existing_statement.entries) {
-            const existingMap = {};
-            existing_statement.entries.forEach(entry => {
-                existingMap[entry.class] = {
-                    boys: entry.boys,
-                    girls: entry.girls
+        const filteredClasses = getFilteredClasses();
+
+        if (isEditMode) {
+            // Map existing statements to entries for editing
+            return filteredClasses.map(cls => {
+                const existing = existing_statements.find(s => s.class === cls.value);
+                return {
+                    class: cls.value,
+                    class_label: cls.label,
+                    boys: existing ? existing.boys : 0,
+                    girls: existing ? existing.girls : 0
                 };
             });
-            
-            return filteredClasses.map(cls => ({
-                class: cls.value,
-                class_label: cls.label,
-                boys: existingMap[cls.value]?.boys || 0,
-                girls: existingMap[cls.value]?.girls || 0
-            }));
         }
-        
+
+        // For new statements, pre-fill from previous month if available
+        if (previous_month_data && previous_month_data.entries) {
+            return filteredClasses.map(cls => {
+                const previousEntry = previous_month_data.entries.find(e => e.class === cls.value);
+                return {
+                    class: cls.value,
+                    class_label: cls.label,
+                    boys: previousEntry ? previousEntry.boys : 0,
+                    girls: previousEntry ? previousEntry.girls : 0
+                };
+            });
+        }
+
+        // No previous data, start with zeros
         return filteredClasses.map(cls => ({
             class: cls.value,
             class_label: cls.label,
@@ -71,10 +86,10 @@ export default function Create({
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
+
         // Filter entries with students
         const filledEntries = data.entries.filter(entry => entry.boys > 0 || entry.girls > 0);
-        
+
         if (filledEntries.length === 0) {
             alert('Please enter student counts for at least one class');
             return;
@@ -147,10 +162,12 @@ export default function Create({
                                             {school_name} • UDISE: {user_udise}
                                         </p>
                                     )}
-                                    {isEditMode && (
-                                        <span className="inline-flex mt-1 items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                                            Edit Mode - This Month Locked
-                                        </span>
+                                    {isEditMode && existing_statement?.last_updated_at && (
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            <i className="fas fa-clock mr-1"></i>
+                                            Last Updated: {existing_statement.last_updated_at}
+                                            {existing_statement.updated_by_name && ` by ${existing_statement.updated_by_name}`}
+                                        </p>
                                     )}
                                 </div>
 
@@ -166,9 +183,8 @@ export default function Create({
                                                 value={data.date}
                                                 onChange={(e) => setData('date', e.target.value)}
                                                 disabled={isEditMode}
-                                                className={`w-full rounded-md shadow-sm border-gray-300 text-sm ${
-                                                    isEditMode ? 'bg-gray-100 cursor-not-allowed' : ''
-                                                }`}
+                                                className={`w-full rounded-md shadow-sm border-gray-300 text-sm ${isEditMode ? 'bg-gray-100 cursor-not-allowed' : ''
+                                                    }`}
                                                 required
                                             />
                                             {errors.date && <p className="mt-1 text-xs text-red-600">{errors.date}</p>}
@@ -182,9 +198,8 @@ export default function Create({
                                                 value={data.academic_year}
                                                 onChange={(e) => setData('academic_year', e.target.value)}
                                                 disabled={isEditMode}
-                                                className={`w-full rounded-md shadow-sm border-gray-300 text-sm ${
-                                                    isEditMode ? 'bg-gray-100 cursor-not-allowed' : ''
-                                                }`}
+                                                className={`w-full rounded-md shadow-sm border-gray-300 text-sm ${isEditMode ? 'bg-gray-100 cursor-not-allowed' : ''
+                                                    }`}
                                                 required
                                             >
                                                 <option value="">Select Academic Year</option>
@@ -213,17 +228,23 @@ export default function Create({
                         <div className="space-y-6">
                             {/* Class Entries */}
                             <div className="bg-white shadow-sm sm:rounded-lg p-6 flex flex-col">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Student Enrollment</h3>
-                                
-                                <div className="space-y-2 flex-grow overflow-y-auto" style={{maxHeight: 'calc(100vh - 350px)'}}>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-800">Student Enrollment</h3>
+                                    {!isEditMode && previous_month_data && (
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                            📋 Pre-filled from {previous_month_data.month_name}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2 flex-grow overflow-y-auto" style={{ maxHeight: 'calc(100vh - 350px)' }}>
                                     {data.entries.map((entry, index) => (
-                                        <div 
+                                        <div
                                             key={index}
-                                            className={`border rounded-lg p-2 ${
-                                                entry.boys + entry.girls > 0 
-                                                    ? 'border-blue-300 bg-blue-50' 
-                                                    : 'border-gray-200'
-                                            }`}
+                                            className={`border rounded-lg p-2 ${entry.boys + entry.girls > 0
+                                                ? 'border-blue-300 bg-blue-50'
+                                                : 'border-gray-200'
+                                                }`}
                                         >
                                             <div className="grid grid-cols-3 gap-2 items-center">
                                                 <div className="text-sm font-semibold text-gray-900">
@@ -273,7 +294,7 @@ export default function Create({
                         {/* Right Side - Preview */}
                         <div className="space-y-6">
                             {/* Details Card */}
-                            <div className="bg-white shadow-sm sm:rounded-lg p-6 sticky top-6 flex flex-col" style={{maxHeight: 'calc(100vh - 200px)'}}>
+                            <div className="bg-white shadow-sm sm:rounded-lg p-6 sticky top-6 flex flex-col" style={{ maxHeight: 'calc(100vh - 200px)' }}>
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="text-sm font-semibold text-gray-800">Roll Statement Preview</h3>
                                     {data.academic_year && (
@@ -288,7 +309,7 @@ export default function Create({
                                         data.entries
                                             .filter(e => e.boys + e.girls > 0)
                                             .map((entry, index) => (
-                                                <div 
+                                                <div
                                                     key={index}
                                                     className="border rounded-lg p-3 bg-gradient-to-r from-blue-50 to-indigo-50"
                                                 >

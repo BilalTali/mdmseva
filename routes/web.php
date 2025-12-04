@@ -295,7 +295,17 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/roll-statements/pdf', [RollStatementController::class, 'downloadPDF'])
         ->name('roll-statements.print');
     
-    // Create Route (must be before {rollStatement})
+    // Download PDF Route (must be before {rollStatement})
+    Route::get('/roll-statements/download-pdf', [RollStatementController::class, 'downloadPDF'])
+        ->name('roll-statements.download-pdf');
+    
+    // Delete Bulk Route (must be before {rollStatement})
+    Route::delete('/roll-statements/bulk-delete', [RollStatementController::class, 'destroyBulk'])
+        ->name('roll-statements.bulk-destroy');
+    
+
+    
+    // Create Route (must be before {roll Statement})
     Route::get('/roll-statements/create', [RollStatementController::class, 'create'])
         ->name('roll-statements.create');
     
@@ -316,7 +326,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     
     Route::put('/roll-statements/{rollStatement}', [RollStatementController::class, 'update'])
         ->name('roll-statements.update');
-    
+
     Route::delete('/roll-statements/{rollStatement}', [RollStatementController::class, 'destroy'])
         ->name('roll-statements.destroy');
     

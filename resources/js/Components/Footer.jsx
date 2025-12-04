@@ -50,10 +50,10 @@ export default function Footer({ withSidebar = false }) {
                         <p className="text-sm text-stone-700">
                             Email:{' '}
                             <a
-                                href="mailto:support@mdmseva.gov.in"
+                                href="mailto:talibilal342@gmail.com"
                                 className="text-amber-800 hover:text-amber-600 hover:underline transition-colors"
                             >
-                                support@mdmseva.gov.in
+                                talibilal342@gmail.com
                             </a>
                         </p>
                     </div>

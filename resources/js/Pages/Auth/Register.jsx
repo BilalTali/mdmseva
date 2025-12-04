@@ -15,7 +15,6 @@ export default function Register() {
         password: '',
         password_confirmation: '',
         phone: '',
-        date_of_birth: '',
         state: 'Jammu and Kashmir',
         district_id: '',
         zone_id: '',
@@ -92,7 +91,6 @@ export default function Register() {
             'password',
             'password_confirmation',
             'phone',
-            'date_of_birth',
         ];
 
         const step2Fields = [
@@ -288,19 +286,7 @@ export default function Register() {
                                     <InputError message={errors.phone} className="mt-2" />
                                 </div>
 
-                                {/* Date of Birth */}
-                                <div>
-                                    <InputLabel htmlFor="date_of_birth" value="Date of Birth" />
-                                    <TextInput
-                                        id="date_of_birth"
-                                        type="date"
-                                        name="date_of_birth"
-                                        value={data.date_of_birth}
-                                        className="mt-1 block w-full"
-                                        onChange={(e) => setData('date_of_birth', e.target.value)}
-                                    />
-                                    <InputError message={errors.date_of_birth} className="mt-2" />
-                                </div>
+
                             </div>
                         </div>
                     </div>

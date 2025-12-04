@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, Link } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import Input from '@/components/ui/input';
@@ -124,6 +124,15 @@ export default function Create({
                                             {isEditing ? 'Update Daily Consumption' : 'Add Daily Consumption'}
                                         </CardTitle>
                                     </div>
+                                    <Link
+                                        href={route('daily-consumptions.list', { month: data.month, year: data.year })}
+                                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                        </svg>
+                                        Back to List
+                                    </Link>
                                 </div>
                             </CardHeader>
                             <CardContent>

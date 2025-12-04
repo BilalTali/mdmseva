@@ -179,11 +179,10 @@ const FeedbackWizard = () => {
         return (
           <React.Fragment key={step}>
             <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                step < currentStep ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-lg' :
-                step === currentStep ? 'bg-gradient-to-r from-amber-700 to-orange-700 text-white shadow-xl ring-4 ring-amber-200' :
-                'bg-stone-200 text-stone-500'
-              }`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${step < currentStep ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-lg' :
+                  step === currentStep ? 'bg-gradient-to-r from-amber-700 to-orange-700 text-white shadow-xl ring-4 ring-amber-200' :
+                    'bg-stone-200 text-stone-500'
+                }`}>
                 {step < currentStep ? <Check className="w-5 h-5" /> : step}
               </div>
               <span className={`text-xs mt-2 font-semibold ${step <= currentStep ? 'text-amber-800' : 'text-stone-500'}`}>
@@ -191,9 +190,8 @@ const FeedbackWizard = () => {
               </span>
             </div>
             {step < totalSteps && (
-              <div className={`flex-1 h-1 mx-2 rounded-full transition-all ${
-                step < currentStep ? 'bg-gradient-to-r from-amber-600 to-amber-700' : 'bg-stone-200'
-              }`} />
+              <div className={`flex-1 h-1 mx-2 rounded-full transition-all ${step < currentStep ? 'bg-gradient-to-r from-amber-600 to-amber-700' : 'bg-stone-200'
+                }`} />
             )}
           </React.Fragment>
         );
@@ -237,10 +235,9 @@ const FeedbackWizard = () => {
                 type="text"
                 value={formData.name}
                 onChange={(e) => updateFormData('name', e.target.value)}
-                placeholder="Tali Bilal"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.name ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
-                } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
+                placeholder="Enter your name"
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.name ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
+                  } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
               />
               {errors.name && <p className="text-xs text-red-700 mt-1 font-semibold">{errors.name}</p>}
             </div>
@@ -251,10 +248,9 @@ const FeedbackWizard = () => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => updateFormData('email', e.target.value)}
-                placeholder="talibilal342@gmail.com"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.email ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
-                } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
+                placeholder="Enter your email"
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.email ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
+                  } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
               />
               {errors.email && <p className="text-xs text-red-700 mt-1 font-semibold">{errors.email}</p>}
             </div>
@@ -265,10 +261,9 @@ const FeedbackWizard = () => {
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => updateFormData('phone', e.target.value)}
-                placeholder="+91 9906343434"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.phone ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
-                } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
+                placeholder="Enter mobile number"
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.phone ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
+                  } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
               />
               {errors.phone && <p className="text-xs text-red-700 mt-1 font-semibold">{errors.phone}</p>}
             </div>
@@ -283,11 +278,10 @@ const FeedbackWizard = () => {
                 type="text"
                 value={formData.udise}
                 onChange={(e) => updateFormData('udise', e.target.value)}
-                placeholder="11 digit UDISE"
+                placeholder="Enter 11 digit UDISE code"
                 maxLength={11}
-                className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.udise ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
-                } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.udise ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
+                  } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
               />
               {errors.udise && <p className="text-xs text-red-700 mt-1 font-semibold">{errors.udise}</p>}
             </div>
@@ -298,10 +292,9 @@ const FeedbackWizard = () => {
                 type="text"
                 value={formData.school}
                 onChange={(e) => updateFormData('school', e.target.value)}
-                placeholder=" Primary School"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.school ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
-                } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
+                placeholder="Enter school name"
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.school ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
+                  } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
               />
               {errors.school && <p className="text-xs text-red-700 mt-1 font-semibold">{errors.school}</p>}
             </div>
@@ -312,10 +305,9 @@ const FeedbackWizard = () => {
                 type="text"
                 value={formData.state}
                 onChange={(e) => updateFormData('state', e.target.value)}
-                placeholder="Jammu & Kashmir"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.state ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
-                } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
+                placeholder="Enter state"
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.state ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
+                  } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
               />
               {errors.state && <p className="text-xs text-red-700 mt-1 font-semibold">{errors.state}</p>}
             </div>
@@ -326,10 +318,9 @@ const FeedbackWizard = () => {
                 type="text"
                 value={formData.district}
                 onChange={(e) => updateFormData('district', e.target.value)}
-                placeholder="Srinagar"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.district ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
-                } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
+                placeholder="Enter district"
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.district ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
+                  } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
               />
               {errors.district && <p className="text-xs text-red-700 mt-1 font-semibold">{errors.district}</p>}
             </div>
@@ -340,10 +331,9 @@ const FeedbackWizard = () => {
                 type="text"
                 value={formData.zone}
                 onChange={(e) => updateFormData('zone', e.target.value)}
-                placeholder="Zone 1"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.zone ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
-                } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
+                placeholder="Enter zone"
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.zone ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
+                  } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none transition-all`}
               />
               {errors.zone && <p className="text-xs text-red-700 mt-1 font-semibold">{errors.zone}</p>}
             </div>
@@ -360,16 +350,14 @@ const FeedbackWizard = () => {
                     key={type.value}
                     type="button"
                     onClick={() => updateFormData('feedbackType', type.value)}
-                    className={`p-4 rounded-xl border-2 transition-all ${
-                      formData.feedbackType === type.value
+                    className={`p-4 rounded-xl border-2 transition-all ${formData.feedbackType === type.value
                         ? `bg-gradient-to-r ${type.color} text-white border-transparent shadow-lg scale-105`
                         : 'bg-white border-amber-300 hover:border-amber-500 hover:shadow-md'
-                    }`}
+                      }`}
                   >
                     <div className="text-2xl mb-2">{type.icon}</div>
-                    <div className={`text-sm font-bold ${
-                      formData.feedbackType === type.value ? 'text-white' : 'text-amber-900'
-                    }`}>
+                    <div className={`text-sm font-bold ${formData.feedbackType === type.value ? 'text-white' : 'text-amber-900'
+                      }`}>
                       {type.label}
                     </div>
                   </button>
@@ -386,11 +374,10 @@ const FeedbackWizard = () => {
                     key={level.value}
                     type="button"
                     onClick={() => updateFormData('priority', level.value)}
-                    className={`p-3 rounded-xl border-2 font-bold text-xs transition-all ${
-                      formData.priority === level.value
+                    className={`p-3 rounded-xl border-2 font-bold text-xs transition-all ${formData.priority === level.value
                         ? level.color + ' shadow-md'
                         : 'bg-white border-amber-300 text-stone-700 hover:border-amber-500'
-                    }`}
+                      }`}
                   >
                     {level.label}
                   </button>
@@ -415,11 +402,10 @@ const FeedbackWizard = () => {
                     className="transform transition-all hover:scale-125 focus:outline-none"
                   >
                     <Star
-                      className={`w-12 h-12 ${
-                        star <= (hoveredRating || formData.rating)
+                      className={`w-12 h-12 ${star <= (hoveredRating || formData.rating)
                           ? 'fill-amber-500 text-amber-500'
                           : 'fill-stone-200 text-stone-300'
-                      }`}
+                        }`}
                     />
                   </button>
                 ))}
@@ -441,11 +427,10 @@ const FeedbackWizard = () => {
               <textarea
                 value={formData.message}
                 onChange={(e) => updateFormData('message', e.target.value)}
-                placeholder="Tell us more..."
+                placeholder="Enter your message..."
                 rows={6}
-                className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.message ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
-                } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none resize-none transition-all`}
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.message ? 'border-red-500 bg-red-50' : 'border-amber-300 bg-white'
+                  } focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none resize-none transition-all`}
               />
               <div className="flex justify-between items-center mt-1">
                 <span className="text-xs text-stone-600">{formData.message.length} characters</span>
@@ -466,9 +451,8 @@ const FeedbackWizard = () => {
                   <span className="text-stone-700">Rating:</span>
                   <div className="flex gap-0.5">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-3 h-3 ${
-                        i < formData.rating ? 'fill-amber-500 text-amber-500' : 'fill-stone-300 text-stone-400'
-                      }`} />
+                      <Star key={i} className={`w-3 h-3 ${i < formData.rating ? 'fill-amber-500 text-amber-500' : 'fill-stone-300 text-stone-400'
+                        }`} />
                     ))}
                   </div>
                 </div>
@@ -483,11 +467,10 @@ const FeedbackWizard = () => {
           type="button"
           onClick={handlePrevious}
           disabled={currentStep === 1}
-          className={`px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1 transition-all ${
-            currentStep === 1
+          className={`px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1 transition-all ${currentStep === 1
               ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
               : 'bg-white text-amber-800 hover:bg-amber-100 border-2 border-amber-300 shadow-md'
-          }`}
+            }`}
         >
           <ChevronLeft className="w-4 h-4" />
           Previous
@@ -507,11 +490,10 @@ const FeedbackWizard = () => {
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className={`px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1 transition-all shadow-lg ${
-              isSubmitting
+            className={`px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1 transition-all shadow-lg ${isSubmitting
                 ? 'bg-stone-400 cursor-not-allowed'
                 : 'bg-gradient-to-r from-emerald-700 to-emerald-800 text-white hover:shadow-xl'
-            }`}
+              }`}
           >
             {isSubmitting ? (
               <>

@@ -56,8 +56,8 @@ class RollStatementController extends Controller
                 'boys' => $statement->boys,
                 'girls' => $statement->girls,
                 'total' => $statement->total,
-                'can_be_edited' => $statement->can_be_edited,
-                'can_be_deleted' => $statement->can_be_deleted,
+                'last_updated_at' => $statement->last_updated_at?->format('d-m-Y H:i'),
+                'updated_by_name' => $statement->updated_by_name,
             ];
         });
 
@@ -91,38 +91,35 @@ class RollStatementController extends Controller
             return redirect()->route('login');
         }
         $userUdise = $user->udise_code ?? $user->udise;
-        // Get the most recent date and academic year combination for this UDISE
-        $latestStatement = RollStatement::where('udise', $userUdise)
+        
+        // Fetch the most recent date for which we have statements
+        $latestDateStatement = RollStatement::where('udise', $userUdise)
             ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
             ->first();
-        
-        $existingStatement = null;
-        
-        // If there's a latest statement, check if we can get all entries for that date/academic year
-        if ($latestStatement) {
-            // Get all entries for the same date and academic year
-            $allEntries = RollStatement::where('udise', $userUdise)
-                ->where('date', $latestStatement->date)
-                ->where('academic_year', $latestStatement->academic_year)
+
+        $previousMonthData = null;
+
+        if ($latestDateStatement) {
+            // Get all statements for this latest date (to get all classes)
+            $latestStatements = RollStatement::where('udise', $userUdise)
+                ->where('date', $latestDateStatement->date)
                 ->orderBy('class')
                 ->get();
-            
-            // Prepare existing statement with all entries
-            $existingStatement = [
-                'id' => $latestStatement->id,
-                'date' => $latestStatement->date->format('Y-m-d'),
-                'academic_year' => $latestStatement->academic_year,
-                'entries' => $allEntries->map(function ($statement) {
-                    return [
-                        'id' => $statement->id,
-                        'class' => $statement->class,
-                        'class_label' => $statement->class_label,
-                        'boys' => $statement->boys,
-                        'girls' => $statement->girls,
-                    ];
-                })->toArray(),
-            ];
+
+            if ($latestStatements->isNotEmpty()) {
+                $previousMonthData = [
+                    'month_name' => $latestDateStatement->month_name, // Uses the accessor
+                    'academic_year' => $latestDateStatement->academic_year,
+                    'date' => $latestDateStatement->date->format('Y-m-d'),
+                    'entries' => $latestStatements->map(function ($stmt) {
+                        return [
+                            'class' => $stmt->class,
+                            'boys' => $stmt->boys,
+                            'girls' => $stmt->girls,
+                        ];
+                    })->values(),
+                ];
+            }
         }
 
         return Inertia::render('RollStatements/Create', [
@@ -131,7 +128,7 @@ class RollStatementController extends Controller
             'user_udise' => $userUdise,
             'school_name' => $user->school_name,
             'school_type' => $user->school_type ?? 'primary',
-            'existing_statement' => $existingStatement,
+            'previous_month_data' => $previousMonthData,
         ]);
     }
 
@@ -232,22 +229,37 @@ class RollStatementController extends Controller
      */
     public function show(RollStatement $rollStatement)
     {
+        // Fetch all statements for the same date and academic year
+        $statements = RollStatement::where('date', $rollStatement->date)
+            ->where('academic_year', $rollStatement->academic_year)
+            ->where('udise', $rollStatement->udise)
+            ->orderBy('class')
+            ->get();
+
         return Inertia::render('RollStatements/Show', [
-            'rollStatement' => [
-                'id' => $rollStatement->id,
-                'date' => $rollStatement->date->format('Y-m-d'),
-                'formatted_date' => $rollStatement->formatted_date,
+            'statements' => $statements->map(function ($stmt) {
+                return [
+                    'id' => $stmt->id,
+                    'date' => $stmt->date->format('Y-m-d'),
+                    'formatted_date' => $stmt->formatted_date,
+                    'udise' => $stmt->udise,
+                    'academic_year' => $stmt->academic_year,
+                    'class' => $stmt->class,
+                    'class_label' => $stmt->class_label,
+                    'boys' => $stmt->boys,
+                    'girls' => $stmt->girls,
+                    'total' => $stmt->total,
+                    'month_name' => $stmt->month_name,
+                    'last_updated_at' => $stmt->formatted_last_updated,
+                    'updated_by_name' => $stmt->updated_by_name,
+                ];
+            }),
+            'date' => $rollStatement->date->format('Y-m-d'),
+            'academic_year' => $rollStatement->academic_year,
+            'school_info' => [
+                'name' => $rollStatement->user->school_name ?? 'Unknown School',
                 'udise' => $rollStatement->udise,
-                'academic_year' => $rollStatement->academic_year,
-                'class' => $rollStatement->class,
-                'class_label' => $rollStatement->class_label,
-                'boys' => $rollStatement->boys,
-                'girls' => $rollStatement->girls,
-                'total' => $rollStatement->total,
-                'month_name' => $rollStatement->month_name,
-                'can_be_edited' => $rollStatement->can_be_edited,
-                'can_be_deleted' => $rollStatement->can_be_deleted,
-            ],
+            ]
         ]);
     }
 
@@ -256,31 +268,38 @@ class RollStatementController extends Controller
      */
     public function edit(RollStatement $rollStatement)
     {
-        // Check if can be edited
-        if (!$rollStatement->can_be_edited) {
-            return redirect()
-                ->route('roll-statements.index')
-                ->with('error', 'This roll statement cannot be edited. Only statements from the current month can be edited.');
-        }
-
+        // No lock check - allow editing anytime
         $user = Auth::user();
         if (!$user) {
             return redirect()->route('login');
         }
 
-        return Inertia::render('RollStatements/Edit', [
-            'rollStatement' => [
-                'id' => $rollStatement->id,
-                'date' => $rollStatement->date->format('Y-m-d'),
-                'udise' => $rollStatement->udise,
-                'academic_year' => $rollStatement->academic_year,
-                'class' => $rollStatement->class,
-                'boys' => $rollStatement->boys,
-                'girls' => $rollStatement->girls,
-            ],
+        // Fetch all statements for the same date and academic year
+        $statements = RollStatement::where('date', $rollStatement->date)
+            ->where('academic_year', $rollStatement->academic_year)
+            ->where('udise', $rollStatement->udise)
+            ->orderBy('class')
+            ->get();
+
+        return Inertia::render('RollStatements/Create', [
+            'existing_statements' => $statements->map(function ($stmt) {
+                return [
+                    'id' => $stmt->id,
+                    'date' => $stmt->date->format('Y-m-d'),
+                    'udise' => $stmt->udise,
+                    'academic_year' => $stmt->academic_year,
+                    'class' => $stmt->class,
+                    'boys' => $stmt->boys,
+                    'girls' => $stmt->girls,
+                    'last_updated_at' => $stmt->formatted_last_updated,
+                    'updated_by_name' => $stmt->updated_by_name,
+                ];
+            }),
             'academic_years' => $this->getAcademicYears(),
             'classes' => $this->getClasses(),
             'school_type' => $user->school_type ?? 'primary',
+            'user_udise' => $user->udise_code ?? $user->udise,
+            'school_name' => $user->school_name,
         ]);
     }
 
@@ -362,13 +381,7 @@ class RollStatementController extends Controller
                 ->with('success', $message);
         }
 
-        // Original single entry update - check if can be edited
-        if (!$rollStatement->can_be_edited) {
-            return redirect()
-                ->route('roll-statements.index')
-                ->with('error', 'This roll statement cannot be edited. Only statements from the current month can be edited.');
-        }
-
+        // Original single entry update - no lock check, allow editing anytime
         $validated = $request->validate([
             'date' => 'required|date',
             'udise' => ['required', 'digits:11'],
@@ -406,19 +419,15 @@ class RollStatementController extends Controller
      */
     public function destroy(RollStatement $rollStatement)
     {
-        // Check if can be deleted
-        if (!$rollStatement->can_be_deleted) {
-            return redirect()
-                ->route('roll-statements.index')
-                ->with('error', 'This roll statement cannot be deleted. Only statements from the current month can be deleted.');
-        }
-
+        // No lock check - allow deletion anytime
         $rollStatement->delete();
 
         return redirect()
             ->route('roll-statements.index')
             ->with('success', 'Roll statement deleted successfully.');
     }
+
+
 
     /**
      * Download the roll statement as PDF.
@@ -511,9 +520,10 @@ class RollStatementController extends Controller
             'totalBoys' => $totalBoys,
             'totalGirls' => $totalGirls,
             'grandTotal' => $grandTotal,
+            'theme' => $request->query('theme', 'bw'), // Default to black & white theme
         ];
 
-        $pdf = Pdf::loadView('pdf.roll-statement', $data)
+        $pdf = Pdf::loadView('roll-statements.pdf', $data)
             ->setPaper('a4', 'portrait');
         
         $filename = sprintf(
@@ -521,6 +531,10 @@ class RollStatementController extends Controller
             Carbon::parse($date)->format('Y-m-d'),
             $academicYear
         );
+
+        if ($request->query('action') === 'preview') {
+            return $pdf->stream($filename);
+        }
 
         return $pdf->download($filename);
     }
@@ -553,10 +567,27 @@ class RollStatementController extends Controller
             ['value' => '6', 'label' => '6th'],
             ['value' => '7', 'label' => '7th'],
             ['value' => '8', 'label' => '8th'],
-            ['value' => '9', 'label' => '9th'],
-            ['value' => '10', 'label' => '10th'],
-            ['value' => '11', 'label' => '11th'],
-            ['value' => '12', 'label' => '12th'],
         ];
+    }
+    /**
+     * Remove all roll statements for a specific date and academic year.
+     */
+    public function destroyBulk(Request $request)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'academic_year' => 'required|string',
+            'udise' => 'required|string',
+        ]);
+
+        // Delete all roll statements matching the criteria
+        $deleted = RollStatement::where('date', $validated['date'])
+            ->where('academic_year', $validated['academic_year'])
+            ->where('udise', $validated['udise'])
+            ->delete();
+
+        return redirect()
+            ->route('roll-statements.index')
+            ->with('success', "Roll statement deleted successfully. ({$deleted} " . ($deleted === 1 ? 'entry' : 'entries') . " removed)");
     }
 }

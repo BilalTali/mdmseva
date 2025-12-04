@@ -20,14 +20,14 @@ export default function StructuredData({ type = 'organization', data = {} }) {
                     "contactPoint": {
                         "@type": "ContactPoint",
                         "contactType": "Customer Service",
-                        "email": data.email || "support@mdmseva.gov.in"
+                        "email": data.email || "talibilal342@gmail.com"
                     },
                     "areaServed": {
                         "@type": "AdministrativeArea",
                         "name": "Jammu and Kashmir, Ladakh"
                     }
                 };
-            
+
             case 'website':
                 return {
                     "@context": "https://schema.org",
@@ -44,7 +44,7 @@ export default function StructuredData({ type = 'organization', data = {} }) {
                         "query-input": "required name=search_term_string"
                     }
                 };
-            
+
             case 'breadcrumb':
                 return {
                     "@context": "https://schema.org",
@@ -56,7 +56,7 @@ export default function StructuredData({ type = 'organization', data = {} }) {
                         "item": item.url
                     }))
                 };
-            
+
             default:
                 return null;
         }
