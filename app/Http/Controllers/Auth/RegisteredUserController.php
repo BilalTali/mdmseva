@@ -40,7 +40,7 @@ class RegisteredUserController extends Controller
             'email' => 'required|string|lowercase|email:rfc,dns|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', new StrongPassword()],
             'phone' => ['required', 'digits:10', 'unique:users,phone'],
-            'udise_code' => ['required', 'string', 'max:20', 'unique:users,udise_code'],
+            'udise_code' => ['required', 'digits:11', 'unique:users,udise_code'],
             
             // Location master data validation (J&K/Ladakh only)
             'state' => 'required|string|in:Jammu and Kashmir,Ladakh',

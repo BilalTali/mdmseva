@@ -388,8 +388,11 @@ export default function Register() {
                                     name="udise_code"
                                     value={data.udise_code}
                                     className="mt-1 block w-full"
-                                    maxLength={20}
-                                    onChange={(e) => setData('udise_code', e.target.value)}
+                                    maxLength={11}
+                                    onChange={(e) => {
+                                        const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                        setData('udise_code', digits);
+                                    }}
                                     required
                                 />
                                 <p className="mt-1 text-sm text-[var(--text-tertiary)]">
