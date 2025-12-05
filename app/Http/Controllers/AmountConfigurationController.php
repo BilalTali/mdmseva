@@ -69,11 +69,11 @@ class AmountConfigurationController extends Controller
 
             // Include unified salt percentages
             // If not set, use defaults
-            $configData['salt_percentage_common'] = (float)($configuration->salt_percentage_common ?? 30);
-            $configData['salt_percentage_chilli'] = (float)($configuration->salt_percentage_chilli ?? 20);
-            $configData['salt_percentage_turmeric'] = (float)($configuration->salt_percentage_turmeric ?? 20);
+            $configData['salt_percentage_common'] = (float)($configuration->salt_percentage_common ?? 5);
+            $configData['salt_percentage_chilli'] = (float)($configuration->salt_percentage_chilli ?? 35);
+            $configData['salt_percentage_turmeric'] = (float)($configuration->salt_percentage_turmeric ?? 25);
             $configData['salt_percentage_coriander'] = (float)($configuration->salt_percentage_coriander ?? 15);
-            $configData['salt_percentage_other'] = (float)($configuration->salt_percentage_other ?? 15);
+            $configData['salt_percentage_other'] = (float)($configuration->salt_percentage_other ?? 20);
             
             $isCompleted = $configuration->is_completed;
         }
@@ -137,11 +137,11 @@ class AmountConfigurationController extends Controller
             $configData['daily_fuel_middle'] = $config->daily_fuel_middle;
         }
 
-        $configData['salt_percentage_common'] = (float)($config->salt_percentage_common ?? 30);
-        $configData['salt_percentage_chilli'] = (float)($config->salt_percentage_chilli ?? 20);
-        $configData['salt_percentage_turmeric'] = (float)($config->salt_percentage_turmeric ?? 20);
+        $configData['salt_percentage_common'] = (float)($config->salt_percentage_common ?? 5);
+        $configData['salt_percentage_chilli'] = (float)($config->salt_percentage_chilli ?? 35);
+        $configData['salt_percentage_turmeric'] = (float)($config->salt_percentage_turmeric ?? 25);
         $configData['salt_percentage_coriander'] = (float)($config->salt_percentage_coriander ?? 15);
-        $configData['salt_percentage_other'] = (float)($config->salt_percentage_other ?? 15);
+        $configData['salt_percentage_other'] = (float)($config->salt_percentage_other ?? 20);
 
         return Inertia::render('AmountConfiguration/Form', [
             'config' => $configData,

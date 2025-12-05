@@ -356,7 +356,7 @@ export default function Form({ auth, config, schoolType, hasPrimary, hasMiddle }
                                             onChange={setData}
                                             onBlur={() => recalculateSaltTotal(data)}
                                             error={errors.salt_percentage_common}
-                                            helpText="Default: 30%"
+                                            helpText="Default: 5%"
                                         />
                                         <InputField
                                             label="Chilli Powder %"
@@ -365,7 +365,7 @@ export default function Form({ auth, config, schoolType, hasPrimary, hasMiddle }
                                             onChange={setData}
                                             onBlur={() => recalculateSaltTotal(data)}
                                             error={errors.salt_percentage_chilli}
-                                            helpText="Default: 20%"
+                                            helpText="Default: 35%"
                                         />
                                         <InputField
                                             label="Turmeric %"
@@ -374,7 +374,7 @@ export default function Form({ auth, config, schoolType, hasPrimary, hasMiddle }
                                             onChange={setData}
                                             onBlur={() => recalculateSaltTotal(data)}
                                             error={errors.salt_percentage_turmeric}
-                                            helpText="Default: 20%"
+                                            helpText="Default: 25%"
                                         />
                                         <InputField
                                             label="Ingredients %"
@@ -392,7 +392,7 @@ export default function Form({ auth, config, schoolType, hasPrimary, hasMiddle }
                                             onChange={setData}
                                             onBlur={() => recalculateSaltTotal(data)}
                                             error={errors.salt_percentage_other}
-                                            helpText="Default: 15%"
+                                            helpText="Default: 20%"
                                         />
                                     </div>
                                     <div className={`mt-4 p-4 rounded-lg border-2 ${Math.abs(saltTotal - 100) < 0.01

@@ -111,11 +111,11 @@ class UpdateAmountConfigurationRequest extends FormRequest
 
         // ✅ Set default unified salt percentages if not provided
         if (!$this->has('salt_percentage_common')) {
-            $data['salt_percentage_common'] = 30;
-            $data['salt_percentage_chilli'] = 20;
-            $data['salt_percentage_turmeric'] = 20;
+            $data['salt_percentage_common'] = 5;
+            $data['salt_percentage_chilli'] = 35;
+            $data['salt_percentage_turmeric'] = 25;
             $data['salt_percentage_coriander'] = 15;
-            $data['salt_percentage_other'] = 15;
+            $data['salt_percentage_other'] = 20;
         }
 
         if (!empty($data)) {
