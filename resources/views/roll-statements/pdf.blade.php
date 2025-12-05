@@ -4,13 +4,19 @@
     <meta charset="utf-8">
     <title>Roll Statement - {{ $academic_year }}</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap');
+
         @page { 
             size: A4 portrait; 
-            margin: 12mm 10mm;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
         }
 
         .content-wrapper {
-            width: 92%;
+            width: 100%;
             margin: 0 auto;
         }
         
@@ -19,247 +25,169 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
-        body {
-            font-family: 'DejaVu Sans', 'Arial', sans-serif;
-            font-size: 8pt;
-            line-height: 1.3;
-            color: #000;
-        }
-        
-        /* Theme Classes */
-        body.theme-bw {
-            --primary-color: #000;
-            --primary-bg: #fff;
-            --header-bg: #f5f5f5;
-            --table-header-bg: #e0e0e0;
-            --table-header-text: #000;
-            --border-color: #000;
-            --accent-light: #f9f9f9;
-            --primary-total-bg: #e0e0e0;
-            --upper-total-bg: #d0d0d0;
-        }
-        
-        body.theme-blue {
-            --primary-color: #1e40af;
-            --primary-bg: #fff;
-            --header-bg: #dbeafe;
-            --table-header-bg: #2563eb;
-            --table-header-text: #fff;
-            --border-color: #2563eb;
-            --accent-light: #eff6ff;
-            --primary-total-bg: #dbeafe;
-            --upper-total-bg: #bfdbfe;
-        }
-        
-        body.theme-green {
-            --primary-color: #047857;
-            --primary-bg: #fff;
-            --header-bg: #d1fae5;
-            --table-header-bg: #059669;
-            --table-header-text: #fff;
-            --border-color: #059669;
-            --accent-light: #ecfdf5;
-            --primary-total-bg: #d1fae5;
-            --upper-total-bg: #a7f3d0;
-        }
-        
-        body.theme-purple {
-            --primary-color: #6b21a8;
-            --primary-bg: #fff;
-            --header-bg: #e9d5ff;
-            --table-header-bg: #7c3aed;
-            --table-header-text: #fff;
-            --border-color: #7c3aed;
-            --accent-light: #f5f3ff;
-            --primary-total-bg: #e9d5ff;
-            --upper-total-bg: #d8b4fe;
-        }
-        
-        /* Header Section */
+
         .report-header {
             text-align: center;
-            margin-bottom: 8px;
-            padding-bottom: 6px;
-            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 20px;
         }
 
         .state-name {
-            font-size: 16pt;
-            font-weight: bold;
+            font-family: 'Playfair Display', serif;
+            font-size: 22pt;
+            font-weight: 700;
+            color: #b91c1c; /* Red 700 */
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--primary-color);
-            margin-top: 15px;
-            margin-bottom: 3px;
+            margin-bottom: 8px;
+            margin-top: 40px; /* Added top spacing */
+            letter-spacing: 0.5px;
+            line-height: 1.2;
         }
 
         .district-zone-row {
-            font-size: 11pt;
+            font-size: 10pt;
+            color: #1e40af; /* Indigo 800 */
             font-weight: 600;
-            color: #111;
-            margin-bottom: 3px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .heading-separator {
-            margin: 0 8px;
+            margin: 0 10px;
+            color: #cbd5e1; /* Slate 300 */
+            font-weight: 300;
         }
 
         .school-name-wrapper {
-            margin: 6px 0 8px;
+            margin: 15px 0;
         }
 
         .school-name-header {
             display: inline-block;
-            padding: 7px 26px;
-            border: 2px solid var(--primary-color);
-            border-radius: 999px;
-            background: linear-gradient(120deg, var(--accent-light), #fff);
+            padding: 10px 25px;
+            background-color: #eff6ff; /* Blue 50 */
+            border-radius: 8px;
             font-size: 14pt;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1.4px;
-            color: #111;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .school-name-tagline {
-            margin-top: 4px;
-            font-size: 8pt;
-            font-weight: 600;
-            color: #444;
-            letter-spacing: 0.6px;
+            color: #1e3a8a; /* Blue 900 */
+            border: 1px solid #dbeafe; /* Blue 100 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .single-line-info {
             font-size: 10pt;
-            font-weight: 600;
-            color: #222;
-            margin-bottom: 4px;
-        }
-        
-        .header-details {
-            font-size: 7pt;
-            color: #333;
-            line-height: 1.4;
-        }
-        
-        .header-details span {
-            margin: 0 5px;
+            font-weight: 500;
+            color: #475569; /* Slate 600 */
+            margin-top: 8px;
+            background-color: #f8fafc;
+            display: inline-block;
+            padding: 4px 15px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
         }
         
         h3 {
-            font-size: 9pt;
-            margin-top: 10px;
-            margin-bottom: 6px;
-            color: var(--primary-color);
-            border-bottom: 1.5px solid var(--border-color);
-            padding-bottom: 2px;
+            font-size: 12pt;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            color: #b91c1c; /* Red 700 */
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            border-bottom: 1px solid #fee2e2;
+            display: inline-block;
+            padding-bottom: 5px;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
         }
         
         /* Tables */
         table {
-            width: 100%;
+            width: 90%; /* Reduced width for side margins */
+            margin: 0 auto 20px auto; /* Center table */
             border-collapse: collapse;
-            margin-bottom: 8px;
-            font-size: 9pt;
-            border: 1.5px solid #000;
+            font-size: 10pt;
+            background-color: #fff;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         th, td {
-            border: 1.5px solid #000 !important;
-            padding: 5px 3px;
+            padding: 10px 12px;
             text-align: center;
+            border: 1px solid #e2e8f0;
         }
         
         th {
-            background-color: var(--table-header-bg);
-            color: var(--table-header-text);
-            font-weight: bold;
-            font-size: 8pt;
-            border: 1.5px solid #000 !important;
+            background-color: #f1f5f9; /* Slate 100 */
+            color: #0f172a; /* Slate 900 */
+            font-weight: 700;
+            font-size: 9pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #94a3b8;
         }
         
         td {
-            font-size: 7pt;
-            font-weight: bold;
+            color: #334155;
         }
 
         .cell-left {
             text-align: left;
-            padding-left: 4px;
+            padding-left: 20px;
         }
 
         .class-cell {
             text-align: center;
-            background-color: #fffefc;
-            padding-left: 0 !important;
+            font-weight: 600;
+            color: #1e40af;
         }
 
         .class-pill {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 999px;
-            font-weight: 800;
-            font-size: 7pt;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            border: 1px solid #c084fc;
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            color: #78350f;
-            min-width: 40px;
-            text-align: center;
+            /* Removed pill style for cleaner table look, kept class for targeting */
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: 10pt;
         }
 
         /* Subtotal Rows */
-        .primary-subtotal-row {
-            background-color: var(--primary-total-bg) !important;
-            font-weight: bold;
-        }
-
-        .primary-subtotal-row td {
-            border: 1.5px solid #000 !important;
-            font-weight: bold;
-            font-size: 7pt;
-            padding: 4px 3px;
-        }
-
-        .upper-subtotal-row {
-            background-color: var(--upper-total-bg) !important;
-            font-weight: bold;
-        }
-
-        .upper-subtotal-row td {
-            border: 1.5px solid #000 !important;
-            font-weight: bold;
-            font-size: 7pt;
-            padding: 4px 3px;
-        }
-
-        .grand-total-row {
-            background-color: #f3e8ff !important;
-            font-weight: bold;
-        }
-
-        body.theme-bw .grand-total-row {
-            background-color: #c0c0c0 !important;
-        }
-
-        .grand-total-row td {
-            border: 1.5px solid #000 !important;
-            font-weight: bold;
-            font-size: 8pt;
-            padding: 5px 3px;
+        .primary-subtotal-row, .upper-subtotal-row {
+            background-color: #eff6ff; /* Blue 50 */
+            font-weight: 700;
+            color: #1e3a8a;
         }
         
-        /* Footer Signatures */
+        .grand-total-row {
+            background-color: #f0fdf4; /* Green 50 */
+            font-weight: 800;
+            color: #14532d; /* Green 900 */
+            border-top: 2px solid #166534;
+        }
+
         .footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 7pt;
-            color: #666;
-            border-top: 1px solid #000;
-            padding-top: 6px;
+            width: 90%;
+            display: table;
+            margin: 60px auto 0 auto;
+        }
+
+        .footer > div {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+        }
+
+        .signature-box {
+            border-top: 2px solid #94a3b8;
+            width: 70%;
+            padding-top: 10px;
+            font-weight: 600;
+            color: #1e293b;
         }
         
         /* Print Optimization */
@@ -268,10 +196,6 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            
-            table, th, td {
-                border: 1px solid #000 !important;
-            }
         }
     </style>
 </head>
@@ -279,40 +203,49 @@
 <div class="content-wrapper">
 
     @php
+        // Ensure rollStatements is a collection
+        $rollStatements = $rollStatements ?? collect([]);
+
         // Use lowercase class values as stored in database
         $primaryClassNames = ['kg', '1', '2', '3', '4', '5'];
         $upperClassNames = ['6', '7', '8'];
         
         // Group roll statements by level
         $primaryStatements = $rollStatements->filter(function($stmt) use ($primaryClassNames) {
-            return in_array(strtolower($stmt->class), $primaryClassNames);
+            return in_array(strtolower($stmt->class ?? ''), $primaryClassNames);
         });
         
         $upperStatements = $rollStatements->filter(function($stmt) use ($upperClassNames) {
-            return in_array(strtolower($stmt->class), $upperClassNames);
+            return in_array(strtolower($stmt->class ?? ''), $upperClassNames);
         });
         
         $showPrimary = $primaryStatements->count() > 0;
         $showUpper = $upperStatements->count() > 0;
     @endphp
 
-    {{-- Header --}}
-    <div class="report-header">
-        <div class="state-name">Government of {{ $user->state ?? 'State' }}</div>
-        <div class="district-zone-row">
-            District: {{ optional($user->district)->name ?? $user->district ?? 'N/A' }} <span class="heading-separator">|</span>
-            Zone: {{ optional($user->zone)->name ?? $user->zone ?? 'N/A' }} <span class="heading-separator">|</span>
-            UDISE: {{ $user->udise_code ?? $user->udise ?? 'N/A' }}
-        </div>
-        <div class="school-name-wrapper">
-            <div class="school-name-header">
-                {{ strtoupper($user->school_name ?? 'School Name') }}
+        <div class="report-header">
+            <h1 class="state-name">Government of Jammu and Kashmir</h1>
+            
+            <div class="district-zone-row">
+                District: {{ $user->district->name ?? $user->district ?? 'N/A' }} 
+                <span class="heading-separator">|</span>
+                Zone: {{ $user->zone->name ?? $user->zone ?? 'N/A' }} 
+                <span class="heading-separator">|</span>
+                UDISE: {{ $user->udise_code ?? $user->udise ?? 'N/A' }}
+            </div>
+            
+            <div class="school-name-wrapper">
+                <div class="school-name-header">
+                    {{ strtoupper($user->school_name ?? 'School Name') }}
+                </div>
+            </div>
+            
+            <div class="single-line-info">
+                Monthly Roll Statement <span class="heading-separator">•</span> 
+                Academic Year: {{ $academic_year }} <span class="heading-separator">•</span> 
+                Date: {{ \Carbon\Carbon::parse($date)->format('F d, Y') }}
             </div>
         </div>
-        <div class="single-line-info">
-         Monthly Roll Statement | Academic Year: {{ $academic_year }} | Date: {{ \Carbon\Carbon::parse($date)->format('d-m-Y') }}
-        </div>
-    </div>
     {{-- Roll Statement Table --}}
     <h3>Class-wise Student Strength</h3>
     <table>
@@ -421,19 +354,21 @@
     </table>
 
     {{-- Footer Signatures --}}
-    <div class="footer" style="background: linear-gradient(120deg, var(--accent-light), #fff); border: 1px solid var(--border-color); border-radius: 6px; margin-top: 24px;">
-        <div style="text-align:center; border-right: 1px dashed var(--border-color);">
-            <div style="height: 60px;"></div>
-            <strong>MDM Incharge</strong>
+    <div class="footer">
+        <div style="text-align: left;">
+            <div class="signature-box">
+                <div style="height: 40px;"></div>
+                <strong> Admission Incharge</strong>
+            </div>
         </div>
-        <div style="text-align:center;">
-            <div style="height: 60px;"></div>
-            <strong>Headmaster</strong>
+        <div style="text-align: right;">
+            <div class="signature-box" style="margin-left: auto;">
+                <div style="height: 40px;"></div>
+                <strong> Head of Institution</strong>
+            </div>
         </div>
     </div>
-    <div class="footer-note">
-        Generated via MDMSeva | Date: {{ \Carbon\Carbon::parse($date)->format('F Y') }}
-    </div>
+    
 </div>
 </body>
 </html>
