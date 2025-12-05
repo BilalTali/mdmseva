@@ -1,4 +1,5 @@
 // Location: resources/js/Pages/AmountConfiguration/Form.jsx
+// Version: 1.1 (Force Update for Defaults)
 import { useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
