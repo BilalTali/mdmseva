@@ -160,6 +160,14 @@ Create a `.htaccess` file in your **root** folder (`public_html`) with this cont
 </IfModule>
 ```
 
+> [!IMPORTANT]
+> **Critical File**: The `.htaccess` file in the project root is **essential** for the site to work on shared hosting. It redirects all requests to the `public/` folder.
+> 
+> - ✅ This file is now **tracked in Git** (at repository root)
+> - ⚠️ **Never run** `git clean -fd` without understanding it will remove untracked files
+> - 🔄 If the file gets deleted, the site will show `ERR_CONNECTION_TIMED_OUT`
+> - 📝 The correct syntax includes `$1` to pass the URL path: `RewriteRule ^(.*)$ public/$1 [L]`
+
 ---
 
 ## ✅ Step 6: Verify Deployment
@@ -180,3 +188,34 @@ When you make changes locally:
 2.  `git push`
 3.  Go to Hostinger **Git** section and click **Deploy** (or run `git pull` via SSH).
 4.  Run `php artisan migrate --force` if you changed the database.
+5.  **After deployment**, verify the root `.htaccess` file exists with correct content.
+
+### Safe Deployment Commands (SSH)
+
+```bash
+# Navigate to project
+cd domains/shayaan786.com/public_html
+
+# Fetch latest changes
+git fetch origin
+
+# Reset to match remote branch (safer than git clean -fd)
+git reset --hard origin/ui-fixes
+
+# IMPORTANT: Verify .htaccess exists after reset
+cat .htaccess
+
+# If .htaccess is missing or incorrect, it should be in Git now
+# But if needed, recreate it:
+cat > .htaccess << 'EOF'
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+EOF
+
+# Cache Laravel configuration
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
