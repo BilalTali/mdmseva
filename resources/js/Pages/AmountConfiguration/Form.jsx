@@ -28,18 +28,18 @@ export default function Form({ auth, config, schoolType, hasPrimary, hasMiddle }
         month: config?.month || new Date().getMonth() + 1,
 
         // Primary (Class 1-5)
-        daily_pulses_primary: config?.daily_pulses_primary ?? defaultPrimaryRates.daily_pulses_primary,
-        daily_vegetables_primary: config?.daily_vegetables_primary ?? defaultPrimaryRates.daily_vegetables_primary,
-        daily_oil_primary: config?.daily_oil_primary ?? defaultPrimaryRates.daily_oil_primary,
-        daily_salt_primary: config?.daily_salt_primary ?? defaultPrimaryRates.daily_salt_primary,
-        daily_fuel_primary: config?.daily_fuel_primary ?? defaultPrimaryRates.daily_fuel_primary,
+        daily_pulses_primary: config?.daily_pulses_primary || defaultPrimaryRates.daily_pulses_primary,
+        daily_vegetables_primary: config?.daily_vegetables_primary || defaultPrimaryRates.daily_vegetables_primary,
+        daily_oil_primary: config?.daily_oil_primary || defaultPrimaryRates.daily_oil_primary,
+        daily_salt_primary: config?.daily_salt_primary || defaultPrimaryRates.daily_salt_primary,
+        daily_fuel_primary: config?.daily_fuel_primary || defaultPrimaryRates.daily_fuel_primary,
 
         // Middle (Class 6-8)
-        daily_pulses_middle: config?.daily_pulses_middle ?? defaultMiddleRates.daily_pulses_middle,
-        daily_vegetables_middle: config?.daily_vegetables_middle ?? defaultMiddleRates.daily_vegetables_middle,
-        daily_oil_middle: config?.daily_oil_middle ?? defaultMiddleRates.daily_oil_middle,
-        daily_salt_middle: config?.daily_salt_middle ?? defaultMiddleRates.daily_salt_middle,
-        daily_fuel_middle: config?.daily_fuel_middle ?? defaultMiddleRates.daily_fuel_middle,
+        daily_pulses_middle: config?.daily_pulses_middle || defaultMiddleRates.daily_pulses_middle,
+        daily_vegetables_middle: config?.daily_vegetables_middle || defaultMiddleRates.daily_vegetables_middle,
+        daily_oil_middle: config?.daily_oil_middle || defaultMiddleRates.daily_oil_middle,
+        daily_salt_middle: config?.daily_salt_middle || defaultMiddleRates.daily_salt_middle,
+        daily_fuel_middle: config?.daily_fuel_middle || defaultMiddleRates.daily_fuel_middle,
 
         // UNIFIED Salt Percentages (apply to both Primary and Middle)
         salt_percentage_common: config?.salt_percentage_common ?? 5,
