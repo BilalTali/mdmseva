@@ -36,7 +36,7 @@ class DistrictZoneSeeder extends Seeder
         $this->command->info('Seeding Kashmir Division...');
 
         // 1. Srinagar
-        $srinagar = District::firstOrCreate(
+        $srinagar = District::updateOrCreate(
             ['code' => 'JK-SRI'],
             ['name' => 'Srinagar', 'state' => 'Jammu and Kashmir']
         );
@@ -45,7 +45,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 2. Ganderbal
-        $ganderbal = District::firstOrCreate(
+        $ganderbal = District::updateOrCreate(
             ['code' => 'JK-GAN'],
             ['name' => 'Ganderbal', 'state' => 'Jammu and Kashmir']
         );
@@ -54,7 +54,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 3. Budgam
-        $budgam = District::firstOrCreate(
+        $budgam = District::updateOrCreate(
             ['code' => 'JK-BUD'],
             ['name' => 'Budgam', 'state' => 'Jammu and Kashmir']
         );
@@ -63,7 +63,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 4. Anantnag
-        $anantnag = District::firstOrCreate(
+        $anantnag = District::updateOrCreate(
             ['code' => 'JK-ANA'],
             ['name' => 'Anantnag', 'state' => 'Jammu and Kashmir']
         );
@@ -72,7 +72,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 5. Kulgam
-        $kulgam = District::firstOrCreate(
+        $kulgam = District::updateOrCreate(
             ['code' => 'JK-KUL'],
             ['name' => 'Kulgam', 'state' => 'Jammu and Kashmir']
         );
@@ -81,7 +81,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 6. Pulwama
-        $pulwama = District::firstOrCreate(
+        $pulwama = District::updateOrCreate(
             ['code' => 'JK-PUL'],
             ['name' => 'Pulwama', 'state' => 'Jammu and Kashmir']
         );
@@ -90,7 +90,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 7. Shopian
-        $shopian = District::firstOrCreate(
+        $shopian = District::updateOrCreate(
             ['code' => 'JK-SHO'],
             ['name' => 'Shopian', 'state' => 'Jammu and Kashmir']
         );
@@ -99,7 +99,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 8. Baramulla
-        $baramulla = District::firstOrCreate(
+        $baramulla = District::updateOrCreate(
             ['code' => 'JK-BAR'],
             ['name' => 'Baramulla', 'state' => 'Jammu and Kashmir']
         );
@@ -108,7 +108,7 @@ class DistrictZoneSeeder extends Seeder
             ]);
 
         // 9. Bandipora
-        $bandipora = District::firstOrCreate(
+        $bandipora = District::updateOrCreate(
             ['code' => 'JK-BAN'],
             ['name' => 'Bandipora', 'state' => 'Jammu and Kashmir']
         );
@@ -117,7 +117,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 10. Kupwara
-        $kupwara = District::firstOrCreate(
+        $kupwara = District::updateOrCreate(
             ['code' => 'JK-KUP'],
             ['name' => 'Kupwara', 'state' => 'Jammu and Kashmir']
         );
@@ -136,7 +136,7 @@ class DistrictZoneSeeder extends Seeder
         $this->command->info('Seeding Jammu Division...');
 
         // 1. Jammu
-        $jammu = District::firstOrCreate(
+        $jammu = District::updateOrCreate(
             ['code' => 'JK-JAM'],
             ['name' => 'Jammu', 'state' => 'Jammu and Kashmir']
         );
@@ -145,7 +145,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 2. Samba
-        $samba = District::firstOrCreate(
+        $samba = District::updateOrCreate(
             ['code' => 'JK-SAM'],
             ['name' => 'Samba', 'state' => 'Jammu and Kashmir']
         );
@@ -154,7 +154,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 3. Kathua
-        $kathua = District::firstOrCreate(
+        $kathua = District::updateOrCreate(
             ['code' => 'JK-KAT'],
             ['name' => 'Kathua', 'state' => 'Jammu and Kashmir']
         );
@@ -163,7 +163,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 4. Udhampur
-        $udhampur = District::firstOrCreate(
+        $udhampur = District::updateOrCreate(
             ['code' => 'JK-UDH'],
             ['name' => 'Udhampur', 'state' => 'Jammu and Kashmir']
         );
@@ -172,7 +172,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 5. Reasi
-        $reasi = District::firstOrCreate(
+        $reasi = District::updateOrCreate(
             ['code' => 'JK-REA'],
             ['name' => 'Reasi', 'state' => 'Jammu and Kashmir']
         );
@@ -181,7 +181,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 6. Rajouri
-        $rajouri = District::firstOrCreate(
+        $rajouri = District::updateOrCreate(
             ['code' => 'JK-RAJ'],
             ['name' => 'Rajouri', 'state' => 'Jammu and Kashmir']
         );
@@ -190,7 +190,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 7. Poonch
-        $poonch = District::firstOrCreate(
+        $poonch = District::updateOrCreate(
             ['code' => 'JK-POO'],
             ['name' => 'Poonch', 'state' => 'Jammu and Kashmir']
         );
@@ -199,7 +199,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 8. Doda
-        $doda = District::firstOrCreate(
+        $doda = District::updateOrCreate(
             ['code' => 'JK-DOD'],
             ['name' => 'Doda', 'state' => 'Jammu and Kashmir']
         );
@@ -208,7 +208,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 9. Ramban
-        $ramban = District::firstOrCreate(
+        $ramban = District::updateOrCreate(
             ['code' => 'JK-RAM'],
             ['name' => 'Ramban', 'state' => 'Jammu and Kashmir']
         );
@@ -217,7 +217,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 10. Kishtwar
-        $kishtwar = District::firstOrCreate(
+        $kishtwar = District::updateOrCreate(
             ['code' => 'JK-KIS'],
             ['name' => 'Kishtwar', 'state' => 'Jammu and Kashmir']
         );
@@ -236,7 +236,7 @@ class DistrictZoneSeeder extends Seeder
         $this->command->info('Seeding Ladakh...');
 
         // 1. Leh
-        $leh = District::firstOrCreate(
+        $leh = District::updateOrCreate(
             ['code' => 'LD-LEH'],
             ['name' => 'Leh', 'state' => 'Ladakh']
         );
@@ -245,7 +245,7 @@ class DistrictZoneSeeder extends Seeder
         ]);
 
         // 2. Kargil
-        $kargil = District::firstOrCreate(
+        $kargil = District::updateOrCreate(
             ['code' => 'LD-KAR'],
             ['name' => 'Kargil', 'state' => 'Ladakh']
         );
@@ -264,7 +264,7 @@ class DistrictZoneSeeder extends Seeder
         foreach ($zoneNames as $index => $zoneName) {
             $code = strtoupper($district->code . '-Z' . str_pad($index + 1, 2, '0', STR_PAD_LEFT));
             
-            Zone::firstOrCreate(
+            Zone::updateOrCreate(
                 ['code' => $code],
                 [
                     'district_id' => $district->id,
