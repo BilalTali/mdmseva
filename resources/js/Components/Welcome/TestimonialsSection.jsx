@@ -125,12 +125,13 @@ const TestimonialsSection = ({ testimonials, loadingTestimonials, testimonialsEr
                       ))}
                     </div>
 
-                    <div className="flex-grow mb-6 relative">
+                  <div className="flex-grow mb-6 relative flex flex-col gap-4">
+                    <div>
                       <p className={`text-stone-700 italic leading-relaxed ${isLong ? 'line-clamp-4' : ''}`}>
                         "{testimonial.message}"
                       </p>
                       {isLong && (
-                        <button
+                        <button 
                           onClick={() => setSelectedTestimonial(testimonial)}
                           className="text-amber-700 hover:text-amber-800 font-semibold text-sm mt-2 inline-flex items-center gap-1 hover:underline focus:outline-none"
                         >
@@ -139,32 +140,41 @@ const TestimonialsSection = ({ testimonials, loadingTestimonials, testimonialsEr
                       )}
                     </div>
 
-                    <div className="flex items-center mt-auto pt-6 border-t border-amber-50">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center text-white font-bold text-sm shadow-sm mr-3 flex-shrink-0">
-                        {testimonial.avatar || testimonial.name?.charAt(0) || 'U'}
+                    {testimonial.admin_response && (
+                      <div className="bg-stone-50 p-3 rounded-lg border-l-4 border-amber-500 mt-auto">
+                        <p className="text-xs font-bold text-amber-800 mb-1">Admin Response</p>
+                        <p className="text-sm text-stone-600 line-clamp-2">
+                          {testimonial.admin_response}
+                        </p>
                       </div>
-                      <div className="overflow-hidden">
-                        <h4 className="font-bold text-stone-900 text-sm truncate">{testimonial.name}</h4>
-                        <p className="text-xs text-amber-700 font-medium truncate">{testimonial.role || 'Educator'}</p>
-                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-stone-500 truncate">
-                          <span>{testimonial.district || 'District'}</span>
-                          <span>•</span>
-                          <span>{testimonial.zone || 'Zone'}</span>
-                        </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center mt-auto pt-6 border-t border-amber-50">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center text-white font-bold text-sm shadow-sm mr-3 flex-shrink-0">
+                      {testimonial.avatar || testimonial.name?.charAt(0) || 'U'}
+                    </div>
+                    <div className="overflow-hidden">
+                      <h4 className="font-bold text-stone-900 text-sm truncate">{testimonial.name}</h4>
+                      <p className="text-xs text-amber-700 font-medium truncate">{testimonial.role || 'Educator'}</p>
+                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-stone-500 truncate">
+                        <span>{testimonial.district || 'District'}</span>
+                        <span>•</span>
+                        <span>{testimonial.zone || 'Zone'}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-              )
-            })
+              </div>
+            )})
           )}
         </div>
-
+        
         {/* Mobile Swipe Hint */}
         {!loadingTestimonials && testimonials?.length > 1 && (
           <div className="flex justify-center mt-4 gap-2 md:hidden">
             {[...Array(Math.min(5, Math.ceil(testimonials.length)))].map((_, i) => (
-              <div key={i} className="w-1.5 h-1.5 rounded-full bg-amber-200"></div>
+               <div key={i} className="w-1.5 h-1.5 rounded-full bg-amber-200"></div>
             ))}
           </div>
         )}
@@ -172,60 +182,70 @@ const TestimonialsSection = ({ testimonials, loadingTestimonials, testimonialsEr
         {/* Read More Modal */}
         {selectedTestimonial && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedTestimonial(null)}>
-            <div
-              className="bg-white rounded-2xl w-full max-w-2xl relative shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]"
+            <div 
+              className="bg-white rounded-2xl w-full max-w-2xl relative shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]" 
               onClick={e => e.stopPropagation()}
             >
               {/* Modal Header */}
               <div className="p-6 border-b border-amber-100 flex items-center justify-between bg-amber-50/50">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center text-white font-bold text-lg shadow-md">
-                    {selectedTestimonial.avatar || selectedTestimonial.name?.charAt(0) || 'U'}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-stone-900">{selectedTestimonial.name}</h3>
-                    <div className="text-sm text-amber-700 font-medium flex items-center gap-2">
-                      {selectedTestimonial.role || 'Educator'}
-                      <span className="text-stone-300">•</span>
-                      <span className="text-stone-500">{selectedTestimonial.district}, {selectedTestimonial.zone}</span>
+                 <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                      {selectedTestimonial.avatar || selectedTestimonial.name?.charAt(0) || 'U'}
                     </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedTestimonial(null)}
+                    <div>
+                      <h3 className="font-bold text-lg text-stone-900">{selectedTestimonial.name}</h3>
+                      <div className="text-sm text-amber-700 font-medium flex items-center gap-2">
+                        {selectedTestimonial.role || 'Educator'}
+                        <span className="text-stone-300">•</span>
+                        <span className="text-stone-500">{selectedTestimonial.district}, {selectedTestimonial.zone}</span>
+                      </div>
+                    </div>
+                 </div>
+                 <button 
+                  onClick={() => setSelectedTestimonial(null)} 
                   className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+                 >
+                   <X className="w-6 h-6" />
+                 </button>
               </div>
 
               {/* Modal Content */}
               <div className="p-8 overflow-y-auto">
-                <Quote className="w-10 h-10 text-amber-200 mb-6 rotate-180" />
-                <p className="text-stone-700 text-lg leading-relaxed whitespace-pre-line italic font-serif">
-                  "{selectedTestimonial.message}"
-                </p>
+                 <Quote className="w-10 h-10 text-amber-200 mb-6 rotate-180" />
+                 <p className="text-stone-700 text-lg leading-relaxed whitespace-pre-line italic font-serif">
+                   "{selectedTestimonial.message}"
+                 </p>
+                 
+                 {selectedTestimonial.admin_response && (
+                    <div className="bg-stone-50 p-6 rounded-xl border-l-4 border-amber-500 mt-8">
+                       <h4 className="font-bold text-amber-800 text-sm mb-2 uppercase tracking-wide">Response from Admin</h4>
+                       <p className="text-stone-700 leading-relaxed">
+                          {selectedTestimonial.admin_response}
+                       </p>
+                    </div>
+                 )}
 
-                <div className="mt-6 flex items-center gap-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${i < (selectedTestimonial.rating || 0)
-                          ? 'fill-amber-400 text-amber-400'
-                          : 'fill-stone-200 text-stone-200'
+                 <div className="mt-8 flex items-center gap-2 pt-6 border-t border-stone-100">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-5 h-5 ${
+                          i < (selectedTestimonial.rating || 0)
+                            ? 'fill-amber-400 text-amber-400'
+                            : 'fill-stone-200 text-stone-200'
                         }`}
-                    />
-                  ))}
-                  <span className="text-sm text-stone-500 ml-2">
-                    {selectedTestimonial.rating ? `${selectedTestimonial.rating}.0 rating` : 'Testimonial'}
-                  </span>
-                </div>
+                      />
+                    ))}
+                    <span className="text-sm text-stone-500 ml-2">
+                      {selectedTestimonial.rating ? `${selectedTestimonial.rating}.0 rating` : 'Testimonial'}
+                    </span>
+                 </div>
 
-                {selectedTestimonial.submitted_at && (
-                  <p className="text-xs text-stone-400 mt-4">
-                    Shared on {formatDate(selectedTestimonial.submitted_at)}
-                  </p>
-                )}
+                 {selectedTestimonial.submitted_at && (
+                    <p className="text-xs text-stone-400 mt-4">
+                      Shared on {formatDate(selectedTestimonial.submitted_at)}
+                    </p>
+                 )}
               </div>
             </div>
           </div>
