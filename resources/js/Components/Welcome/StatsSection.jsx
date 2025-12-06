@@ -1,8 +1,8 @@
 // Location: resources/js/Components/Welcome/StatsSection.jsx
 import React from 'react';
-import { 
-  School, Users, Package, FileText, Receipt, 
-  TrendingUp, BarChart3 
+import {
+  School, Users, Package, FileText, Receipt,
+  TrendingUp, BarChart3
 } from 'lucide-react';
 
 const StatsSection = ({ stats, loading, error }) => {
@@ -86,19 +86,7 @@ const StatsSection = ({ stats, loading, error }) => {
               </div>
             </div>
 
-            {/* Bills Generated */}
-            <div className="bg-gradient-to-br from-rose-700 to-pink-800 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all">
-              <div className="flex items-center justify-between mb-4">
-                <Receipt className="w-10 h-10 opacity-80" />
-                <TrendingUp className="w-6 h-6" />
-              </div>
-              <div className="text-4xl font-bold mb-2">{formatNumber(stats.bills_total)}</div>
-              <div className="text-rose-100 font-medium">Bills Generated</div>
-              <div className="mt-3 pt-3 border-t border-rose-600 text-xs space-y-1">
-                <div>Kiryana: {formatNumber(stats.bills_kiryana)}</div>
-                <div>Fuel: {formatNumber(stats.bills_fuel)}</div>
-              </div>
-            </div>
+
           </div>
         )}
       </div>

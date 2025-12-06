@@ -77,9 +77,7 @@ export default function AdminNavigation({ user }) {
                                         <Dropdown.Link href="/admin/daily-consumptions">
                                             Daily Consumptions
                                         </Dropdown.Link>
-                                        <Dropdown.Link href="/admin/bills">
-                                            Bills
-                                        </Dropdown.Link>
+
                                     </Dropdown.Content>
                                 </Dropdown>
                             </div>
@@ -213,12 +211,7 @@ export default function AdminNavigation({ user }) {
                     >
                         Daily Consumptions
                     </Link>
-                    <Link
-                        href="/admin/bills"
-                        className="block w-full pl-6 pr-4 py-2 border-l-4 text-left text-base font-medium text-primary-200 hover:text-white hover:bg-primary-700 hover:border-white focus:outline-none focus:text-white focus:bg-blue-700 focus:border-white transition duration-150 ease-in-out"
-                    >
-                        Bills
-                    </Link>
+
                     <Link
                         href={route('admin.ai-config.index')}
                         className="block w-full pl-3 pr-4 py-2 border-l-4 text-left text-base font-medium text-primary-200 hover:text-white hover:bg-primary-700 hover:border-white focus:outline-none focus:text-white focus:bg-blue-700 focus:border-white transition duration-150 ease-in-out"

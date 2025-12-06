@@ -1,8 +1,8 @@
 // Location: resources/js/Components/Welcome/HeroSection.jsx
 import React from 'react';
-import { 
-  Zap, Package, ChevronRight, Clock, School, 
-  Activity, CheckCircle, Star 
+import {
+  Zap, Package, ChevronRight, Clock, School,
+  Activity, CheckCircle, Star
 } from 'lucide-react';
 
 const HeroSection = ({ stats, loading }) => {
@@ -49,14 +49,13 @@ const HeroSection = ({ stats, loading }) => {
             Streamline your Mid-Day Meal program with{' '}
             <span className="text-amber-800 font-bold">automated rice tracking</span>,{' '}
             <span className="text-orange-800 font-bold">real-time consumption monitoring</span>,{' '}
-            <span className="text-red-800 font-bold">instant PDF reports</span>, and{' '}
-            <span className="text-amber-900 font-bold">comprehensive vendor billing</span>
+            <span className="text-red-800 font-bold">instant PDF reports</span>
             —designed specifically for Indian schools.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <a 
-              href="/register" 
+            <a
+              href="/register"
               className={`px-8 py-4 rounded-xl ${gradients.primary} text-white font-bold text-lg shadow-2xl hover:shadow-lg flex items-center justify-center gap-2 transform hover:scale-105 transition-all`}
             >
               <span>Get Started Free</span>
@@ -71,19 +70,14 @@ const HeroSection = ({ stats, loading }) => {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t-2 border-amber-400">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-8 border-t-2 border-amber-400">
             <div>
               <div className={`text-3xl font-bold ${gradients.text.accent1}`}>
                 {loading ? '...' : formatNumber(stats.total_students || 89000)}+
               </div>
               <div className="text-sm text-stone-700 font-semibold">Students Served</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-800 to-red-800">
-                {loading ? '...' : formatNumber(Math.max(0, stats.rice_available || 0))}+
-              </div>
-              <div className="text-sm text-stone-700 font-semibold">Rice Balance (KG's)</div>
-            </div>
+
             <div>
               <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-800 to-emerald-900">
                 {loading ? '...' : formatNumber(stats.reports_generated || 7200)}+
@@ -114,14 +108,8 @@ const HeroSection = ({ stats, loading }) => {
                 <div className="text-amber-900 text-sm font-semibold">Students Fed Today</div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded-2xl p-4 border-2 border-orange-400 shadow-md hover:shadow-lg transition-shadow">
-                  <Package className="w-8 h-8 text-orange-800 mb-3" />
-                  <div className="text-2xl font-bold text-orange-900">
-                    {loading ? '...' : (Math.max(0, stats.rice_available || 0)).toLocaleString()}
-                  </div>
-                  <div className="text-orange-800 text-xs font-semibold">Rice Balance (KG's)</div>
-                </div>
+              <div className="grid grid-cols-1 gap-4">
+
 
                 <div className="bg-gradient-to-br from-emerald-100 to-green-100 rounded-2xl p-4 border-2 border-emerald-400 shadow-md hover:shadow-lg transition-shadow">
                   <svg className="w-8 h-8 text-emerald-800 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,8 +151,8 @@ const HeroSection = ({ stats, loading }) => {
           <div className={`absolute -bottom-6 -left-6 ${gradients.success} rounded-2xl p-4 shadow-xl animate-bounce`}>
             <CheckCircle className="w-8 h-8 text-white" />
           </div>
-          <div 
-            className="absolute -top-6 -right-6 bg-gradient-to-r from-amber-600 to-yellow-600 rounded-2xl p-4 shadow-xl animate-bounce" 
+          <div
+            className="absolute -top-6 -right-6 bg-gradient-to-r from-amber-600 to-yellow-600 rounded-2xl p-4 shadow-xl animate-bounce"
             style={{ animationDelay: '1s' }}
           >
             <Star className="w-8 h-8 text-white" />

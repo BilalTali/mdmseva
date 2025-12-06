@@ -13,7 +13,7 @@ const RealtimeStats = ({ demoMode = true }) => {
         activeUsers: 0,
         riceDistributed: 0
     });
-    
+
     const [isLoading, setIsLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
@@ -58,7 +58,7 @@ const RealtimeStats = ({ demoMode = true }) => {
         const interval = setInterval(() => {
             currentStep++;
             const progress = currentStep / steps;
-            
+
             setStats({
                 enrolledSchools: Math.floor(targetStats.enrolledSchools * progress),
                 riceReportsGenerated: Math.floor(targetStats.riceReportsGenerated * progress),
@@ -82,10 +82,10 @@ const RealtimeStats = ({ demoMode = true }) => {
     // Initial fetch and setup polling
     useEffect(() => {
         fetchStats();
-        
+
         // Poll for updates every 30 seconds
         const interval = setInterval(fetchStats, 30000);
-        
+
         return () => clearInterval(interval);
     }, []);
 
@@ -102,12 +102,7 @@ const RealtimeStats = ({ demoMode = true }) => {
             label: 'Rice Reports',
             color: 'green'
         },
-        {
-            icon: <Receipt className="w-10 h-10 text-orange-600" />,
-            value: stats.kiryanaaBills,
-            label: 'Kiryana Bills',
-            color: 'orange'
-        },
+
         {
             icon: <Package className="w-10 h-10 text-purple-600" />,
             value: stats.riceDistributed,
@@ -151,8 +146,8 @@ const RealtimeStats = ({ demoMode = true }) => {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
                 {statItems.map((item, index) => (
-                    <div 
-                        key={index} 
+                    <div
+                        key={index}
                         className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition transform hover:-translate-y-1"
                     >
                         <div className="flex items-center justify-between mb-4">

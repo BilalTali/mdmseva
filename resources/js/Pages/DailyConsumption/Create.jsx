@@ -118,7 +118,7 @@ export default function Create({
                     <Card className="border-0 shadow-xl bg-white/80 backdrop-blur">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <CardHeader className="space-y-3 border-b border-gray-100 pb-6">
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                     <div>
                                         <CardTitle className="text-2xl font-bold text-gray-900">
                                             {isEditing ? 'Update Daily Consumption' : 'Add Daily Consumption'}
@@ -126,7 +126,7 @@ export default function Create({
                                     </div>
                                     <Link
                                         href={route('daily-consumptions.list', { month: data.month, year: data.year })}
-                                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center"
+                                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center self-start sm:self-auto min-h-[44px]"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -274,10 +274,10 @@ export default function Create({
                                                 Select Day
                                             </h3>
                                             <div className="p-4 border border-gray-300 rounded-lg bg-gradient-to-br from-blue-50 to-purple-50 w-full max-w-md mx-auto">
-                                                <div className="grid grid-cols-7 gap-1">
+                                                <div className="grid grid-cols-7 gap-2">
                                                     {/* Day headers */}
                                                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                                                        <div key={i} className="text-xs font-semibold text-gray-600 text-center py-1">
+                                                        <div key={i} className="text-xs sm:text-sm font-semibold text-gray-600 text-center py-1">
                                                             {day}
                                                         </div>
                                                     ))}
@@ -300,7 +300,7 @@ export default function Create({
                                                                 type="button"
                                                                 onClick={() => setData('day', dayStr)}
                                                                 className={`
-                                                                    aspect-square rounded-lg text-sm font-medium transition-all flex items-center justify-center relative
+                                                                    aspect-square rounded-lg text-sm sm:text-base font-medium transition-all flex items-center justify-center relative min-h-[44px]
                                                                     ${isSelected
                                                                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md scale-110 z-10'
                                                                         : isServed
@@ -317,7 +317,7 @@ export default function Create({
                                                         );
                                                     })}
                                                 </div>
-                                                <div className="mt-4 flex items-center gap-4 text-xs text-gray-600 justify-center">
+                                                <div className="mt-4 flex items-center gap-4 text-xs sm:text-sm text-gray-600 justify-center flex-wrap">
                                                     <div className="flex items-center gap-1">
                                                         <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
                                                         <span>Served</span>

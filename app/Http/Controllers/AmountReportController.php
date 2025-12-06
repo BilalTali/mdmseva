@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\AmountReportExport;
 
 class AmountReportController extends Controller
 {
@@ -647,6 +649,29 @@ class AmountReportController extends Controller
 
             return back()->with('error', 'Failed to regenerate report: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Export the report to Excel.
+     */
+    public function export(Request $request)
+    {
+        $request->validate([
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+            'year' => ['required', 'integer', 'min:2020', 'max:2100'],
+        ]);
+
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $user = Auth::user();
+
+        $filename = sprintf(
+            'amount-report-%s-%s.xlsx',
+            date('F-Y', mktime(0, 0, 0, $month, 1, $year)),
+            strtolower(str_replace(' ', '-', $user->name))
+        );
+
+        return Excel::download(new AmountReportExport($user->id, $month, $year), $filename);
     }
 
     /**

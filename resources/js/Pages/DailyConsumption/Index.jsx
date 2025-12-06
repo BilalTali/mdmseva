@@ -29,42 +29,42 @@ export default function Index({
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-4">
                     <h2 className="font-semibold text-xl text-[var(--text-primary)] leading-tight">
                         Daily Consumption - {monthName} {currentYear}
                     </h2>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <a
                             href={`/daily-consumptions/export?month=${currentMonth}&year=${currentYear}&format=xlsx`}
-                            className="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 transition"
+                            className="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 transition min-h-[44px]"
                         >
                             <Download className="w-4 h-4 mr-2" />
                             Export
                         </a>
                         <Link
                             href={route('daily-consumptions.index')}
-                            className="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 transition"
+                            className="inline-flex items-center justify-center px-4 py-2.5 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 transition min-h-[44px]"
                         >
                             <Calendar className="w-4 h-4 mr-2" />
                             Change Month
                         </Link>
                         <Link
                             href={route('daily-consumptions.create', { month: currentMonth, year: currentYear })}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 transition"
+                            className="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 transition min-h-[44px]"
                         >
                             <Plus className="w-4 h-4 mr-2" />
                             Add Entry
                         </Link>
                         <Link
                             href={`/rice-reports/create?month=${currentMonth}&year=${currentYear}`}
-                            className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 transition"
+                            className="inline-flex items-center justify-center px-4 py-2.5 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 transition min-h-[44px]"
                         >
                             <FileText className="w-4 h-4 mr-2" />
                             Rice Report
                         </Link>
                         <Link
                             href={`/amount-reports/create?month=${currentMonth}&year=${currentYear}`}
-                            className="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 transition"
+                            className="inline-flex items-center justify-center px-4 py-2.5 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 transition min-h-[44px]"
                         >
                             <DollarSign className="w-4 h-4 mr-2" />
                             Amount Report
@@ -75,8 +75,8 @@ export default function Index({
         >
             <Head title={`Daily Consumption - ${monthName} ${currentYear}`} />
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <div className="py-8 sm:py-12">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
                     {error && (
                         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
@@ -85,30 +85,30 @@ export default function Index({
                     )}
 
                     {/* Summary Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white rounded-lg shadow p-4">
-                            <p className="text-sm text-gray-600">Opening Balance</p>
-                            <p className="text-2xl font-bold text-blue-600">{openingBalance} kg</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-white rounded-lg shadow p-5 sm:p-4">
+                            <p className="text-sm text-gray-600 mb-2">Opening Balance</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-blue-600">{openingBalance} kg</p>
                         </div>
-                        <div className="bg-white rounded-lg shadow p-4">
-                            <p className="text-sm text-gray-600">Total Rice Consumed</p>
-                            <p className="text-2xl font-bold text-orange-600">{totalRiceConsumed} kg</p>
+                        <div className="bg-white rounded-lg shadow p-5 sm:p-4">
+                            <p className="text-sm text-gray-600 mb-2">Total Rice Consumed</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-orange-600">{totalRiceConsumed} kg</p>
                         </div>
-                        <div className="bg-white rounded-lg shadow p-4">
-                            <p className="text-sm text-gray-600">Closing Balance</p>
-                            <p className={`text-2xl font-bold ${closingBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        <div className="bg-white rounded-lg shadow p-5 sm:p-4">
+                            <p className="text-sm text-gray-600 mb-2">Closing Balance</p>
+                            <p className={`text-2xl sm:text-3xl font-bold ${closingBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
                                 {closingBalance} kg
                             </p>
                             {closingBalance < 0 && (
-                                <div className="flex items-center text-red-600 text-xs mt-1">
+                                <div className="flex items-center text-red-600 text-xs mt-2">
                                     <TrendingDown className="w-3 h-3 mr-1" />
                                     Deficit
                                 </div>
                             )}
                         </div>
-                        <div className="bg-white rounded-lg shadow p-4">
-                            <p className="text-sm text-gray-600">Total Amount Spent</p>
-                            <p className="text-2xl font-bold text-purple-600">₹{totalAmountConsumed.toFixed(2)}</p>
+                        <div className="bg-white rounded-lg shadow p-5 sm:p-4">
+                            <p className="text-sm text-gray-600 mb-2">Total Amount Spent</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-purple-600">₹{totalAmountConsumed.toFixed(2)}</p>
                         </div>
                     </div>
 
@@ -163,13 +163,13 @@ export default function Index({
                                                     {Number(item.rice_balance || 0).toFixed(2)}
                                                 </td>
                                                 <td className="px-4 py-3 text-sm text-center">
-                                                    <div className="flex items-center justify-center gap-2">
+                                                    <div className="flex items-center justify-center gap-3">
                                                         <Link
                                                             href={route('daily-consumptions.edit', item.id)}
-                                                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition"
+                                                            className="p-2.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition min-w-[44px] min-h-[44px] flex items-center justify-center"
                                                             title="Edit Entry"
                                                         >
-                                                            <Edit className="w-4 h-4" />
+                                                            <Edit className="w-5 h-5" />
                                                         </Link>
                                                         <button
                                                             onClick={() => {
@@ -177,10 +177,10 @@ export default function Index({
                                                                     router.delete(route('daily-consumptions.destroy', item.id));
                                                                 }
                                                             }}
-                                                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition"
+                                                            className="p-2.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition min-w-[44px] min-h-[44px] flex items-center justify-center"
                                                             title="Delete Entry"
                                                         >
-                                                            <Trash2 className="w-4 h-4" />
+                                                            <Trash2 className="w-5 h-5" />
                                                         </button>
                                                     </div>
                                                 </td>

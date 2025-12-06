@@ -278,51 +278,7 @@ export default function Index({
                                             </div>
                                         </div>
 
-                                        {/* Bill Management Section */}
-                                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-3 border-t border-amber-200">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center space-x-3">
-                                                    <ReceiptPercentIcon className="h-5 w-5 text-amber-600" />
-                                                    <span className="text-sm font-semibold text-gray-700">Vendor Bills</span>
-                                                    {report.bills_count > 0 && (
-                                                        <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-200 text-amber-800">
-                                                            {report.bills_count} {report.bills_count === 1 ? 'Bill' : 'Bills'}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <Link
-                                                        href={route('amount-reports.bills.create', [report.id, 'kiryana'])}
-                                                        className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 
-                                                            text-white text-xs font-semibold rounded-lg transition-colors shadow-sm"
-                                                        title="Create Kiryana Bill"
-                                                    >
-                                                        <ShoppingBagIcon className="h-4 w-4 mr-1.5" />
-                                                        Kiryana Bill
-                                                    </Link>
-                                                    <Link
-                                                        href={route('amount-reports.bills.create', [report.id, 'fuel'])}
-                                                        className="inline-flex items-center px-3 py-1.5 bg-orange-600 hover:bg-orange-700 
-                                                            text-white text-xs font-semibold rounded-lg transition-colors shadow-sm"
-                                                        title="Create Fuel Bill"
-                                                    >
-                                                        <BoltIcon className="h-4 w-4 mr-1.5" />
-                                                        Fuel Bill
-                                                    </Link>
-                                                    {report.bills_count > 0 && (
-                                                        <Link
-                                                            href={route('amount-reports.bills.index', report.id)}
-                                                            className="inline-flex items-center px-3 py-1.5 bg-gray-600 hover:bg-gray-700 
-                                                                text-white text-xs font-semibold rounded-lg transition-colors shadow-sm"
-                                                            title="View All Bills"
-                                                        >
-                                                            <EyeIcon className="h-4 w-4 mr-1.5" />
-                                                            View Bills
-                                                        </Link>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
+
 
                                         {/* Expanded Details */}
                                         {expandedReport === report.id && (

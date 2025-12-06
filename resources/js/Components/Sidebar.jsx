@@ -33,8 +33,7 @@ export default function Sidebar({ currentRoute }) {
     const shouldMonthlyReportsBeOpen = () => {
         return currentRoute && (
             currentRoute.startsWith('rice-reports') ||
-            currentRoute.startsWith('amount-reports') ||
-            currentRoute.includes('bills')
+            currentRoute.startsWith('amount-reports')
         );
     };
 
@@ -364,72 +363,7 @@ export default function Sidebar({ currentRoute }) {
                     </div>
                 </div>
 
-                {/* Vendor Bills Section */}
-                <div className="mb-2">
-                    <div className="px-4 py-2 mb-1">
-                        <h3 className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider flex items-center">
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            Vendor Bills
-                        </h3>
-                    </div>
-                    <div className="ml-4 space-y-2">
-                        {/* Info Message */}
-                        <div className="px-4 py-3 bg-[var(--primary-50)] border border-[var(--primary-100)] rounded-lg">
-                            <div className="flex items-start space-x-2">
-                                <svg className="w-4 h-4 text-[var(--primary-600)] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <p className="text-xs text-[var(--primary-700)] leading-relaxed">
-                                    Bills are created within Amount Reports. First create or select an Amount Report, then add bills.
-                                </p>
-                            </div>
-                        </div>
-                        {/* Quick Access Buttons */}
-                        <div className="space-y-1">
-                            <Link
-                                href={route('amount-reports.index')}
-                                className="flex items-center px-4 py-2.5 text-[var(--text-secondary)] hover:bg-[var(--primary-50)] hover:text-[var(--primary-600)] rounded-lg transition-all duration-200 group"
-                            >
-                                <svg className="w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <span className="text-sm font-medium">View All Reports</span>
-                                <svg className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </Link>
-                            <Link
-                                href={route('amount-reports.create')}
-                                className="flex items-center px-4 py-2.5 text-[var(--text-secondary)] hover:bg-[var(--accent-50)] hover:text-[var(--accent-600)] rounded-lg transition-all duration-200 group"
-                            >
-                                <svg className="w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                                <span className="text-sm font-medium">Create New Report</span>
-                                <svg className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </Link>
-                        </div>
-                        {/* Bill Types Info */}
-                        <div className="px-4 pt-2 space-y-1">
-                            <div className="flex items-center text-xs text-[var(--text-tertiary)]">
-                                <svg className="w-3 h-3 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                </svg>
-                                <span>Kiryana Bills</span>
-                            </div>
-                            <div className="flex items-center text-xs text-[var(--text-tertiary)]">
-                                <svg className="w-3 h-3 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                <span>Fuel Bills</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
 
                 {/* Divider */}
                 <div className="border-t border-[var(--border-light)] my-4"></div>

@@ -320,8 +320,6 @@ const Dashboard = ({ auth, initialSummary, currentYear, currentMonth, schoolType
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rice Report</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Report</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kiryana Bills</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fuel Bills</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
@@ -351,30 +349,6 @@ const Dashboard = ({ auth, initialSummary, currentYear, currentMonth, schoolType
                                                                 className="text-blue-600 hover:text-blue-900 hover:underline"
                                                             >
                                                                 View Report
-                                                            </Link>
-                                                        ) : (
-                                                            <span className="text-gray-400">Not generated</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                        {status.has_kiryana_bill ? (
-                                                            <Link
-                                                                href={route('amount-reports.index', { month: month.value, year: currentYear })}
-                                                                className="text-blue-600 hover:text-blue-900 hover:underline"
-                                                            >
-                                                                View Bills
-                                                            </Link>
-                                                        ) : (
-                                                            <span className="text-gray-400">Not generated</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                        {status.has_fuel_bill ? (
-                                                            <Link
-                                                                href={route('amount-reports.index', { month: month.value, year: currentYear })}
-                                                                className="text-blue-600 hover:text-blue-900 hover:underline"
-                                                            >
-                                                                View Bills
                                                             </Link>
                                                         ) : (
                                                             <span className="text-gray-400">Not generated</span>

@@ -22,12 +22,7 @@ const FeaturesSection = () => {
       description: 'Get instant help with our intelligent chatbot assistant available 24/7 to answer queries and guide you through the system.',
       color: 'from-blue-700 to-indigo-800'
     },
-    {
-      icon: <Receipt className="w-8 h-8" />,
-      title: 'Vendor Bill Management',
-      description: 'Create detailed bills for Kiryana and Fuel vendors with itemized breakdowns and salt subcategories.',
-      color: 'from-red-700 to-red-800'
-    },
+
     {
       icon: <BarChart3 className="w-8 h-8" />,
       title: 'Analytics Dashboard',
@@ -56,8 +51,8 @@ const FeaturesSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="bg-white/80 backdrop-blur rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 border-2 border-amber-200"
             >
               <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-4 text-white shadow-lg`}>

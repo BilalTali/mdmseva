@@ -1,6 +1,7 @@
 // Location: resources/js/Pages/Welcome.jsx
 import React, { useState, useEffect } from 'react';
 import Navigation from '@/Components/Welcome/Navigation';
+import TrialBanner from '@/Components/Welcome/TrialBanner';
 import HeroSection from '@/Components/Welcome/HeroSection';
 import TeamCarousel from '@/Components/Welcome/TeamCarousel';
 import StatsSection from '@/Components/Welcome/StatsSection';
@@ -220,6 +221,9 @@ export default function Welcome() {
           mobileNavOpen={mobileNavOpen}
           setMobileNavOpen={setMobileNavOpen}
         />
+
+        {/* Trial Feedback Banner */}
+        <TrialBanner />
 
         {/* Hero Content */}
         <HeroSection
