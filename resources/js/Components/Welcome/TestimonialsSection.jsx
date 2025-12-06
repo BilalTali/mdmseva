@@ -79,9 +79,9 @@ const TestimonialsSection = ({ testimonials, loadingTestimonials, testimonialsEr
             [1, 2, 3].map((skeleton) => (
               <div
                 key={skeleton}
-                className="min-w-full md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-16px)] flex-shrink-0"
+                className="min-w-full lg:min-w-[calc(33.333%-16px)] flex-shrink-0"
               >
-                <div className="bg-white rounded-2xl p-8 border border-amber-100 shadow-sm h-full animate-pulse">
+                <div className="bg-white rounded-2xl p-8 border border-amber-100 shadow-sm h-full animate-pulse flex flex-col">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 bg-amber-100 rounded-full"></div>
                     <div className="space-y-2">
@@ -89,7 +89,7 @@ const TestimonialsSection = ({ testimonials, loadingTestimonials, testimonialsEr
                       <div className="h-3 bg-amber-50 rounded w-24"></div>
                     </div>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-3 flex-grow">
                     <div className="h-3 bg-amber-50 rounded w-full"></div>
                     <div className="h-3 bg-amber-50 rounded w-5/6"></div>
                     <div className="h-3 bg-amber-50 rounded w-4/6"></div>
@@ -102,9 +102,9 @@ const TestimonialsSection = ({ testimonials, loadingTestimonials, testimonialsEr
             testimonials.map((testimonial) => (
               <div
                 key={testimonial.id}
-                className="min-w-full md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-16px)] flex-shrink-0 snap-center"
+                className="min-w-full lg:min-w-[calc(33.333%-16px)] flex-shrink-0 snap-center flex"
               >
-                <div className="bg-white rounded-2xl p-8 shadow-sm border border-amber-100 hover:shadow-md transition-shadow h-full flex flex-col relative group/card">
+                <div className="bg-white rounded-2xl p-8 shadow-sm border border-amber-100 hover:shadow-md transition-shadow w-full flex flex-col relative group/card h-full">
                   {/* Quote Icon Background */}
                   <div className="absolute top-6 right-6 text-amber-100 opacity-50">
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
@@ -117,8 +117,8 @@ const TestimonialsSection = ({ testimonials, loadingTestimonials, testimonialsEr
                       <Star
                         key={i}
                         className={`w-4 h-4 ${i < (testimonial.rating || 0)
-                            ? 'fill-amber-400 text-amber-400'
-                            : 'fill-stone-200 text-stone-200'
+                          ? 'fill-amber-400 text-amber-400'
+                          : 'fill-stone-200 text-stone-200'
                           }`}
                       />
                     ))}
