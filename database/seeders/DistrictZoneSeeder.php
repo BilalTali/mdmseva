@@ -264,13 +264,19 @@ class DistrictZoneSeeder extends Seeder
         foreach ($zoneNames as $index => $zoneName) {
             $code = strtoupper($district->code . '-Z' . str_pad($index + 1, 2, '0', STR_PAD_LEFT));
             
-            Zone::updateOrCreate(
+            $zone = Zone::updateOrCreate(
                 ['code' => $code],
                 [
                     'district_id' => $district->id,
                     'name' => $zoneName,
                 ]
             );
+
+            if ($zone->wasRecentlyCreated) {
+                $this->command->info("  + Created Zone: {$zoneName} ({$code})");
+            } else {
+                $this->command->line("  ~ Updated Zone: {$zoneName} ({$code})");
+            }
         }
     }
 }
