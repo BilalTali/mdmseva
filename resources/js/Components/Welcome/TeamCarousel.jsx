@@ -1,12 +1,13 @@
 // Location: resources/js/Components/Welcome/TeamCarousel.jsx
-import React, { useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, X, Quote, Star, Briefcase } from 'lucide-react';
 import DeveloperMessageCard from '@/Components/DeveloperMessageCard';
 
 const CARD_GAP = 24;
 
 const TeamCarousel = ({ teamMembers, loadingTeam }) => {
   const scrollContainerRef = useRef(null);
+  const [selectedMember, setSelectedMember] = useState(null);
 
   const scroll = (direction) => {
     const container = scrollContainerRef.current;
@@ -73,6 +74,7 @@ const TeamCarousel = ({ teamMembers, loadingTeam }) => {
                   role={member.role}
                   message={member.message}
                   image_path={member.image_path ? `/storage/${member.image_path}` : null}
+                  onReadMore={() => setSelectedMember(member)}
                 />
               </div>
             ))}
@@ -115,6 +117,71 @@ const TeamCarousel = ({ teamMembers, loadingTeam }) => {
             <ChevronRight className="w-4 h-4" />
           </p>
         </div>
+
+        {/* Read More Modal */}
+        {selectedMember && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedMember(null)}>
+            <div
+              className="bg-white rounded-2xl w-full max-w-3xl relative shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="relative h-32 bg-gradient-to-r from-amber-700 to-orange-800 shrink-0">
+                <div className="absolute inset-0 opacity-20">
+                  <Quote className="w-full h-full text-white rotate-12 scale-150 translate-x-10 -translate-y-10" />
+                </div>
+                <button
+                  onClick={() => setSelectedMember(null)}
+                  className="absolute top-4 right-4 p-2 bg-black/20 text-white hover:bg-black/30 rounded-full transition-colors z-10"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="px-8 pb-8 -mt-16 flex flex-col overflow-y-auto">
+                <div className="flex flex-col md:flex-row gap-6 mb-6 shrink-0">
+                  <div className="w-32 h-32 rounded-full border-4 border-white shadow-xl bg-stone-100 shrink-0 mx-auto md:mx-0 overflow-hidden relative">
+                    {selectedMember.image_path ? (
+                      <img
+                        src={`/storage/${selectedMember.image_path}`}
+                        alt={selectedMember.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-stone-200 text-stone-400">
+                        <span className="text-4xl font-bold">{selectedMember.name?.charAt(0)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="pt-16 md:pt-16 text-center md:text-left">
+                    <h3 className="text-2xl font-bold text-stone-900">{selectedMember.name}</h3>
+                    <div className="flex items-center justify-center md:justify-start gap-2 text-amber-700 font-medium mt-1">
+                      <Briefcase className="w-4 h-4" />
+                      {selectedMember.designation}
+                    </div>
+                    {selectedMember.role && (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold mt-2">
+                        <Star className="w-3 h-3 fill-amber-600" />
+                        {selectedMember.role}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="prose prose-amber max-w-none">
+                  <h4 className="flex items-center gap-2 text-lg font-bold text-stone-800 border-b border-amber-100 pb-2 mb-4">
+                    <Quote className="w-5 h-5 text-amber-600" />
+                    Developer Message
+                  </h4>
+                  <p className="text-stone-700 text-lg leading-relaxed whitespace-pre-line italic font-serif">
+                    "{selectedMember.message}"
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <style>{`

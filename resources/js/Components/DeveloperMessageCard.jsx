@@ -1,10 +1,13 @@
+// Location: resources/js/Components/DeveloperMessageCard.jsx
 import React from 'react';
 import { User, Briefcase, Star, Quote } from 'lucide-react';
 
-export default function TeamMemberCard({ name, designation, role, message, image_path }) {
+export default function TeamMemberCard({ name, designation, role, message, image_path, onReadMore }) {
+    const isLong = message && message.length > 250;
+
     return (
         <div className="flex-shrink-0 w-full max-w-5xl mx-auto my-8">
-            <div className="relative bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row transition-transform hover:scale-[1.01] duration-500 border border-stone-100">
+            <div className="relative bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row transition-transform hover:scale-[1.01] duration-500 border border-stone-100 min-h-[500px] md:min-h-[400px]">
 
                 {/* Decorative background pattern */}
                 <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
@@ -12,7 +15,7 @@ export default function TeamMemberCard({ name, designation, role, message, image
                 </div>
 
                 {/* Left Side - Image Profile */}
-                <div className="w-full md:w-2/5 relative bg-gradient-to-br from-amber-700 via-orange-600 to-amber-800 p-10 flex flex-col items-center justify-center text-center">
+                <div className="w-full md:w-2/5 relative bg-gradient-to-br from-amber-700 via-orange-600 to-amber-800 p-10 flex flex-col items-center justify-center text-center shrink-0">
                     {/* Abstract shapes */}
                     <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
                         <div className="absolute top-[-20%] left-[-20%] w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl"></div>
@@ -56,16 +59,24 @@ export default function TeamMemberCard({ name, designation, role, message, image
                 </div>
 
                 {/* Right Side - Message Content */}
-                <div className="w-full md:w-3/5 p-8 md:p-12 lg:p-16 flex flex-col justify-center relative bg-white/50 backdrop-blur-3xl">
+                <div className="w-full md:w-3/5 p-8 md:p-12 lg:p-16 flex flex-col relative bg-white/50 backdrop-blur-3xl">
                     <Quote className="w-12 h-12 text-amber-200 mb-6 opacity-80" />
 
-                    <div className="relative z-10">
-                        <p className="text-lg md:text-xl lg:text-2xl text-stone-700 leading-relaxed font-medium italic font-serif">
+                    <div className="relative z-10 flex-grow mb-4">
+                        <p className={`text-lg md:text-xl lg:text-2xl text-stone-700 leading-relaxed font-medium italic font-serif ${isLong ? 'line-clamp-5' : ''}`}>
                             "{message}"
                         </p>
+                        {isLong && (
+                            <button
+                                onClick={onReadMore}
+                                className="text-amber-700 hover:text-amber-800 font-bold text-base mt-3 inline-flex items-center gap-1 hover:underline focus:outline-none transition-colors"
+                            >
+                                Read more message...
+                            </button>
+                        )}
                     </div>
 
-                    <div className="mt-8 pt-8 border-t border-amber-100 flex items-center gap-4">
+                    <div className="mt-auto pt-8 border-t border-amber-100 flex items-center gap-4">
                         <div className="flex flex-col">
                             <span className="text-amber-900 font-bold text-lg">MDM SEVA Initiative</span>
                             <span className="text-stone-500 text-sm">Dedicated to efficient school management</span>
