@@ -34,6 +34,12 @@ const FeaturesSection = () => {
       title: 'Quick Feedback System',
       description: 'Share your experience with our multi-step feedback wizard and get responses from our support team within 24-48 hours.',
       color: 'from-purple-700 to-pink-800'
+    },
+    {
+      icon: <FileText className="w-8 h-8" />,
+      title: 'Automated Reporting',
+      description: 'Generate comprehensive monthly purchase lists and financial statements instantly, ready for official submission.',
+      color: 'from-green-700 to-emerald-800'
     }
   ];
 

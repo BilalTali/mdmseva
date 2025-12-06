@@ -33,7 +33,7 @@ const StatsSection = ({ stats, loading, error }) => {
             <p className="text-sm text-red-700 mt-2">{error}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {/* Total Schools */}
             <div className="bg-gradient-to-br from-amber-700 to-amber-800 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all">
               <div className="flex items-center justify-between mb-4">

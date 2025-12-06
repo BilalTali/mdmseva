@@ -1,57 +1,82 @@
 import React from 'react';
-import { User, Briefcase, Star } from 'lucide-react';
+import { User, Briefcase, Star, Quote } from 'lucide-react';
 
 export default function TeamMemberCard({ name, designation, role, message, image_path }) {
     return (
-        <div className="flex-shrink-0 w-full max-w-6xl min-h-[24rem] bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-amber-100 flex flex-col lg:flex-row items-stretch mx-auto">
-            {/* Left Side - Image & Gradient */}
-            <div className="w-full lg:w-80 h-64 lg:h-auto flex-shrink-0 bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 relative flex items-center justify-center p-6">
-                <div className="relative z-10 transform transition-transform duration-500 hover:scale-105">
-                    {image_path ? (
-                        <img
-                            src={image_path}
-                            alt={name}
-                            className="w-40 h-40 lg:w-56 lg:h-56 rounded-full object-cover border-4 border-white shadow-2xl"
-                        />
-                    ) : (
-                        <div className="w-40 h-40 lg:w-56 lg:h-56 rounded-full bg-white/20 border-4 border-white shadow-2xl flex items-center justify-center backdrop-blur-sm">
-                            <User className="w-20 h-20 lg:w-28 lg:h-28 text-white" />
-                        </div>
-                    )}
-                </div>
-            </div>
+        <div className="flex-shrink-0 w-full max-w-5xl mx-auto my-8">
+            <div className="relative bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row transition-transform hover:scale-[1.01] duration-500 border border-stone-100">
 
-            {/* Right Side - Content */}
-            <div className="flex-1 p-8 lg:p-12 flex flex-col justify-center text-left bg-white">
-                {/* Name */}
-                <h3 className="text-2xl lg:text-4xl font-bold text-gray-900 mb-2">{name}</h3>
-
-                {/* Designation */}
-                <div className="flex items-center gap-2 text-amber-700 mb-4">
-                    <Briefcase className="w-5 h-5 lg:w-6 lg:h-6" />
-                    <p className="text-lg lg:text-xl font-semibold">{designation}</p>
+                {/* Decorative background pattern */}
+                <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
+                    <Quote size={300} className="text-amber-900 rotate-180" />
                 </div>
 
-                {/* Role Badge */}
-                {role && (
-                    <div className="mb-6">
-                        <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-800 rounded-full text-sm font-medium border border-amber-100 shadow-sm">
-                            <Star className="w-4 h-4 text-amber-600" />
-                            {role}
-                        </span>
+                {/* Left Side - Image Profile */}
+                <div className="w-full md:w-2/5 relative bg-gradient-to-br from-amber-700 via-orange-600 to-amber-800 p-10 flex flex-col items-center justify-center text-center">
+                    {/* Abstract shapes */}
+                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
+                        <div className="absolute top-[-20%] left-[-20%] w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl"></div>
+                        <div className="absolute bottom-[-20%] right-[-20%] w-64 h-64 bg-amber-300 rounded-full mix-blend-overlay filter blur-3xl"></div>
                     </div>
-                )}
 
-                {/* Message */}
-                <p className="text-base lg:text-lg text-gray-600 leading-relaxed">
-                    {message}
-                </p>
+                    <div className="relative z-10">
+                        <div className="relative inline-block group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-amber-300 to-orange-300 rounded-full blur opacity-40 group-hover:opacity-60 transition duration-500"></div>
+                            {image_path ? (
+                                <img
+                                    src={image_path}
+                                    alt={name}
+                                    className="relative w-48 h-48 lg:w-56 lg:h-56 rounded-full object-cover border-[6px] border-white/20 shadow-2xl"
+                                />
+                            ) : (
+                                <div className="relative w-48 h-48 lg:w-56 lg:h-56 rounded-full bg-white/10 border-[6px] border-white/20 shadow-2xl flex items-center justify-center backdrop-blur-md">
+                                    <User className="w-24 h-24 text-white/90" />
+                                </div>
+                            )}
 
-                {/* Decorative dots */}
-                <div className="mt-4 flex gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-                    <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                            {/* Role Badge Floating */}
+                            {role && (
+                                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white text-amber-700 rounded-full text-sm font-bold shadow-lg border border-amber-50">
+                                        <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                                        {role}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-8 text-white">
+                            <h3 className="text-2xl lg:text-3xl font-bold tracking-tight text-white mb-1.5">{name}</h3>
+                            <div className="flex items-center justify-center gap-2 text-amber-100/90 font-medium tracking-wide text-sm uppercase">
+                                <Briefcase className="w-4 h-4" />
+                                {designation}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Side - Message Content */}
+                <div className="w-full md:w-3/5 p-8 md:p-12 lg:p-16 flex flex-col justify-center relative bg-white/50 backdrop-blur-3xl">
+                    <Quote className="w-12 h-12 text-amber-200 mb-6 opacity-80" />
+
+                    <div className="relative z-10">
+                        <p className="text-lg md:text-xl lg:text-2xl text-stone-700 leading-relaxed font-medium italic font-serif">
+                            "{message}"
+                        </p>
+                    </div>
+
+                    <div className="mt-8 pt-8 border-t border-amber-100 flex items-center gap-4">
+                        <div className="flex flex-col">
+                            <span className="text-amber-900 font-bold text-lg">MDM SEVA Initiative</span>
+                            <span className="text-stone-500 text-sm">Dedicated to efficient school management</span>
+                        </div>
+                        <div className="ml-auto opacity-50">
+                            {/* Signature or Brand mark */}
+                            <svg className="h-8 w-auto text-amber-900" viewBox="0 0 100 30" fill="currentColor">
+                                <path d="M10,15 Q25,25 40,15 T70,15 T100,15" stroke="currentColor" strokeWidth="2" fill="none" />
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
