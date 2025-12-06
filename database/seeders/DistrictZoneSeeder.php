@@ -26,6 +26,16 @@ class DistrictZoneSeeder extends Seeder
 
         $this->command->info('Districts and zones seeding completed successfully!');
         $this->command->info('Total: 22 districts seeded');
+
+        // Clear application cache to ensure fresh data is served
+        $this->command->info('Clearing application cache...');
+        \Illuminate\Support\Facades\Cache::forget('districts:all');
+        \Illuminate\Support\Facades\Cache::forget('districts:Jammu and Kashmir');
+        \Illuminate\Support\Facades\Cache::forget('districts:Ladakh');
+        \Illuminate\Support\Facades\Cache::forget('zones:all');
+        // Ideally we should clear all zone caches, but a full flush is safer here
+        $this->command->call('cache:clear');
+        $this->command->info('✓ Application cache cleared.');
     }
 
     /**
