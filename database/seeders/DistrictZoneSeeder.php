@@ -51,7 +51,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Srinagar', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($srinagar, [
-            'City Zone', 'North Zone', 'South Zone', 'East Zone'
+            'BATMALOO','GULAB BAGH','HAWAL','IDDGAH','NISHAT','RAINAWARI','SRINAGAR','ZALDAGAR' 
         ]);
 
         // 2. Ganderbal
@@ -60,7 +60,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Ganderbal', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($ganderbal, [
-            'Ganderbal ', 'Kangan ', 'Lar '
+            'Ganderbal ', 'HARIGANWAN ', 'KANGAN ', 'TULMULLA '
         ]);
 
         // 3. Budgam
@@ -69,7 +69,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Budgam', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($budgam, [
-            'Budgam ', 'Beerwah ', 'Khansahib ', 'Chadoora ','Khag'
+            'Budgam ', 'Beerwah ', 'Khansahib ','Khag','B K PORA','CHADOORA','CHARAR-I-SHARIF','DREYGAM','HARDUPANZOO','MAGAM','NAGAM','NARBAL','NURBAL','SOIBUGH'
         ]);
 
         // 4. Anantnag
@@ -78,7 +78,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Anantnag', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($anantnag, [
-            'Anantnag ', 'Bijbehara ', 'Pahalgam '
+            'Anantnag ', 'Bijbehara ','AISHMUQAM','ACHABAL','BIDDER','DORU','MATTAN','QAZIGUND','SHANGAS','SRIGUFWARA','VAILLO','VERINAG'
         ]);
 
         // 5. Kulgam
@@ -87,7 +87,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Kulgam', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($kulgam, [
-            'Kulgam ', 'DH Pora ', 'Frisal '
+            'Kulgam ', 'DEVSAR ', 'DH PORA ', 'H C GAM ', 'QAIMOH ', 'YARIPORA '
         ]);
 
         // 6. Pulwama
@@ -96,7 +96,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Pulwama', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($pulwama, [
-            'Pulwama ', 'Pampore ', 'Tral '
+            'Pulwama ', 'Pampore ', 'Tral ','AWANTIPORA','KAKPORA','SHADIMARG','TAHAB'
         ]);
 
         // 7. Shopian
@@ -105,7 +105,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Shopian', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($shopian, [
-            'Shopian ', 'Zainapora '
+            'IMAMSHAIB','SHOPIAN','KEEGAM','VEHIL'
         ]);
 
         // 8. Baramulla
@@ -151,7 +151,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Jammu', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($jammu, [
-            'City Zone', 'North Zone', 'South Zone', 'East Zone', 'West Zone'
+            'AKHNOOR','ARINA','BHALWAL','BISHNAH','CHOWKI CHOURA','DANSAL','GANDHI NAGAR','JAMMU','JOURIAN','KHOUR','MARH','MIRAN SAHIB','PURMANDAL','RS PORA','SATWARI','VIJAYPUR'
         ]);
 
         // 2. Samba
@@ -160,7 +160,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Samba', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($samba, [
-            'Samba Zone', 'Vijaypur Zone', 'Ghagwal Zone'
+            'GHAGWAL','PURMANDAL','RAMGRAH','SAMBA','VIJAYPUR'
         ]);
 
         // 3. Kathua
@@ -169,7 +169,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Kathua', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($kathua, [
-            'Kathua Zone', 'Hiranagar Zone', 'Billawar Zone', 'Bani Zone'
+            'BANI','BARNOTI','BASHOLI','BHADDU','BILLAWAR','HIRANAGAR','KATHUA','LAKHANPUR','MAHANPUR','MARHEEN','SALLAN'
         ]);
 
         // 4. Udhampur
@@ -178,7 +178,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Udhampur', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($udhampur, [
-            'Udhampur Zone', 'Chenani Zone', 'Ramnagar Zone'
+            'BABEY','CHENANI','DUDU','GHORDI','JIB','KULWANTA','MAJALTA','PANCHARI','RAMNAGAR','TIKRI','UDHAMPUR'
         ]);
 
         // 5. Reasi
@@ -187,7 +187,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Reasi', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($reasi, [
-            'Reasi Zone', 'Katra Zone'
+            'ARNAS','CHASSANA','CHINKAH','MAHORE','POUNI','REASI'
         ]);
 
         // 6. Rajouri
@@ -196,7 +196,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Rajouri', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($rajouri, [
-            'Rajouri Zone', 'Nowshera Zone', 'Kalakote Zone'
+            'BALJARALLAN','DANDSAR','DOONGI BRAHMANA','DRHAL','KALKOTE','KHAWAS','KOTRANKA','LOWER HATHAL','MANJAKOTE','MOGLA','NOWSHERA','PEERI','RAJOURI','SUNDER BANI','THANAMANDI'
         ]);
 
         // 7. Poonch
@@ -205,7 +205,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Poonch', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($poonch, [
-            'Poonch Zone', 'Surankote Zone', 'Mendhar Zone'
+            'BAFLIAZ','BALKOTE','HARNI','KUNIYIAN','MANDI','MANKOTE','MENDHAR','NANGALI','POONCH','SATHRA','SURANKOTE'
         ]);
 
         // 8. Doda
@@ -214,7 +214,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Doda', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($doda, [
-            'Doda Zone', 'Bhaderwah Zone', 'Thathri Zone'
+            'ASSAR','BHADERWAH','BHALESSA','BHALLA','BHATYAS','DODA','GHAT','GUNDA','THATHRI'
         ]);
 
         // 9. Ramban
@@ -223,7 +223,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Ramban', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($ramban, [
-            'Ramban Zone', 'Banihal Zone'
+            'BANIHAL','BATOTE','GOOL','KHARI','RAMBAN','UKHRAL'
         ]);
 
         // 10. Kishtwar
@@ -232,7 +232,7 @@ class DistrictZoneSeeder extends Seeder
             ['name' => 'Kishtwar', 'state' => 'Jammu and Kashmir']
         );
         $this->createZones($kishtwar, [
-            'Kishtwar Zone', 'Paddar Zone'
+            'DRABSHALLA','INDERWAL','KISHTWAR','MARWAH','NAGSENI','PADDAR'
         ]);
 
         $this->command->info('✓ Jammu Division: 10 districts seeded');
@@ -272,7 +272,21 @@ class DistrictZoneSeeder extends Seeder
     private function createZones(District $district, array $zoneNames): void
     {
         foreach ($zoneNames as $index => $zoneName) {
+            $zoneName = trim($zoneName);
             $code = strtoupper($district->code . '-Z' . str_pad($index + 1, 2, '0', STR_PAD_LEFT));
+
+            // Remove if any duplicate found (Same name, different code)
+            $duplicates = Zone::where('district_id', $district->id)
+                ->where('name', $zoneName)
+                ->where('code', '!=', $code)
+                ->get();
+
+            if ($duplicates->isNotEmpty()) {
+                foreach ($duplicates as $duplicate) {
+                    $duplicate->delete();
+                    $this->command->warn("  - Deleted duplicate zone: {$duplicate->name} ({$duplicate->code})");
+                }
+            }
             
             $zone = Zone::updateOrCreate(
                 ['code' => $code],
